@@ -5,29 +5,48 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QTabWidget>
-#include <QStackedLayout>
 
-MainWindowContent::MainWindowContent(QWidget *parent)
-    : QWidget{parent}
+MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
+    : QWidget{parent},
+      mContextMenu(new QStackedLayout()),
+      mGrid(new SudokuGridWidget(size, this)),
+      mCurrentView(ViewType::EnterDigits)
 {
+    // build widget layout
     QHBoxLayout* horizontalLayout = new QHBoxLayout();
     this->setLayout(horizontalLayout);
-
-    SudokuGridWidget* grid = new SudokuGridWidget(9);
     QTabWidget* tabsLeft = new QTabWidget();
-    QFrame* contextMenu = new QFrame();
-
+    QFrame* contextMenuFrame = new QFrame();
     horizontalLayout->addWidget(tabsLeft);
-    horizontalLayout->addWidget(grid);
-    horizontalLayout->addWidget(contextMenu);
+    horizontalLayout->addWidget(mGrid);
+    horizontalLayout->addWidget(contextMenuFrame);
 
-    QStackedLayout* contextMenuStack = new QStackedLayout();
-    contextMenuStack->setStackingMode(QStackedLayout::StackingMode::StackOne);
-    contextMenu->setLayout(contextMenuStack);
-
-    EditGridControls* edit = new EditGridControls();
+    // build left-hand side tabs
+    EditGridControls* edit = new EditGridControls(this);
     tabsLeft->addTab(edit, "Create");
 
-    RegionsEditingControls* regionsEditControls = new RegionsEditingControls();
-    contextMenuStack->addWidget(regionsEditControls);
+    // build context menu stacked layout
+    mContextMenu->setStackingMode(QStackedLayout::StackingMode::StackOne);
+    contextMenuFrame->setLayout(mContextMenu);
+    QWidget* emptyView = new QLabel("To Be Implemented...");
+    QWidget* emptyView2 = new QLabel("To Be Implemented...");
+    RegionsEditingControls* regionsEditControls = new RegionsEditingControls(mGrid);
+    mContextMenu->insertWidget(ViewType::EnterDigits, emptyView);
+    mContextMenu->insertWidget(ViewType::DrawRegions, regionsEditControls);
+    mContextMenu->insertWidget(ViewType::DrawKiller, emptyView2);
+    mContextMenu->setCurrentIndex(ViewType::EnterDigits);
+
+    // context menu styling
+    contextMenuFrame->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
+    contextMenuFrame->setObjectName("context_menu_frame");
+    contextMenuFrame->setStyleSheet("#context_menu_frame{background-color: white;}");
+}
+
+void MainWindowContent::ChangeView(ViewType view)
+{
+    if(view != mCurrentView)
+    {
+        mCurrentView = view;
+        mContextMenu->setCurrentIndex(view);
+    }
 }

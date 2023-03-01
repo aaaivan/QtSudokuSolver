@@ -2,15 +2,31 @@
 #define MAINWINDOWCONTENT_H
 
 #include <QWidget>
+#include <QStackedLayout>
+
+class SudokuGridWidget;
 
 class MainWindowContent : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MainWindowContent(QWidget *parent = nullptr);
+    explicit MainWindowContent(unsigned short size, QWidget *parent = nullptr);
 
-signals:
+    enum ViewType
+    {
+        EnterDigits,
+        DrawRegions,
+        DrawKiller
+    };
 
+private:
+    QStackedLayout* mContextMenu;
+    SudokuGridWidget* mGrid;
+
+    ViewType mCurrentView;
+
+public:
+    void ChangeView(ViewType view);
 };
 
 #endif // MAINWINDOWCONTENT_H

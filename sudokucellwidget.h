@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QLabel>
+#include <QPushButton>
 #include <QStackedLayout>
 #include <QStackedWidget>
 
@@ -14,11 +15,11 @@ public:
     void RefreshLayout();
 
 private:
-    enum CellType
+    enum ContentType
     {
-        Given,
-        Solved,
-        Unsolved
+        GivenDigit,
+        SolvedDigit,
+        CellOptions
     };
     enum Edges: int
     {
@@ -28,26 +29,43 @@ private:
         BottomEdge = 0x4,
         LeftEdge = 0x8,
     };
+    enum CellView: int
+    {
+        Options,
+        Value,
+        RegionId
+    };
 
     int mLength;
 
     QStackedLayout* mOverlayLayout;
-    QStackedWidget* mStackedWidget;
-    QLabel* mOptions;
-    QLabel* mValue;
+    QStackedWidget* mStackedContent;
+    QPushButton* mOptionsLabel;
+    QPushButton* mValueLabel;
+    QPushButton* mRegionIdLabel;
     QLabel* mGraphicsOverlay;
 
     QString mContentString;
-    Edges mBoldEdges;
-    CellType mCellType;
+    ContentType mContentType;
 
-    int mRegionNumber;
-    bool mBorderDirty;
-    bool mContentDirty;
+    int mRegionId;
+    bool mValueDirty;
 
-    QString GetEdgeName(Edges edge);
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
+
+    QString GetEdgeName(Edges edge) const;
+    QString CreateStylesheet() const;
+
+    // Styling variables
+    bool mStyleDirty;
+    Edges mBoldEdges;
+    QString mBGColour;
+    QString mFocusBGColour;
+
+public:
+    void ShowRegionNumber();
+    void HideRegionNumber();
 };
 
 #endif // SUDOKUCELLWIDGET_H

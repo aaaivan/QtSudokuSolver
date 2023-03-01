@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    MainWindowContent* content = new MainWindowContent(this);
+    MainWindowContent* content = new MainWindowContent(9, this);
     this->setCentralWidget(content);
 }
 

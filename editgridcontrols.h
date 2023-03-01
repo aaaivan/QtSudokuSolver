@@ -1,6 +1,7 @@
 #ifndef EDITGRIDCONTROLS_H
 #define EDITGRIDCONTROLS_H
 
+#include "mainwindowcontent.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QCheckBox>
@@ -9,18 +10,25 @@ class EditGridControls : public QWidget
 {
     Q_OBJECT
 public:
-    explicit EditGridControls(QWidget *parent = nullptr);
-
-public slots:
-    void OnPositiveDiagonalChanged(int checked);
-    void OnNegativeDiagonalChanged(int checked);
+    explicit EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private:
-    QPushButton* addDigitsBtn;
-    QPushButton* drawRegionsBtn;
-    QPushButton* drawKillersBtn;
-    QCheckBox* positiveDiagonalCheckbox;
-    QCheckBox* negativeDiagonalCheckbox;
+    MainWindowContent* mMainWindowContent;
+    QPushButton* mAddDigitsBtn;
+    QPushButton* mDrawRegionsBtn;
+    QPushButton* mDrawKillersBtn;
+    QCheckBox* mPositiveDiagonalCheckbox;
+    QCheckBox* mNegativeDiagonalCheckbox;
+
+    MainWindowContent::ViewType GetViewForButton(QPushButton* btn);
+
+public slots:
+    void AddDigitsBtn_Toggled(bool checked);
+    void DrawRegionsBtn_Toggled(bool checked);
+    void DrawKillersBtn_Toggled(bool checked);
+    void OnViewButtonChecked(QPushButton* btn);
+    void PositiveDiagonalCheckbox_OnChange(int checked);
+    void NegativeDiagonalCheckbox_OnChange(int checked);
 };
 
 #endif // EDITGRIDCONTROLS_H

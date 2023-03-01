@@ -1,9 +1,10 @@
 #include "sudokugridwidget.h"
 #include "sudokucellwidget.h"
 
-SudokuGridWidget::SudokuGridWidget(unsigned short size, QWidget *parent)
+SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
       mSize(size),
+      mMainWindowContent(mainWindowContent),
       mGridLayout(new QGridLayout(this)),
       mGrid()
 {
@@ -37,4 +38,9 @@ QSize SudokuGridWidget::sizeHint() const
 QSize SudokuGridWidget::minimumSizeHint() const
 {
     return mGridLayout->minimumSize();
+}
+
+unsigned short SudokuGridWidget::SizeGet()
+{
+    return mSize;
 }
