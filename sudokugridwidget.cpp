@@ -1,12 +1,14 @@
 #include "sudokugridwidget.h"
 #include "sudokucellwidget.h"
+#include "puzzledata.h"
 
 SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
       mSize(size),
       mMainWindowContent(mainWindowContent),
       mGridLayout(new QGridLayout(this)),
-      mCells()
+      mCells(),
+      mPuzzleData(std::make_shared<PuzzleData>(size))
 {
     this->setLayout(mGridLayout);
     this->setFrameStyle(QFrame::Box);
@@ -20,7 +22,7 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
         mCells.back().reserve(mSize);
         for(unsigned short j = 0; j < mSize; ++j)
         {
-            SudokuCellWidget* cell = new SudokuCellWidget(mMainWindowContent);
+            SudokuCellWidget* cell = new SudokuCellWidget(i, j, mMainWindowContent);
             mCells.back().push_back(cell);
             mGridLayout->addWidget(cell, i, j);
         }
@@ -61,6 +63,11 @@ unsigned short SudokuGridWidget::SizeGet()
 const QVector<QVector<SudokuCellWidget *> > &SudokuGridWidget::CellsGet() const
 {
     return mCells;
+}
+
+PuzzleData *SudokuGridWidget::PuzzleDataGet() const
+{
+    return mPuzzleData.get();
 }
 
 void SudokuGridWidget::SwitchView(MainWindowContent::ViewType view)

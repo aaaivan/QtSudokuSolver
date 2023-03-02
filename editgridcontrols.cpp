@@ -19,8 +19,7 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     verticalLayout->addWidget(mDrawRegionsBtn);
     verticalLayout->addWidget(mDrawKillersBtn);
     QFrame* line = new QFrame();
-    line->setFrameShape(QFrame::Shape::HLine);
-    line->setFrameShadow(QFrame::Shadow::Sunken);
+    line->setFrameStyle(QFrame::HLine | QFrame::Sunken);
     verticalLayout->addWidget(line);
     verticalLayout->addWidget(mPositiveDiagonalCheckbox);
     verticalLayout->addWidget(mNegativeDiagonalCheckbox);

@@ -1,15 +1,19 @@
 #include "drawregionscontrols.h"
 #include "sudokucellwidget.h"
 #include "sudokugridwidget.h"
+#include "puzzledata.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
 #include <QMessageBox>
 
+const QString kCounterLabelText = "Cells in region %1: <b>%2</b>";
+
 DrawRegionsControls::DrawRegionsControls(SudokuGridWidget* grid, QWidget *parent)
     : QWidget{parent},
       mGrid(grid),
       mRegionSelect(new QComboBox()),
+      mCellCounters(grid->SizeGet()),
       mClearRegionsBtn(new QPushButton("Clear Regions"))
 {
     // build vertical layout
@@ -17,6 +21,14 @@ DrawRegionsControls::DrawRegionsControls(SudokuGridWidget* grid, QWidget *parent
     this->setLayout(verticalLayout);
     QWidget* formWidget = new QWidget();
     verticalLayout->addWidget(formWidget);
+    for(int i = 0; i < mCellCounters.size(); ++i)
+    {
+        mCellCounters[i] = new QLabel(QString(kCounterLabelText).arg(QString::number(i+1), QString::number(0)));
+        verticalLayout->addWidget(mCellCounters[i]);
+    }
+    QFrame* hLine = new QFrame();
+    hLine->setFrameStyle(QFrame::HLine | QFrame::Sunken);
+    verticalLayout->addWidget(hLine);
     verticalLayout->addWidget(mClearRegionsBtn);
     verticalLayout->addStretch();
 
@@ -51,7 +63,7 @@ void DrawRegionsControls::RegionSelect_CurrentIndexChanged(int index)
 
 void DrawRegionsControls::ClearRegionsBtn_Clicked()
 {
-    auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "my title", "All the regions in the grid will be cleared.\nContinue?",
+    auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "Clear Regions", "All the regions in the grid will be cleared.\nContinue?",
                                                         QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Ok, QMessageBox::StandardButton::Cancel));
 
     if(btn == QMessageBox::StandardButton::Ok)
@@ -70,4 +82,20 @@ void DrawRegionsControls::ClearRegionsBtn_Clicked()
 unsigned short DrawRegionsControls::SelectedRegionIdGet() const
 {
     return mRegionSelect->currentData().toInt();
+}
+
+void DrawRegionsControls::UpdateCellCounters(unsigned short regionId)
+{
+    unsigned short index = regionId - 1;
+    if(index < mGrid->SizeGet())
+    {
+        PuzzleData* puzzleData = mGrid->PuzzleDataGet();
+        int count = puzzleData->CellCountInRegion(regionId);
+        QString text = kCounterLabelText;
+        if(count == mGrid->SizeGet())
+        {
+            text = "<span style='color:green;'>" + text + "</span>";
+        }
+        mCellCounters[index]->setText(QString(text).arg(QString::number(regionId), QString::number(count)));
+    }
 }

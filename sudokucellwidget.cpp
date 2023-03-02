@@ -1,8 +1,12 @@
 #include "sudokucellwidget.h"
+#include "drawregionscontrols.h"
+#include "puzzledata.h"
+#include "sudokugridwidget.h"
 
-SudokuCellWidget::SudokuCellWidget(MainWindowContent* mainWindowContent, QWidget *parent)
+SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
-      mLength(40),
+      mX(x),
+      mY(y),
       mMainWindowContent(mainWindowContent),
       mNeighbours(4, nullptr),
       mOverlayLayout(new QStackedLayout(this)),
@@ -15,6 +19,7 @@ SudokuCellWidget::SudokuCellWidget(MainWindowContent* mainWindowContent, QWidget
       mContentType(ContentType::CellOptions),
       mRegionId(0),
       mValueDirty(true),
+      mLength(40),
       mStyleDirty(true),
       mRegionLabelStyleDirty(true),
       mBoldEdges(None),
@@ -158,8 +163,17 @@ SudokuCellWidget::CellEdge SudokuCellWidget::OppositeEdgeGet(CellEdge oppositeTo
 
 void SudokuCellWidget::RegionIdLabel_OnClicked()
 {
-    unsigned short newId = mMainWindowContent->SelectedRegionIdGet();
-    UpdateRegionId(newId);
+    unsigned short newId = mMainWindowContent->DrawRegionContextMenuGet()->SelectedRegionIdGet();
+    if(newId == mRegionId)
+    {
+        newId = 0;
+    }
+    auto cellCount = mMainWindowContent->GridGet()->PuzzleDataGet()->CellCountInRegion(newId);
+    auto puzzleSize = mMainWindowContent->GridGet()->SizeGet();
+    if(cellCount < puzzleSize)
+    {
+        UpdateRegionId(newId);
+    }
 }
 
 unsigned short SudokuCellWidget::RegionIdGet()
@@ -220,8 +234,12 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
 {
     if(newId != mRegionId)
     {
+        mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mX, mY);
+        mMainWindowContent->GridGet()->PuzzleDataGet()->AddCellToRegion(newId, mX, mY);
+        mMainWindowContent->DrawRegionContextMenuGet()->UpdateCellCounters(mRegionId);
+        mMainWindowContent->DrawRegionContextMenuGet()->UpdateCellCounters(newId);
+        mRegionIdLabel->setText(newId ? QString::number(newId) : "-");
         mRegionId = newId;
-        mRegionIdLabel->setText(mRegionId ? QString::number(mRegionId) : "-");
 
         int edge = 1;
         for(const auto& c : mNeighbours)
@@ -234,7 +252,7 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
             }
             edge = edge << 1;
         }
-        mRegionLabelHighlighted = true;
+        mRegionLabelHighlighted = mRegionId == mMainWindowContent->DrawRegionContextMenuGet()->SelectedRegionIdGet();
         mRegionLabelStyleDirty = true;
         RefreshLayout();
     }

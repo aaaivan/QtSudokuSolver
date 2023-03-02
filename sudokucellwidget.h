@@ -12,7 +12,7 @@ class SudokuCellWidget : public QFrame
 {
     Q_OBJECT
 public:
-    explicit SudokuCellWidget(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    explicit SudokuCellWidget(unsigned short x, unsigned short y, MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
     void RefreshLayout();
 
 private:
@@ -37,7 +37,9 @@ private:
         RegionId
     };
 
-    int mLength;
+    unsigned short mX;
+    unsigned short mY;
+
     MainWindowContent* mMainWindowContent;
     QList<SudokuCellWidget*> mNeighbours;
 
@@ -55,6 +57,7 @@ private:
     bool mValueDirty;
 
     // Styling variables
+    int mLength;
     bool mStyleDirty;
     bool mRegionLabelStyleDirty;
     CellEdge mBoldEdges;

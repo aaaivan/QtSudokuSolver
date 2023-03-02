@@ -3,8 +3,10 @@
 
 #include <QWidget>
 #include <QStackedLayout>
+#include <memory>
 
 class SudokuGridWidget;
+class DrawRegionsControls;
 
 class MainWindowContent : public QWidget
 {
@@ -22,11 +24,11 @@ public:
 private:
     QStackedLayout* mContextMenu;
     SudokuGridWidget* mGrid;
-
     ViewType mCurrentView;
 
 public:
-    unsigned short SelectedRegionIdGet() const;
+    DrawRegionsControls* DrawRegionContextMenuGet() const;
+    SudokuGridWidget* GridGet() const;
     void ChangeView(ViewType view);
 };
 

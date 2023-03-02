@@ -7,6 +7,7 @@
 #include <QGridLayout>
 
 class SudokuCellWidget;
+class PuzzleData;
 
 class SudokuGridWidget : public QFrame
 {
@@ -19,6 +20,7 @@ private:
     MainWindowContent* mMainWindowContent;
     QGridLayout* mGridLayout;
     QVector<QVector<SudokuCellWidget*>> mCells;
+    std::shared_ptr<PuzzleData> mPuzzleData;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
@@ -27,6 +29,7 @@ public:
     // public getters
     unsigned short SizeGet();
     const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
+    PuzzleData* PuzzleDataGet() const;
 
     // public non-const functions
     void SwitchView(MainWindowContent::ViewType view);

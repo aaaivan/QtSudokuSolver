@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QComboBox>
 #include <QPushButton>
+#include <QLabel>
 
 class SudokuCellWidget;
 class SudokuGridWidget;
@@ -17,6 +18,7 @@ public:
 private:
     SudokuGridWidget* mGrid;
     QComboBox* mRegionSelect;
+    QVector<QLabel*> mCellCounters;
     QPushButton* mClearRegionsBtn;
 
 private slots:
@@ -25,6 +27,7 @@ private slots:
 
 public:
     unsigned short SelectedRegionIdGet() const;
+    void UpdateCellCounters(unsigned short regionId);
 };
 
 #endif // DRAWREGIONSCONTROLS_H

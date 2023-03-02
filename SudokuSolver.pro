@@ -14,6 +14,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mainwindowcontent.cpp \
+    puzzledata.cpp \
     sudokucellwidget.cpp \
     sudokugridwidget.cpp
 
@@ -22,6 +23,7 @@ HEADERS += \
     editgridcontrols.h \
     mainwindow.h \
     mainwindowcontent.h \
+    puzzledata.h \
     sudokucellwidget.h \
     sudokugridwidget.h
 

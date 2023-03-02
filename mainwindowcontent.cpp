@@ -42,9 +42,14 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     contextMenuFrame->setStyleSheet("#context_menu_frame{background-color: white;}");
 }
 
-unsigned short MainWindowContent::SelectedRegionIdGet() const
+DrawRegionsControls *MainWindowContent::DrawRegionContextMenuGet() const
 {
-    return dynamic_cast<DrawRegionsControls*>(mContextMenu->widget(ViewType::DrawRegions))->SelectedRegionIdGet();
+    return dynamic_cast<DrawRegionsControls*>(mContextMenu->widget(ViewType::DrawRegions));
+}
+
+SudokuGridWidget *MainWindowContent::GridGet() const
+{
+    return mGrid;
 }
 
 void MainWindowContent::ChangeView(ViewType view)
