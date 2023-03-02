@@ -3,6 +3,7 @@
 #include "puzzledata.h"
 #include "sudokugridwidget.h"
 #include "cellcontentbutton.h"
+#include "cellregionidbutton.h"
 
 SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, unsigned short gridSize, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
@@ -15,7 +16,7 @@ SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, unsigned 
       mStackedContent(new QStackedWidget()),
       mOptionsLabel(new CellContentButton(gridSize, this)),
       mValueLabel(new CellContentButton(gridSize, this)),
-      mRegionIdLabel(new QPushButton()),
+      mRegionIdLabel(new CellRegionIdButton(gridSize, this)),
       mGraphicsOverlay(new QLabel()),
       mContentString("12345\n6789"),
       mContentType(ContentType::CellOptions),
@@ -224,12 +225,7 @@ void SudokuCellWidget::RegionIdLabel_OnClicked()
     {
         newId = 0;
     }
-    auto cellCount = mMainWindowContent->GridGet()->PuzzleDataGet()->CellCountInRegion(newId);
-    auto puzzleSize = mMainWindowContent->GridGet()->SizeGet();
-    if(cellCount < puzzleSize)
-    {
-        UpdateRegionId(newId);
-    }
+    UpdateRegionId(newId);
 }
 
 unsigned short SudokuCellWidget::RegionIdGet()
@@ -288,6 +284,13 @@ void SudokuCellWidget::SetEdgeWeight(CellEdge edge, bool bold)
 
 void SudokuCellWidget::UpdateRegionId(unsigned short newId)
 {
+    auto cellCount = mMainWindowContent->GridGet()->PuzzleDataGet()->CellCountInRegion(newId);
+    auto puzzleSize = mMainWindowContent->GridGet()->SizeGet();
+    if(cellCount >= puzzleSize)
+    {
+        return;
+    }
+
     if(newId != mRegionId)
     {
         mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mX, mY);

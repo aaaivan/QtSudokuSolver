@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     cellcontentbutton.cpp \
+    cellregionidbutton.cpp \
     drawregionscontrols.cpp \
     editgridcontrols.cpp \
     main.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
 
 HEADERS += \
     cellcontentbutton.h \
+    cellregionidbutton.h \
     drawregionscontrols.h \
     editgridcontrols.h \
     mainwindow.h \

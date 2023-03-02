@@ -9,6 +9,7 @@
 #include <QStackedWidget>
 
 class CellContentButton;
+class CellRegionIdButton;
 
 class SudokuCellWidget : public QFrame
 {
@@ -50,7 +51,7 @@ private:
     QStackedWidget* mStackedContent;
     CellContentButton* mOptionsLabel;
     CellContentButton* mValueLabel;
-    QPushButton* mRegionIdLabel;
+    CellRegionIdButton* mRegionIdLabel;
     QLabel* mGraphicsOverlay;
 
     QString mContentString;
@@ -85,7 +86,6 @@ private:
     void RefreshLayout();
     void ShowRegionNumber(bool show);
     void SetEdgeWeight(CellEdge edge, bool bold);
-    void UpdateRegionId(unsigned short newId);
 
 private slots:
     void RegionIdLabel_OnClicked();
@@ -99,6 +99,7 @@ public:
     void NeighboursSet(SudokuCellWidget* top, SudokuCellWidget* right, SudokuCellWidget* btm, SudokuCellWidget* left);
     void HighlightRegionLabel(bool highlight);
     void ResetRegionId();
+    void UpdateRegionId(unsigned short newId);
     void SetGivenDigit(unsigned short value);
     void RemoveGivenDigit();
     void SetSolvedDigit(unsigned short value);

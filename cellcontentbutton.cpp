@@ -1,7 +1,6 @@
 #include "cellcontentbutton.h"
 #include "sudokucellwidget.h"
 #include <QKeyEvent>
-#include <QDebug>
 
 CellContentButton::CellContentButton(unsigned short numOptions, SudokuCellWidget *parent)
     : QPushButton{parent},
