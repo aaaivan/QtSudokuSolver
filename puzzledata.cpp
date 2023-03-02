@@ -5,7 +5,9 @@ PuzzleData::PuzzleData(unsigned short size):
     mSize(size),
     mRegions(size),
     mKillerCages(),
-    mGivens()
+    mGivens(),
+    mPositiveDiagonal(false),
+    mNegativeDiagonal(false)
 {
 }
 
@@ -17,6 +19,16 @@ unsigned short PuzzleData::CellCountInRegion(unsigned short regionId) const
         return mRegions[index].size();
     }
     return 0;
+}
+
+bool PuzzleData::HasPositiveDiagonalConstraint() const
+{
+    return mPositiveDiagonal;
+}
+
+bool PuzzleData::HasNegativeDiagonalConstraint() const
+{
+    return mNegativeDiagonal;
 }
 
 void PuzzleData::AddCellToRegion(unsigned short regionId, unsigned short x, unsigned short y)
@@ -40,4 +52,14 @@ void PuzzleData::RemoveCellFromRegion(unsigned short regionId, unsigned short x,
             mRegions[index].erase(it);
         }
     }
+}
+
+void PuzzleData::PositiveDiagonalConstraintSet(bool set)
+{
+    mPositiveDiagonal = set;
+}
+
+void PuzzleData::NegativeDiagonalConstraintSet(bool set)
+{
+    mNegativeDiagonal = set;
 }

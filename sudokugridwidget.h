@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QLabel>
 #include <QGridLayout>
+#include <QPainter>
 
 class SudokuCellWidget;
 class PuzzleData;
@@ -24,10 +25,11 @@ private:
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
+    void paintEvent(QPaintEvent* event) override;
 
 public:
     // public getters
-    unsigned short SizeGet();
+    unsigned short SizeGet() const;
     const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
     PuzzleData* PuzzleDataGet() const;
 

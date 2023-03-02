@@ -40,7 +40,6 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
         }
     }
 
-
     mGridLayout->setSpacing(0);
     mGridLayout->setContentsMargins(0, 0, 0, 0);
 }
@@ -55,7 +54,26 @@ QSize SudokuGridWidget::minimumSizeHint() const
     return mGridLayout->minimumSize();
 }
 
-unsigned short SudokuGridWidget::SizeGet()
+void SudokuGridWidget::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    QPen pen(Qt::GlobalColor::lightGray);
+    pen.setWidth(3);
+    painter.setPen(pen);
+
+    if(mPuzzleData->HasNegativeDiagonalConstraint())
+    {
+        painter.drawLine(0, 0, sizeHint().width(), sizeHint().height());
+    }
+    if(mPuzzleData->HasPositiveDiagonalConstraint())
+    {
+        painter.drawLine(sizeHint().width(), 0, 0, sizeHint().height());
+    }
+
+    QFrame::paintEvent(event);
+}
+
+unsigned short SudokuGridWidget::SizeGet() const
 {
     return mSize;
 }

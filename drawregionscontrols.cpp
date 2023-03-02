@@ -7,7 +7,7 @@
 #include <QLabel>
 #include <QMessageBox>
 
-const QString kCounterLabelText = "Cells in region %1: <b>%2</b>";
+constexpr char kCounterLabelText[] = "Cells in region %1: <b>%2</b>";
 
 DrawRegionsControls::DrawRegionsControls(SudokuGridWidget* grid, QWidget *parent)
     : QWidget{parent},

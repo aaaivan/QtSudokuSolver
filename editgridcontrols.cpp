@@ -1,4 +1,6 @@
 #include "editgridcontrols.h"
+#include "puzzledata.h"
+#include "sudokugridwidget.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QFrame>
@@ -98,10 +100,12 @@ void EditGridControls::OnViewButtonChecked(QPushButton *btn)
 
 void EditGridControls::PositiveDiagonalCheckbox_OnChange(int checked)
 {
-    qDebug("positive diagonal checkbox %d\n", checked);
+    mMainWindowContent->GridGet()->PuzzleDataGet()->PositiveDiagonalConstraintSet(checked);
+    mMainWindowContent->GridGet()->update();
 }
 
 void EditGridControls::NegativeDiagonalCheckbox_OnChange(int checked)
 {
-    qDebug("negative diagonal checkbox %d\n", checked);
+    mMainWindowContent->GridGet()->PuzzleDataGet()->NegativeDiagonalConstraintSet(checked);
+    mMainWindowContent->GridGet()->update();
 }
