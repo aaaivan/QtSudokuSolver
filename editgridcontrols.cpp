@@ -26,6 +26,13 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     verticalLayout->addWidget(mNegativeDiagonalCheckbox);
     verticalLayout->addStretch();
 
+    // buttons mode
+    mAddDigitsBtn->setCheckable(true);
+    mAddDigitsBtn->setChecked(true);
+    AddDigitsBtn_Toggled(true);
+    mDrawRegionsBtn->setCheckable(true);
+    mDrawKillersBtn->setCheckable(true);
+
     // events
     connect(mAddDigitsBtn, SIGNAL(toggled(bool)), this, SLOT(AddDigitsBtn_Toggled(bool)));
     connect(mDrawRegionsBtn, SIGNAL(toggled(bool)), this, SLOT(DrawRegionsBtn_Toggled(bool)));
@@ -33,11 +40,7 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     connect(mPositiveDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(PositiveDiagonalCheckbox_OnChange(int)));
     connect(mNegativeDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(NegativeDiagonalCheckbox_OnChange(int)));
 
-    // buttons mode
-    mAddDigitsBtn->setCheckable(true);
-    mAddDigitsBtn->setChecked(true);
-    mDrawRegionsBtn->setCheckable(true);
-    mDrawKillersBtn->setCheckable(true);
+
 }
 
 MainWindowContent::ViewType EditGridControls::GetViewForButton(QPushButton *btn)

@@ -26,6 +26,7 @@ private:
     ViewType mCurrentView;
 
 public:
+    unsigned short SelectedRegionIdGet() const;
     void ChangeView(ViewType view);
 };
 

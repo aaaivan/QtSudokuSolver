@@ -1,6 +1,7 @@
 #ifndef SUDOKUCELLWIDGET_H
 #define SUDOKUCELLWIDGET_H
 
+#include "mainwindowcontent.h"
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
@@ -11,7 +12,7 @@ class SudokuCellWidget : public QFrame
 {
     Q_OBJECT
 public:
-    explicit SudokuCellWidget(QWidget *parent = nullptr);
+    explicit SudokuCellWidget(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
     void RefreshLayout();
 
 private:
@@ -21,7 +22,7 @@ private:
         SolvedDigit,
         CellOptions
     };
-    enum Edges: int
+    enum CellEdge: int
     {
         None = 0x0,
         TopEdge = 0x1,
@@ -37,6 +38,8 @@ private:
     };
 
     int mLength;
+    MainWindowContent* mMainWindowContent;
+    QList<SudokuCellWidget*> mNeighbours;
 
     QStackedLayout* mOverlayLayout;
     QStackedWidget* mStackedContent;
@@ -48,24 +51,44 @@ private:
     QString mContentString;
     ContentType mContentType;
 
-    int mRegionId;
+    unsigned short mRegionId;
     bool mValueDirty;
-
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
-
-    QString GetEdgeName(Edges edge) const;
-    QString CreateStylesheet() const;
 
     // Styling variables
     bool mStyleDirty;
-    Edges mBoldEdges;
+    bool mRegionLabelStyleDirty;
+    CellEdge mBoldEdges;
     QString mBGColour;
     QString mFocusBGColour;
+    bool mRegionLabelHighlighted;
+
+    // base class overrides
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
+    // private const functions
+    QString EdgeNameGet(CellEdge edge) const;
+    CellEdge OppositeEdgeGet(CellEdge oppositeTo) const;
+    QString CreateStylesheet() const;
+    QString CreateRegionLabelStylesheet() const;
+
+    // private non-cont functions
+    void ShowRegionNumber(bool show);
+    void SetEdgeWeight(CellEdge edge, bool bold);
+    void UpdateRegionId(unsigned short newId);
+
+private slots:
+    void RegionIdLabel_OnClicked();
 
 public:
-    void ShowRegionNumber();
-    void HideRegionNumber();
+    // public const functions
+    unsigned short RegionIdGet();
+
+    // public non-const functions
+    void SwitchView(MainWindowContent::ViewType view);
+    void NeighboursSet(SudokuCellWidget* top, SudokuCellWidget* right, SudokuCellWidget* btm, SudokuCellWidget* left);
+    void HighlightRegionLabel(bool highlight);
+    void ResetRegionId();
 };
 
 #endif // SUDOKUCELLWIDGET_H

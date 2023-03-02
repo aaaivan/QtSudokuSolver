@@ -1,11 +1,11 @@
 #ifndef SUDOKUGRIDWIDGET_H
 #define SUDOKUGRIDWIDGET_H
 
+#include "mainwindowcontent.h"
 #include <QWidget>
 #include <QLabel>
 #include <QGridLayout>
 
-class MainWindowContent;
 class SudokuCellWidget;
 
 class SudokuGridWidget : public QFrame
@@ -18,13 +18,18 @@ private:
     unsigned short mSize;
     MainWindowContent* mMainWindowContent;
     QGridLayout* mGridLayout;
-    QVector<QVector<SudokuCellWidget*>> mGrid;
+    QVector<QVector<SudokuCellWidget*>> mCells;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
 public:
+    // public getters
     unsigned short SizeGet();
+    const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
+
+    // public non-const functions
+    void SwitchView(MainWindowContent::ViewType view);
 };
 
 #endif // SUDOKUGRIDWIDGET_H

@@ -1,8 +1,10 @@
 #include "sudokucellwidget.h"
 
-SudokuCellWidget::SudokuCellWidget(QWidget *parent)
+SudokuCellWidget::SudokuCellWidget(MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
       mLength(40),
+      mMainWindowContent(mainWindowContent),
+      mNeighbours(4, nullptr),
       mOverlayLayout(new QStackedLayout(this)),
       mStackedContent(new QStackedWidget()),
       mOptionsLabel(new QPushButton()),
@@ -14,9 +16,11 @@ SudokuCellWidget::SudokuCellWidget(QWidget *parent)
       mRegionId(0),
       mValueDirty(true),
       mStyleDirty(true),
+      mRegionLabelStyleDirty(true),
       mBoldEdges(None),
       mBGColour("transparent"),
-      mFocusBGColour("rgba(255, 255, 0, 0.4)")
+      mFocusBGColour("rgba(255, 255, 0, 0.4)"),
+      mRegionLabelHighlighted(false)
 {
     this->setObjectName("cell");
 
@@ -42,12 +46,15 @@ SudokuCellWidget::SudokuCellWidget(QWidget *parent)
 
     // text font
     mOptionsLabel->setFont(QFont( mOptionsLabel->font().family(), 8));
-    mValueLabel->setFont(QFont(mValueLabel->font().family(),28, 600));
+    mValueLabel->setFont(QFont(mValueLabel->font().family(),20, 500));
+    mRegionIdLabel->setFont(QFont(mValueLabel->font().family(),20, 500));
 
     // borders and sizes
     mOptionsLabel->setFlat(true);
     mValueLabel->setFlat(true);
-    mRegionIdLabel->setFlat(true);
+
+    // events
+    connect(mRegionIdLabel, SIGNAL(clicked(bool)), this, SLOT(RegionIdLabel_OnClicked()));
 
     RefreshLayout();
 }
@@ -57,6 +64,11 @@ void SudokuCellWidget::RefreshLayout()
     if(mStyleDirty)
     {
         this->setStyleSheet(CreateStylesheet());
+    }
+
+    if(mRegionLabelStyleDirty)
+    {
+        mRegionIdLabel->setStyleSheet(CreateRegionLabelStylesheet());
     }
 
     // options style
@@ -81,16 +93,16 @@ QSize SudokuCellWidget::minimumSizeHint() const
     return QSize(mLength, mLength);
 }
 
-QString SudokuCellWidget::GetEdgeName(Edges edge) const
+QString SudokuCellWidget::EdgeNameGet(CellEdge edge) const
 {
     switch (edge) {
-    case Edges::TopEdge:
+    case CellEdge::TopEdge:
         return "top";
-    case Edges::RightEdge:
+    case CellEdge::RightEdge:
         return "right";
-    case Edges::BottomEdge:
+    case CellEdge::BottomEdge:
         return "bottom";
-    case Edges::LeftEdge:
+    case CellEdge::LeftEdge:
         return "left";
     default:
         return "";
@@ -102,33 +114,151 @@ QString SudokuCellWidget::CreateStylesheet() const
     // normal styling
     QString style = "SudokuCellWidget{\n";
     // borders
-    for(int border = Edges::LeftEdge; border > 0; border = border >> 1)
+    for(int border = CellEdge::LeftEdge; border > 0; border = border >> 1)
     {
         bool isBold = mBoldEdges & border;
-        style += "border-" + GetEdgeName(static_cast<Edges>(border)) + ": " +
-                (isBold ? "3" : "1") + "px solid " +
+        style += "border-" + EdgeNameGet(static_cast<CellEdge>(border)) + ": " +
+                (isBold ? "2" : "1") + "px solid " +
                 (isBold ? "black" : "grey") + ";\n";
     }
     style += "background-color: " + mBGColour + ";\n";
     style += "}\n";
 
-    // focus styling
-    style += "SudokuCellWidget:focus{\n";
-
-    style += "}\n";
-    style += "background-color: " + mFocusBGColour + ";\n";
     return style;
 }
 
-void SudokuCellWidget::ShowRegionNumber()
+QString SudokuCellWidget::CreateRegionLabelStylesheet() const
 {
-    mStackedContent->setCurrentIndex(CellView::RegionId);
+    static const QString normalBG = "transparent";
+    static const QString highlightBG = "rgba(255, 200, 0, 0.2)";
+
+    // normal styling
+    QString style = "QPushButton{\n";
+    style += "background-color: " + (mRegionLabelHighlighted ? highlightBG : normalBG) + ";\n";
+    style += "border: 0px;\n";
+    style += "}\n";
+    return style;
 }
 
-void SudokuCellWidget::HideRegionNumber()
+SudokuCellWidget::CellEdge SudokuCellWidget::OppositeEdgeGet(CellEdge oppositeTo) const
 {
-    CellView view = mContentType == ContentType::CellOptions ?
-                    CellView::Options :
-                    CellView::Value;
-    mStackedContent->setCurrentIndex(view);
+    switch (oppositeTo) {
+    case CellEdge::TopEdge:
+        return CellEdge::BottomEdge;
+    case CellEdge::RightEdge:
+        return CellEdge::LeftEdge;
+    case CellEdge::BottomEdge:
+        return CellEdge::TopEdge;
+    case CellEdge::LeftEdge:
+        return CellEdge::RightEdge;
+    default:
+        return CellEdge::None;
+    }
+}
+
+void SudokuCellWidget::RegionIdLabel_OnClicked()
+{
+    unsigned short newId = mMainWindowContent->SelectedRegionIdGet();
+    UpdateRegionId(newId);
+}
+
+unsigned short SudokuCellWidget::RegionIdGet()
+{
+    return mRegionId;
+}
+
+void SudokuCellWidget::SwitchView(MainWindowContent::ViewType view)
+{
+    switch (view) {
+    case MainWindowContent::ViewType::EnterDigits:
+        ShowRegionNumber(false);
+        break;
+    case MainWindowContent::ViewType::DrawRegions:
+        ShowRegionNumber(true);
+        break;
+    case MainWindowContent::ViewType::DrawKiller:
+        ShowRegionNumber(false);
+        break;
+    default:
+        break;
+    }
+}
+
+void SudokuCellWidget::ShowRegionNumber(bool show)
+{
+    if(show)
+    {
+        mStackedContent->setCurrentIndex(CellView::RegionId);
+    }
+    else
+    {
+        CellView view = mContentType == ContentType::CellOptions ?
+                        CellView::Options :
+                        CellView::Value;
+        mStackedContent->setCurrentIndex(view);
+    }
+}
+
+void SudokuCellWidget::SetEdgeWeight(CellEdge edge, bool bold)
+{
+    if(((mBoldEdges & edge) && !bold) ||
+       (!(mBoldEdges & edge) && bold))
+    {
+        if(bold)
+        {
+            mBoldEdges = static_cast<CellEdge>(edge | mBoldEdges);
+        }
+        else
+        {
+            mBoldEdges = static_cast<CellEdge>(~edge & mBoldEdges);
+        }
+        mStyleDirty = true;
+    }
+}
+
+void SudokuCellWidget::UpdateRegionId(unsigned short newId)
+{
+    if(newId != mRegionId)
+    {
+        mRegionId = newId;
+        mRegionIdLabel->setText(mRegionId ? QString::number(mRegionId) : "-");
+
+        int edge = 1;
+        for(const auto& c : mNeighbours)
+        {
+            if(c)
+            {
+                SetEdgeWeight(static_cast<CellEdge>(edge), c->RegionIdGet() != mRegionId);
+                c->SetEdgeWeight(OppositeEdgeGet(static_cast<CellEdge>(edge)), c->RegionIdGet() != mRegionId);
+                c->RefreshLayout();
+            }
+            edge = edge << 1;
+        }
+        mRegionLabelHighlighted = true;
+        mRegionLabelStyleDirty = true;
+        RefreshLayout();
+    }
+}
+
+void SudokuCellWidget::NeighboursSet(SudokuCellWidget *top, SudokuCellWidget *right, SudokuCellWidget *btm, SudokuCellWidget *left)
+{
+    mNeighbours[0] = top;
+    mNeighbours[1] = right;
+    mNeighbours[2] = btm;
+    mNeighbours[3] = left;
+}
+
+void SudokuCellWidget::HighlightRegionLabel(bool highlight)
+{
+    if(mRegionLabelHighlighted != highlight)
+    {
+        mRegionLabelHighlighted = highlight;
+        mRegionLabelStyleDirty = true;
+        RefreshLayout();
+    }
+}
+
+void SudokuCellWidget::ResetRegionId()
+{
+    UpdateRegionId(0);
 }

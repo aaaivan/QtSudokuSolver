@@ -1,7 +1,7 @@
 #include "mainwindowcontent.h"
 #include "sudokugridwidget.h"
 #include "editgridcontrols.h"
-#include "regionseditingcontrols.h"
+#include "drawregionscontrols.h"
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QTabWidget>
@@ -30,7 +30,7 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     contextMenuFrame->setLayout(mContextMenu);
     QWidget* emptyView = new QLabel("To Be Implemented...");
     QWidget* emptyView2 = new QLabel("To Be Implemented...");
-    RegionsEditingControls* regionsEditControls = new RegionsEditingControls(mGrid);
+    DrawRegionsControls* regionsEditControls = new DrawRegionsControls(mGrid);
     mContextMenu->insertWidget(ViewType::EnterDigits, emptyView);
     mContextMenu->insertWidget(ViewType::DrawRegions, regionsEditControls);
     mContextMenu->insertWidget(ViewType::DrawKiller, emptyView2);
@@ -42,11 +42,17 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     contextMenuFrame->setStyleSheet("#context_menu_frame{background-color: white;}");
 }
 
+unsigned short MainWindowContent::SelectedRegionIdGet() const
+{
+    return dynamic_cast<DrawRegionsControls*>(mContextMenu->widget(ViewType::DrawRegions))->SelectedRegionIdGet();
+}
+
 void MainWindowContent::ChangeView(ViewType view)
 {
     if(view != mCurrentView)
     {
         mCurrentView = view;
         mContextMenu->setCurrentIndex(view);
+        mGrid->SwitchView(view);
     }
 }

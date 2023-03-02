@@ -9,19 +9,19 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    drawregionscontrols.cpp \
     editgridcontrols.cpp \
     main.cpp \
     mainwindow.cpp \
     mainwindowcontent.cpp \
-    regionseditingcontrols.cpp \
     sudokucellwidget.cpp \
     sudokugridwidget.cpp
 
 HEADERS += \
+    drawregionscontrols.h \
     editgridcontrols.h \
     mainwindow.h \
     mainwindowcontent.h \
-    regionseditingcontrols.h \
     sudokucellwidget.h \
     sudokugridwidget.h
 
