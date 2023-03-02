@@ -40,6 +40,9 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     contextMenuFrame->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
     contextMenuFrame->setObjectName("context_menu_frame");
     contextMenuFrame->setStyleSheet("#context_menu_frame{background-color: white;}");
+
+    // focus policy
+    this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 }
 
 DrawRegionsControls *MainWindowContent::DrawRegionContextMenuGet() const

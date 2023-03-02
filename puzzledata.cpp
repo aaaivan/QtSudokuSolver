@@ -63,3 +63,36 @@ void PuzzleData::NegativeDiagonalConstraintSet(bool set)
 {
     mNegativeDiagonal = set;
 }
+
+void PuzzleData::AddGiven(unsigned short value, unsigned short x, unsigned short y)
+{
+    if(value > 0 && value <= mSize)
+    {
+        const CellCoord cell{x, y};
+        auto pred = [&](const std::pair<unsigned short, CellCoord>& given)
+        {
+            return given.second == cell;
+        };
+        if(auto it = std::find_if(mGivens.begin(), mGivens.end(), pred); it != mGivens.end())
+        {
+            it->first = value;
+        }
+        else
+        {
+            mGivens.emplace_back(value, std::move(cell));
+        }
+    }
+}
+
+void PuzzleData::RemoveGiven(unsigned short x, unsigned short y)
+{
+    const CellCoord cell{x, y};
+    auto pred = [&](const std::pair<unsigned short, CellCoord>& given)
+    {
+        return given.second == cell;
+    };
+    if(auto it = std::find_if(mGivens.begin(), mGivens.end(), pred); it != mGivens.end())
+    {
+        mGivens.erase(it);
+    }
+}

@@ -2,26 +2,29 @@
 #include "drawregionscontrols.h"
 #include "puzzledata.h"
 #include "sudokugridwidget.h"
+#include "cellcontentbutton.h"
 
-SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, MainWindowContent* mainWindowContent, QWidget *parent)
+SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, unsigned short gridSize, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
       mX(x),
       mY(y),
+      mGridSize(gridSize),
       mMainWindowContent(mainWindowContent),
       mNeighbours(4, nullptr),
       mOverlayLayout(new QStackedLayout(this)),
       mStackedContent(new QStackedWidget()),
-      mOptionsLabel(new QPushButton()),
-      mValueLabel(new QPushButton()),
+      mOptionsLabel(new CellContentButton(gridSize, this)),
+      mValueLabel(new CellContentButton(gridSize, this)),
       mRegionIdLabel(new QPushButton()),
       mGraphicsOverlay(new QLabel()),
       mContentString("12345\n6789"),
       mContentType(ContentType::CellOptions),
       mRegionId(0),
-      mValueDirty(true),
       mLength(40),
       mStyleDirty(true),
+      mOptionsLabelStyleDirty(true),
       mRegionLabelStyleDirty(true),
+      mValueLabelStyleDirty(true),
       mBoldEdges(None),
       mBGColour("transparent"),
       mFocusBGColour("rgba(255, 255, 0, 0.4)"),
@@ -55,37 +58,12 @@ SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, MainWindo
     mRegionIdLabel->setFont(QFont(mValueLabel->font().family(),20, 500));
 
     // borders and sizes
-    mOptionsLabel->setFlat(true);
     mValueLabel->setFlat(true);
 
     // events
     connect(mRegionIdLabel, SIGNAL(clicked(bool)), this, SLOT(RegionIdLabel_OnClicked()));
 
     RefreshLayout();
-}
-
-void SudokuCellWidget::RefreshLayout()
-{
-    if(mStyleDirty)
-    {
-        this->setStyleSheet(CreateStylesheet());
-    }
-
-    if(mRegionLabelStyleDirty)
-    {
-        mRegionIdLabel->setStyleSheet(CreateRegionLabelStylesheet());
-    }
-
-    // options style
-    if(mValueDirty)
-    {
-        if(mContentType != ContentType::CellOptions)
-        {
-            mValueDirty = false;
-            bool isGiven = mContentType == ContentType::GivenDigit;
-            mValueLabel->setStyleSheet("QLabel{color: " + (isGiven ? QString("black") : QString("grey")) + ";}");
-        }
-    }
 }
 
 QSize SudokuCellWidget::sizeHint() const
@@ -114,6 +92,34 @@ QString SudokuCellWidget::EdgeNameGet(CellEdge edge) const
     }
 }
 
+void SudokuCellWidget::RefreshLayout()
+{
+    if(mStyleDirty)
+    {
+        mStyleDirty = false;
+        this->setStyleSheet(CreateStylesheet());
+    }
+
+    if(mOptionsLabelStyleDirty)
+    {
+        mOptionsLabelStyleDirty = false;
+        mOptionsLabel->setStyleSheet(CreateOptionsLabelStylesheet());
+    }
+
+    if(mRegionLabelStyleDirty)
+    {
+        mRegionLabelStyleDirty = false;
+        mRegionIdLabel->setStyleSheet(CreateRegionLabelStylesheet());
+    }
+
+    // options style
+    if(mValueLabelStyleDirty)
+    {
+        mValueLabelStyleDirty = false;
+        mValueLabel->setStyleSheet(CreateValueLabelStylesheet());
+    }
+}
+
 QString SudokuCellWidget::CreateStylesheet() const
 {
     // normal styling
@@ -132,16 +138,66 @@ QString SudokuCellWidget::CreateStylesheet() const
     return style;
 }
 
+QString SudokuCellWidget::CreateOptionsLabelStylesheet() const
+{
+    static const QString normalBG = "transparent";
+    static const QString focusBG = "rgba(255, 200, 0, 0.2)";
+
+    // normal styling
+    QString style = "QPushButton{\n";
+    style += "background-color: " + normalBG + ";\n";
+    style += "border: 0px;\n";
+    style += "}\n";
+
+    // focus styling
+    style += "QPushButton:focus{\n";
+    style += "background-color: " + focusBG + ";\n";
+    style += "}\n";
+    return style;
+}
+
+QString SudokuCellWidget::CreateValueLabelStylesheet() const
+{
+    static const QString normalBG = "transparent";
+    static const QString focusBG = "rgba(255, 200, 0, 0.2)";
+
+    bool isGiven = mContentType == ContentType::GivenDigit;
+    QString textColour = isGiven ? "black" : "grey";
+    // normal styling
+    QString style = "QPushButton{\n";
+    style += "background-color: " + normalBG + ";\n";
+    style += "border: 0px;\n";
+    style +="color: " + textColour + ";";
+    style += "}\n";
+
+    // focus styling
+    style += "QPushButton:focus{\n";
+    style += "background-color: " + focusBG + ";\n";
+    style += "}\n";
+    return style;
+
+    mValueLabel->setStyleSheet("QLabel{color: " + (isGiven ? QString("black") : QString("grey")) + ";}");
+}
+
 QString SudokuCellWidget::CreateRegionLabelStylesheet() const
 {
     static const QString normalBG = "transparent";
-    static const QString highlightBG = "rgba(255, 200, 0, 0.2)";
+    static const QString highlightBG = "rgba(0, 160, 200, 0.2)";
+    static const QString focusBG = "rgba(255, 200, 0, 0.2)";
+    static const QString textColor = "rgb(0, 0, 255)";
 
     // normal styling
     QString style = "QPushButton{\n";
     style += "background-color: " + (mRegionLabelHighlighted ? highlightBG : normalBG) + ";\n";
     style += "border: 0px;\n";
+    style += "color: " + textColor + ";";
     style += "}\n";
+
+    // focus styling
+    style += "QPushButton:focus{\n";
+    style += "background-color: " + focusBG + ";\n";
+    style += "}\n";
+
     return style;
 }
 
@@ -279,4 +335,35 @@ void SudokuCellWidget::HighlightRegionLabel(bool highlight)
 void SudokuCellWidget::ResetRegionId()
 {
     UpdateRegionId(0);
+}
+
+void SudokuCellWidget::SetGivenDigit(unsigned short value)
+{
+    mMainWindowContent->GridGet()->PuzzleDataGet()->AddGiven(value, mX, mY);
+
+    mValueLabel->setText(QString::number(value));
+    mContentType = ContentType::GivenDigit;
+    mStackedContent->setCurrentIndex(CellView::Value);
+    mValueLabelStyleDirty = true;
+    RefreshLayout();
+}
+
+void SudokuCellWidget::RemoveGivenDigit()
+{
+    mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveGiven(mX, mY);
+
+    mValueLabel->setText("");
+    mContentType = ContentType::CellOptions;
+    mStackedContent->setCurrentIndex(CellView::Options);
+    mValueLabelStyleDirty = true;
+    RefreshLayout();
+}
+
+void SudokuCellWidget::SetSolvedDigit(unsigned short value)
+{
+    mValueLabel->setText(QString::number(value));
+    mContentType = ContentType::SolvedDigit;
+    mStackedContent->setCurrentIndex(CellView::Value);
+    mValueLabelStyleDirty = true;
+    RefreshLayout();
 }

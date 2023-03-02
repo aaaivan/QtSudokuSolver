@@ -22,7 +22,7 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
         mCells.back().reserve(mSize);
         for(unsigned short j = 0; j < mSize; ++j)
         {
-            SudokuCellWidget* cell = new SudokuCellWidget(i, j, mMainWindowContent);
+            SudokuCellWidget* cell = new SudokuCellWidget(i, j, mSize, mMainWindowContent);
             mCells.back().push_back(cell);
             mGridLayout->addWidget(cell, i, j);
         }
@@ -42,6 +42,9 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
 
     mGridLayout->setSpacing(0);
     mGridLayout->setContentsMargins(0, 0, 0, 0);
+
+    // styling
+    this->setStyleSheet("SudokuGridWidget{background-color: white;}");
 }
 
 QSize SudokuGridWidget::sizeHint() const

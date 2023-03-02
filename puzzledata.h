@@ -29,6 +29,8 @@ public:
     void RemoveCellFromRegion(unsigned short regionId, unsigned short x, unsigned short y);
     void PositiveDiagonalConstraintSet(bool set);
     void NegativeDiagonalConstraintSet(bool set);
+    void AddGiven(unsigned short value, unsigned short x, unsigned short y);
+    void RemoveGiven(unsigned short x, unsigned short y);
 };
 
 #endif // PUZZLEDATA_H
