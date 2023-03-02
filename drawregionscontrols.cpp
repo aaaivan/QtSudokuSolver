@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QMessageBox>
 
 DrawRegionsControls::DrawRegionsControls(SudokuGridWidget* grid, QWidget *parent)
     : QWidget{parent},
@@ -50,14 +51,20 @@ void DrawRegionsControls::RegionSelect_CurrentIndexChanged(int index)
 
 void DrawRegionsControls::ClearRegionsBtn_Clicked()
 {
-    for(const auto& vect : mGrid->CellsGet())
+    auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "my title", "All the regions in the grid will be cleared.\nContinue?",
+                                                        QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Ok, QMessageBox::StandardButton::Cancel));
+
+    if(btn == QMessageBox::StandardButton::Ok)
     {
-        for(const auto& c : vect)
+        for(const auto& vect : mGrid->CellsGet())
         {
-            c->ResetRegionId();
+            for(const auto& c : vect)
+            {
+                c->ResetRegionId();
+            }
         }
+        mRegionSelect->setCurrentIndex(0);
     }
-    mRegionSelect->setCurrentIndex(0);
 }
 
 unsigned short DrawRegionsControls::SelectedRegionIdGet() const
