@@ -15,7 +15,7 @@ class SudokuCellWidget : public QFrame
 {
     Q_OBJECT
 public:
-    explicit SudokuCellWidget(unsigned short x, unsigned short y, unsigned short gridSize,
+    explicit SudokuCellWidget(unsigned short x, unsigned short y, unsigned short gridSize, int cellLength,
                               MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private:
@@ -40,9 +40,10 @@ private:
         RegionId
     };
 
-    unsigned short mX;
-    unsigned short mY;
+    unsigned short mCol;
+    unsigned short mRow;
     unsigned short mGridSize;
+    unsigned short mId;
 
     MainWindowContent* mMainWindowContent;
     QList<SudokuCellWidget*> mNeighbours;
@@ -60,7 +61,7 @@ private:
     unsigned short mRegionId;
 
     // Styling variables
-    int mLength;
+    const int mLength;
     bool mStyleDirty;
     bool mOptionsLabelStyleDirty;
     bool mRegionLabelStyleDirty;
@@ -92,7 +93,11 @@ private slots:
 
 public:
     // public const functions
-    unsigned short RegionIdGet();
+    unsigned short CellIdGet() const;
+    unsigned short ColGet() const;
+    unsigned short RowGet() const;
+    unsigned short RegionIdGet() const;
+    const QList<SudokuCellWidget*>& NeighboursGet() const;
 
     // public non-const functions
     void SwitchView(MainWindowContent::ViewType view);

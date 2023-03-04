@@ -1,4 +1,5 @@
 #include "mainwindowcontent.h"
+#include "drawkillerscontrols.h"
 #include "sudokugridwidget.h"
 #include "editgridcontrols.h"
 #include "drawregionscontrols.h"
@@ -29,11 +30,11 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     mContextMenu->setStackingMode(QStackedLayout::StackingMode::StackOne);
     contextMenuFrame->setLayout(mContextMenu);
     QWidget* emptyView = new QLabel("To Be Implemented...");
-    QWidget* emptyView2 = new QLabel("To Be Implemented...");
+    DrawKillersControls* drawKillerControls = new DrawKillersControls();
     DrawRegionsControls* regionsEditControls = new DrawRegionsControls(mGrid);
     mContextMenu->insertWidget(ViewType::EnterDigits, emptyView);
     mContextMenu->insertWidget(ViewType::DrawRegions, regionsEditControls);
-    mContextMenu->insertWidget(ViewType::DrawKiller, emptyView2);
+    mContextMenu->insertWidget(ViewType::DrawKiller, drawKillerControls);
     mContextMenu->setCurrentIndex(ViewType::EnterDigits);
 
     // context menu styling

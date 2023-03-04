@@ -9,6 +9,7 @@
 
 class SudokuCellWidget;
 class PuzzleData;
+class GridGraphicalOverlay;
 
 class SudokuGridWidget : public QFrame
 {
@@ -17,14 +18,18 @@ public:
     explicit SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private:
-    unsigned short mSize;
+    // style param
+    const int mCellLength;
+
     MainWindowContent* mMainWindowContent;
-    QGridLayout* mGridLayout;
+    GridGraphicalOverlay* mGraphicalOverlay;
+
+    unsigned short mSize;
     QVector<QVector<SudokuCellWidget*>> mCells;
     std::shared_ptr<PuzzleData> mPuzzleData;
 
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
+
+
     void paintEvent(QPaintEvent* event) override;
 
 public:

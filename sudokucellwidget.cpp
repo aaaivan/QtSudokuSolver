@@ -5,11 +5,13 @@
 #include "cellcontentbutton.h"
 #include "cellregionidbutton.h"
 
-SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, unsigned short gridSize, MainWindowContent* mainWindowContent, QWidget *parent)
+SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsigned short gridSize,int cellLength,
+                                   MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
-      mX(x),
-      mY(y),
+      mCol(col),
+      mRow(row),
       mGridSize(gridSize),
+      mId(row * gridSize + col),
       mMainWindowContent(mainWindowContent),
       mNeighbours(4, nullptr),
       mOverlayLayout(new QStackedLayout(this)),
@@ -21,7 +23,7 @@ SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, unsigned 
       mContentString("12345\n6789"),
       mContentType(ContentType::CellOptions),
       mRegionId(0),
-      mLength(40),
+      mLength(cellLength),
       mStyleDirty(true),
       mOptionsLabelStyleDirty(true),
       mRegionLabelStyleDirty(true),
@@ -63,8 +65,6 @@ SudokuCellWidget::SudokuCellWidget(unsigned short x, unsigned short y, unsigned 
 
     // events
     connect(mRegionIdLabel, SIGNAL(clicked(bool)), this, SLOT(RegionIdLabel_OnClicked()));
-
-    RefreshLayout();
 }
 
 QSize SudokuCellWidget::sizeHint() const
@@ -126,12 +126,15 @@ QString SudokuCellWidget::CreateStylesheet() const
     // normal styling
     QString style = "SudokuCellWidget{\n";
     // borders
-    for(int border = CellEdge::LeftEdge; border > 0; border = border >> 1)
+    style += "border-width: 0px;\n";
+    for(int border = CellEdge::RightEdge, i = 1; border > 0; border = border >> 1, --i)
     {
-        bool isBold = mBoldEdges & border;
-        style += "border-" + EdgeNameGet(static_cast<CellEdge>(border)) + ": " +
-                (isBold ? "2" : "1") + "px solid " +
-                (isBold ? "black" : "grey") + ";\n";
+        if(mNeighbours[i])
+        {
+            bool isBold = mBoldEdges & border;
+            style += "border-" + EdgeNameGet(static_cast<CellEdge>(border)) + ": " +
+                    (isBold ? "3" : "1") + "px solid black;\n";
+        }
     }
     style += "background-color: " + mBGColour + ";\n";
     style += "}\n";
@@ -148,6 +151,7 @@ QString SudokuCellWidget::CreateOptionsLabelStylesheet() const
     QString style = "QPushButton{\n";
     style += "background-color: " + normalBG + ";\n";
     style += "border: 0px;\n";
+    style += "color: grey;";
     style += "}\n";
 
     // focus styling
@@ -175,9 +179,8 @@ QString SudokuCellWidget::CreateValueLabelStylesheet() const
     style += "QPushButton:focus{\n";
     style += "background-color: " + focusBG + ";\n";
     style += "}\n";
-    return style;
 
-    mValueLabel->setStyleSheet("QLabel{color: " + (isGiven ? QString("black") : QString("grey")) + ";}");
+    return style;
 }
 
 QString SudokuCellWidget::CreateRegionLabelStylesheet() const
@@ -228,14 +231,35 @@ void SudokuCellWidget::RegionIdLabel_OnClicked()
     UpdateRegionId(newId);
 }
 
-unsigned short SudokuCellWidget::RegionIdGet()
+unsigned short SudokuCellWidget::CellIdGet() const
+{
+    return mId;
+}
+
+unsigned short SudokuCellWidget::RowGet() const
+{
+    return mRow;
+}
+
+unsigned short SudokuCellWidget::ColGet() const
+{
+    return mCol;
+}
+
+unsigned short SudokuCellWidget::RegionIdGet() const
 {
     return mRegionId;
 }
 
+const QList<SudokuCellWidget *> &SudokuCellWidget::NeighboursGet() const
+{
+    return mNeighbours;
+}
+
 void SudokuCellWidget::SwitchView(MainWindowContent::ViewType view)
 {
-    switch (view) {
+    switch (view)
+    {
     case MainWindowContent::ViewType::EnterDigits:
         ShowRegionNumber(false);
         break;
@@ -293,8 +317,8 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
 
     if(newId != mRegionId)
     {
-        mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mX, mY);
-        mMainWindowContent->GridGet()->PuzzleDataGet()->AddCellToRegion(newId, mX, mY);
+        mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mCol, mRow);
+        mMainWindowContent->GridGet()->PuzzleDataGet()->AddCellToRegion(newId, mCol, mRow);
         mMainWindowContent->DrawRegionContextMenuGet()->UpdateCellCounters(mRegionId);
         mMainWindowContent->DrawRegionContextMenuGet()->UpdateCellCounters(newId);
         mRegionIdLabel->setText(newId ? QString::number(newId) : "-");
@@ -323,6 +347,7 @@ void SudokuCellWidget::NeighboursSet(SudokuCellWidget *top, SudokuCellWidget *ri
     mNeighbours[1] = right;
     mNeighbours[2] = btm;
     mNeighbours[3] = left;
+    RefreshLayout();
 }
 
 void SudokuCellWidget::HighlightRegionLabel(bool highlight)
@@ -342,7 +367,7 @@ void SudokuCellWidget::ResetRegionId()
 
 void SudokuCellWidget::SetGivenDigit(unsigned short value)
 {
-    mMainWindowContent->GridGet()->PuzzleDataGet()->AddGiven(value, mX, mY);
+    mMainWindowContent->GridGet()->PuzzleDataGet()->AddGiven(value, mCol, mRow);
 
     mValueLabel->setText(QString::number(value));
     mContentType = ContentType::GivenDigit;
@@ -353,7 +378,7 @@ void SudokuCellWidget::SetGivenDigit(unsigned short value)
 
 void SudokuCellWidget::RemoveGivenDigit()
 {
-    mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveGiven(mX, mY);
+    mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveGiven(mCol, mRow);
 
     mValueLabel->setText("");
     mContentType = ContentType::CellOptions;

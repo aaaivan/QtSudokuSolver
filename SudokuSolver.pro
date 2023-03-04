@@ -9,10 +9,14 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    addkillermenu.cpp \
     cellcontentbutton.cpp \
     cellregionidbutton.cpp \
+    drawkillerscontrols.cpp \
     drawregionscontrols.cpp \
     editgridcontrols.cpp \
+    gridgraphicaloverlay.cpp \
+    killercagewidget.cpp \
     main.cpp \
     mainwindow.cpp \
     mainwindowcontent.cpp \
@@ -21,10 +25,14 @@ SOURCES += \
     sudokugridwidget.cpp
 
 HEADERS += \
+    addkillermenu.h \
     cellcontentbutton.h \
     cellregionidbutton.h \
+    drawkillerscontrols.h \
     drawregionscontrols.h \
     editgridcontrols.h \
+    gridgraphicaloverlay.h \
+    killercagewidget.h \
     mainwindow.h \
     mainwindowcontent.h \
     puzzledata.h \

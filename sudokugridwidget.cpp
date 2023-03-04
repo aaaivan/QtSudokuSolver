@@ -1,30 +1,40 @@
 #include "sudokugridwidget.h"
+#include "gridgraphicaloverlay.h"
 #include "sudokucellwidget.h"
 #include "puzzledata.h"
+#include <QStackedLayout>
 
 SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
-      mSize(size),
+      mCellLength(50),
       mMainWindowContent(mainWindowContent),
-      mGridLayout(new QGridLayout(this)),
+      mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength)),
+      mSize(size),
       mCells(),
       mPuzzleData(std::make_shared<PuzzleData>(size))
 {
-    this->setLayout(mGridLayout);
-    this->setFrameStyle(QFrame::Box);
-    this->setLineWidth(3);
-    this->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Fixed,QSizePolicy::Policy::Fixed));
+    // build stacked layout
+    QStackedLayout* stackedLayout = new QStackedLayout(this);
+    this->setLayout(stackedLayout);
+    stackedLayout->setStackingMode(QStackedLayout::StackingMode::StackAll);
+    QWidget* grid = new QWidget();
+    stackedLayout->addWidget(mGraphicalOverlay);
+    stackedLayout->addWidget(grid);
+
+    // build grid
+    QGridLayout* gridLayout = new QGridLayout();
+    grid->setLayout(gridLayout);
 
     mCells.reserve(mSize);
-    for(unsigned short i = 0; i < mSize; ++i)
+    for(unsigned short row = 0; row < mSize; ++row)
     {
         mCells.push_back(QVector<SudokuCellWidget*>());
         mCells.back().reserve(mSize);
-        for(unsigned short j = 0; j < mSize; ++j)
+        for(unsigned short col = 0; col < mSize; ++col)
         {
-            SudokuCellWidget* cell = new SudokuCellWidget(i, j, mSize, mMainWindowContent);
+            SudokuCellWidget* cell = new SudokuCellWidget(row, col, mSize, mCellLength, mMainWindowContent);
             mCells.back().push_back(cell);
-            mGridLayout->addWidget(cell, i, j);
+            gridLayout->addWidget(cell, row, col);
         }
     }
     for(unsigned short i = 0; i < mCells.size(); ++i)
@@ -40,21 +50,13 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
         }
     }
 
-    mGridLayout->setSpacing(0);
-    mGridLayout->setContentsMargins(0, 0, 0, 0);
-
-    // styling
+    // Styling
+    this->setFrameStyle(QFrame::Box);
+    this->setLineWidth(3);
+    this->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Fixed,QSizePolicy::Policy::Fixed));
+    gridLayout->setSpacing(0);
+    gridLayout->setContentsMargins(0, 0, 0, 0);
     this->setStyleSheet("SudokuGridWidget{background-color: white;}");
-}
-
-QSize SudokuGridWidget::sizeHint() const
-{
-    return mGridLayout->sizeHint();
-}
-
-QSize SudokuGridWidget::minimumSizeHint() const
-{
-    return mGridLayout->minimumSize();
 }
 
 void SudokuGridWidget::paintEvent(QPaintEvent *event)

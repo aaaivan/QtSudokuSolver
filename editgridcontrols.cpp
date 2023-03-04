@@ -55,7 +55,7 @@ MainWindowContent::ViewType EditGridControls::GetViewForButton(QPushButton *btn)
     {
         result = MainWindowContent::ViewType::DrawRegions;
     }
-    else if(btn == mAddDigitsBtn)
+    else if(btn == mDrawKillersBtn)
     {
         result = MainWindowContent::ViewType::DrawKiller;
     }

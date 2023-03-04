@@ -21,12 +21,12 @@ private:
     QCheckBox* mNegativeDiagonalCheckbox;
 
     MainWindowContent::ViewType GetViewForButton(QPushButton* btn);
+    void OnViewButtonChecked(QPushButton* btn);
 
-public slots:
+private slots:
     void AddDigitsBtn_Toggled(bool checked);
     void DrawRegionsBtn_Toggled(bool checked);
     void DrawKillersBtn_Toggled(bool checked);
-    void OnViewButtonChecked(QPushButton* btn);
     void PositiveDiagonalCheckbox_OnChange(int checked);
     void NegativeDiagonalCheckbox_OnChange(int checked);
 };
