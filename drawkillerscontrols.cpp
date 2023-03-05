@@ -43,6 +43,7 @@ DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, Q
 
 void DrawKillersControls::hideEvent(QHideEvent *event)
 {
+    Q_UNUSED(event)
     mGrid->GraphicalOverlayGet()->ClearActiveComponent();
 }
 
@@ -131,6 +132,9 @@ void DrawKillersControls::CellClicked(SudokuCellWidget *cell)
 
 void DrawKillersControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
 {
+    Q_UNUSED(event)
+    Q_UNUSED(cell)
+
     switch (mCurrentView)
     {
     case MenuView::MainView:
@@ -152,6 +156,7 @@ void DrawKillersControls::ClueAdded(QWidget *clue)
 
 void DrawKillersControls::ClueRemoved(QWidget *clue)
 {
+    Q_UNUSED(clue)
     SwitchView(MenuView::MainView);
 }
 
@@ -162,12 +167,17 @@ void DrawKillersControls::ClearKillersBtn_Clicked()
 
     if(btn == QMessageBox::StandardButton::Ok)
     {
+        QVector<KillerCageWidget*> killerCages;
         for(const auto& clue : mGrid->GraphicalOverlayGet()->OverlayComponentsGet())
         {
-            if(dynamic_cast<KillerCageWidget*>(clue))
+            if(KillerCageWidget* cage = dynamic_cast<KillerCageWidget*>(clue); cage)
             {
-                mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(clue);
+                killerCages.push_back(cage);
             }
+        }
+        for(const auto& cage : killerCages)
+        {
+            mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(cage);
         }
     }
 }
