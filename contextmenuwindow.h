@@ -18,6 +18,8 @@ public:
     virtual void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) = 0;
     virtual void ClueAdded(QWidget* clue);
     virtual void ClueRemoved(QWidget* clue);
+    virtual void ClueDidGetActive(QWidget* clue);
+    virtual void ClueDidGetInactive(QWidget* clue);
 };
 
 #endif // CONTEXTMENUWINDOW_H

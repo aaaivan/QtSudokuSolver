@@ -59,6 +59,12 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
     this->setStyleSheet("SudokuGridWidget{background-color: white;}");
 }
 
+SudokuGridWidget::~SudokuGridWidget()
+{
+    delete mGraphicalOverlay;
+    mGraphicalOverlay = nullptr;
+}
+
 void SudokuGridWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);

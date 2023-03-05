@@ -48,7 +48,7 @@ bool GridGraphicalOverlay::RemoveOverlayComponent(QWidget *component)
     {
         if(mActiveComponent == component)
         {
-            mActiveComponent = nullptr;
+            ClearActiveComponent();
         }
         if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(component); clue)
         {
@@ -64,14 +64,19 @@ bool GridGraphicalOverlay::ActiveComponentSet(QWidget *component)
 {
     if(mOverlayComponents.contains(component) && mActiveComponent != component)
     {
-        if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(mActiveComponent); clue)
-        {
-            clue->ClueDidGetInactive();
-        }
+        QWidget* prevActive = mActiveComponent;
         mActiveComponent = component;
-        if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(mActiveComponent); clue)
+        VariantClueWidget* prevClue = dynamic_cast<VariantClueWidget*>(prevActive);
+        if(prevClue)
         {
-            clue->ClueDidGetActive();
+            prevClue->ClueDidGetInactive();
+            prevClue->ContextMenuGet()->ClueDidGetInactive(prevActive);
+        }
+        VariantClueWidget* newClue = dynamic_cast<VariantClueWidget*>(mActiveComponent);
+        if(newClue)
+        {
+            newClue->ClueDidGetActive();
+            newClue->ContextMenuGet()->ClueDidGetActive(mActiveComponent);
         }
         return true;
     }
@@ -80,9 +85,12 @@ bool GridGraphicalOverlay::ActiveComponentSet(QWidget *component)
 
 void GridGraphicalOverlay::ClearActiveComponent()
 {
-    if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(mActiveComponent); clue)
+    QWidget* prevActive = mActiveComponent;
+    mActiveComponent = nullptr;
+    VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(prevActive);
+    if(clue)
     {
         clue->ClueDidGetInactive();
+        clue->ContextMenuGet()->ClueDidGetInactive(prevActive);
     }
-    mActiveComponent = nullptr;
 }

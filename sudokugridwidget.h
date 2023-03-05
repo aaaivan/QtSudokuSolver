@@ -16,6 +16,7 @@ class SudokuGridWidget : public QFrame
     Q_OBJECT
 public:
     explicit SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    virtual ~SudokuGridWidget();
 
 private:
     const int mCellLength;

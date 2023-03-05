@@ -1,16 +1,16 @@
 #include "killercagewidget.h"
 #include "gridgraphicaloverlay.h"
+#include "puzzledata.h"
 #include "sudokucellwidget.h"
 #include "drawkillerscontrols.h"
 #include "sudokugridwidget.h"
 #include <QPicture>
 #include <QPainterPath>
 
-KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell,
+KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, unsigned int total,
                                    SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent)
     : QLabel{parent},
       VariantClueWidget(cellLength, grid, killerContextMenu),
-      mCellLength(cellLength),
       mPadding(cellLength/10.0),
       mHighlighted(false),
       mLineWidth(2),
@@ -19,19 +19,21 @@ KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, S
       mMinX(firstCell->ColGet()),
       mMinY(firstCell->RowGet()),
       mMaxCageSize(maxCageSize),
-      mCageTotal(0),
-      mCells(),
+      mCageTotal(),
       mAdjacentCells(),
       mRemovableCells()
 {
     this->setContentsMargins(mPadding - mLineWidth/2, mPadding - mLineWidth/2, mPadding - mLineWidth/2, mPadding - mLineWidth/2);
     KillerCageWidget::AddCell(firstCell);
+    CageTotalSet(total);
 }
 
 KillerCageWidget::~KillerCageWidget()
 {
-    qDebug() << "killer destructor\n";
-
+    if(mCells.size() > 0)
+    {
+        mGrid->PuzzleDataGet()->RemoveKillerCage(mCells[0]->CellIdGet());
+    }
     for(const auto& c : mCells)
     {
         c->RemoveVariantClue(this);
@@ -274,6 +276,11 @@ void KillerCageWidget::DrawEdges(QPainterPath& path, QList<QPair<SudokuCellWidge
     path.addPath(newPath);
 }
 
+unsigned int KillerCageWidget::CageTotalGet() const
+{
+    return mCageTotal;
+}
+
 void KillerCageWidget::AddCell(SudokuCellWidget *cell)
 {
     if(mCells.size() >= mMaxCageSize)
@@ -293,6 +300,28 @@ void KillerCageWidget::AddCell(SudokuCellWidget *cell)
         std::sort(mCells.begin(), mCells.end(), [](const SudokuCellWidget *a, const SudokuCellWidget *b)
             {return a->CellIdGet() < b->CellIdGet();});
 
+        int index = mCells.indexOf(cell);
+        if(mCells.size() == 1)
+        {
+            unsigned short id = cell->CellIdGet();
+            mGrid->PuzzleDataGet()->AddKillerCage(id, {mCageTotal, {id}});
+        }
+        else if(index == 0)
+        {
+            unsigned short newId = cell->CellIdGet();
+            unsigned short oldId = mCells[1]->CellIdGet();
+            mGrid->PuzzleDataGet()->AddCellToKillerCage(oldId, newId);
+            mGrid->PuzzleDataGet()->AddKillerCage(
+                        newId,
+                        mGrid->PuzzleDataGet()->KillerCageGet(oldId));
+            mGrid->PuzzleDataGet()->RemoveKillerCage(oldId);
+        }
+        else
+        {
+            unsigned short id = mCells[0]->CellIdGet();
+            mGrid->PuzzleDataGet()->AddCellToKillerCage(id, cell->CellIdGet());
+        }
+
         UpdatePicture();
     }
 }
@@ -301,18 +330,39 @@ void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
 {
     if(mRemovableCells.contains(cell))
     {
-        mCells.removeIf([=](SudokuCellWidget* c){return c == cell;});
-        cell->RemoveVariantClue(this);
-        CalculateMinCol();
-        CalculateMinRow();
-        CalculateAdjacentCells();
-        CalculateRemovableCells();
-        UpdatePicture();
+        if(mCells.size() > 1)
+        {
+            int index = mCells.indexOf(cell);
+            mCells.removeAt(index);
+            cell->RemoveVariantClue(this);
 
-        if(mCells.size() == 0)
+            if(index == 0)
+            {
+                unsigned short oldId = cell->CellIdGet();
+                unsigned short newId = mCells[0]->CellIdGet();
+                mGrid->PuzzleDataGet()->RemoveCellFromKillerCage(oldId, oldId);
+                mGrid->PuzzleDataGet()->AddKillerCage(
+                            newId,
+                            mGrid->PuzzleDataGet()->KillerCageGet(oldId));
+                mGrid->PuzzleDataGet()->RemoveKillerCage(oldId);
+            }
+            else
+            {
+                unsigned short id = mCells[0]->CellIdGet();
+                mGrid->PuzzleDataGet()->RemoveCellFromKillerCage(id, cell->CellIdGet());
+            }
+
+            CalculateMinCol();
+            CalculateMinRow();
+            CalculateAdjacentCells();
+            CalculateRemovableCells();
+            UpdatePicture();
+        }
+        else
         {
             mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(this);
         }
+
     }
 }
 
@@ -332,5 +382,14 @@ void KillerCageWidget::SetHighlighted(bool highlight)
     {
         mHighlighted = highlight;
         UpdatePicture();
+    }
+}
+
+void KillerCageWidget::CageTotalSet(unsigned int total)
+{
+    if(mCageTotal != total)
+    {
+        mCageTotal = total;
+        mGrid->PuzzleDataGet()->KillerCageTotalSet(mCells[0]->CellIdGet(), mCageTotal);
     }
 }

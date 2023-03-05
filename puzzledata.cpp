@@ -31,23 +31,30 @@ bool PuzzleData::HasNegativeDiagonalConstraint() const
     return mNegativeDiagonal;
 }
 
-void PuzzleData::AddCellToRegion(unsigned short regionId, unsigned short x, unsigned short y)
+const std::pair<unsigned int, CellsInRegion> PuzzleData::KillerCageGet(CellCoord id) const
+{
+    if(mKillerCages.count(id))
+    {
+        return mKillerCages.at(id);
+    }
+    return {};
+}
+
+void PuzzleData::AddCellToRegion(unsigned short regionId, CellCoord cellId)
 {
     unsigned short index = regionId - 1;
     if(index < mSize)
     {
-        CellCoord cell{x, y};
-        mRegions[index].insert(std::move(cell));
+        mRegions[index].insert(cellId);
     }
 }
 
-void PuzzleData::RemoveCellFromRegion(unsigned short regionId, unsigned short x, unsigned short y)
+void PuzzleData::RemoveCellFromRegion(unsigned short regionId, CellCoord  cellId)
 {
     unsigned short index = regionId - 1;
     if(index < mSize)
     {
-        const CellCoord cell{x, y};
-        if(auto it = mRegions[index].find(cell); it != mRegions[index].end())
+        if(auto it = mRegions[index].find(cellId); it != mRegions[index].end())
         {
             mRegions[index].erase(it);
         }
@@ -64,35 +71,77 @@ void PuzzleData::NegativeDiagonalConstraintSet(bool set)
     mNegativeDiagonal = set;
 }
 
-void PuzzleData::AddGiven(unsigned short value, unsigned short x, unsigned short y)
+void PuzzleData::AddGiven(unsigned short value, CellCoord  cellId)
 {
     if(value > 0 && value <= mSize)
     {
-        const CellCoord cell{x, y};
-        auto pred = [&](const std::pair<unsigned short, CellCoord>& given)
+        mGivens[cellId] = value;
+    }
+}
+
+void PuzzleData::RemoveGiven(CellCoord  cellId)
+{
+    auto it = mGivens.find(cellId);
+    if(it != mGivens.end())
+    {
+        mGivens.erase(it);
+    }
+}
+
+void PuzzleData::AddCellToKillerCage(CellCoord cageId, CellCoord  cellId)
+{
+    auto it = mKillerCages.find(cageId);
+    if(it != mKillerCages.end())
+    {
+        it->second.second.insert(cellId);
+    }
+    else
+    {
+        mKillerCages[cageId] = {0, {cellId}};
+    }
+}
+
+void PuzzleData::RemoveCellFromKillerCage(CellCoord cageId, CellCoord  cellId)
+{
+    auto mapIt = mKillerCages.find(cageId);
+    if(mapIt != mKillerCages.end())
+    {
+        auto setIt = mapIt->second.second.find(cellId);
+        if(setIt != mapIt->second.second.end())
         {
-            return given.second == cell;
-        };
-        if(auto it = std::find_if(mGivens.begin(), mGivens.end(), pred); it != mGivens.end())
-        {
-            it->first = value;
-        }
-        else
-        {
-            mGivens.emplace_back(value, std::move(cell));
+            mapIt->second.second.erase(setIt);
+            if(mapIt->second.second.size() == 0)
+            {
+                mKillerCages.erase(mapIt);
+            }
         }
     }
 }
 
-void PuzzleData::RemoveGiven(unsigned short x, unsigned short y)
+void PuzzleData::AddKillerCage(CellCoord cageId, const std::pair<unsigned int, CellsInRegion> &cage)
 {
-    const CellCoord cell{x, y};
-    auto pred = [&](const std::pair<unsigned short, CellCoord>& given)
+    mKillerCages[cageId] = cage;
+}
+
+void PuzzleData::RemoveKillerCage(CellCoord cageId)
+{
+
+    auto it = mKillerCages.find(cageId);
+    if(it != mKillerCages.end())
     {
-        return given.second == cell;
-    };
-    if(auto it = std::find_if(mGivens.begin(), mGivens.end(), pred); it != mGivens.end())
+        mKillerCages.erase(it);
+    }
+}
+
+void PuzzleData::KillerCageTotalSet(CellCoord cageId, unsigned int total)
+{
+    auto it = mKillerCages.find(cageId);
+    if(it != mKillerCages.end())
     {
-        mGivens.erase(it);
+        it->second.first = total;
+    }
+    else
+    {
+        mKillerCages[cageId] = {total, {}};
     }
 }

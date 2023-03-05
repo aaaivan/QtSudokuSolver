@@ -19,6 +19,7 @@ protected:
     QList<SudokuCellWidget*> mCells;
 
 public:
+    int SizeGet() const;
     virtual void AddCell(SudokuCellWidget* cell) = 0;
     virtual void RemoveCell(SudokuCellWidget* cell) = 0;
     virtual void ClueDidGetActive();

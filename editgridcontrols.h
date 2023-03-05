@@ -13,6 +13,8 @@ public:
     explicit EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private:
+
+
     MainWindowContent* mMainWindowContent;
     QPushButton* mAddDigitsBtn;
     QPushButton* mDrawRegionsBtn;
@@ -24,9 +26,7 @@ private:
     void OnViewButtonChecked(QPushButton* btn);
 
 private slots:
-    void AddDigitsBtn_Toggled(bool checked);
-    void DrawRegionsBtn_Toggled(bool checked);
-    void DrawKillersBtn_Toggled(bool checked);
+    void ViewButtonClicked(int btnId);
     void PositiveDiagonalCheckbox_OnChange(int checked);
     void NegativeDiagonalCheckbox_OnChange(int checked);
 };

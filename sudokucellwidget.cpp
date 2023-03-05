@@ -65,17 +65,6 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
     mValueLabel->setFlat(true);
 }
 
-SudokuCellWidget::~SudokuCellWidget()
-{
-    qDebug() << "Cell destructor\n";
-    auto it = mVariantClues.begin();
-    while (it != mVariantClues.end())
-    {
-        (*it)->RemoveCell(this);
-        ++it;
-    }
-}
-
 QSize SudokuCellWidget::sizeHint() const
 {
     return QSize(mLength, mLength);
@@ -327,8 +316,8 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
     {
         DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions));
 
-        mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mCol, mRow);
-        mMainWindowContent->GridGet()->PuzzleDataGet()->AddCellToRegion(newId, mCol, mRow);
+        mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mId);
+        mMainWindowContent->GridGet()->PuzzleDataGet()->AddCellToRegion(newId, mId);
         context->UpdateCellCounters(mRegionId);
         context->UpdateCellCounters(newId);
         mRegionIdLabel->setText(newId ? QString::number(newId) : "-");
@@ -382,7 +371,7 @@ void SudokuCellWidget::SetRegionId(unsigned short newId)
 
 void SudokuCellWidget::SetGivenDigit(unsigned short value)
 {
-    mMainWindowContent->GridGet()->PuzzleDataGet()->AddGiven(value, mCol, mRow);
+    mMainWindowContent->GridGet()->PuzzleDataGet()->AddGiven(value, mId);
 
     mValueLabel->setText(QString::number(value));
     mContentType = ContentType::GivenDigit;
@@ -393,7 +382,7 @@ void SudokuCellWidget::SetGivenDigit(unsigned short value)
 
 void SudokuCellWidget::RemoveGivenDigit()
 {
-    mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveGiven(mCol, mRow);
+    mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveGiven(mId);
 
     mValueLabel->setText("");
     mContentType = ContentType::CellOptions;

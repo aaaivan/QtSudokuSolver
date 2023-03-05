@@ -12,7 +12,7 @@ class KillerCageWidget : public QLabel, public VariantClueWidget
 {
     Q_OBJECT
 public:
-    explicit KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell,
+    explicit KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, unsigned int total,
                               SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent = nullptr);
     virtual ~KillerCageWidget();
 
@@ -28,7 +28,6 @@ private:
     };
 
     //styling variables
-    int mCellLength;
     int mPadding;
     bool mHighlighted;
     int mLineWidth;
@@ -39,7 +38,6 @@ private:
     unsigned short mMinY;
     unsigned short mMaxCageSize;
     unsigned int mCageTotal;
-    QList<SudokuCellWidget*> mCells;
     QSet<SudokuCellWidget*> mAdjacentCells;
     QSet<SudokuCellWidget*> mRemovableCells;
 
@@ -57,12 +55,15 @@ private:
     void CalculatedEdges(QList<QPair<SudokuCellWidget*, Direction>>& outEdges) const;
     void DrawEdges(QPainterPath& path, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const;
 public:
+    unsigned int CageTotalGet() const;
+
     void AddCell(SudokuCellWidget* cell) override;
     void RemoveCell(SudokuCellWidget* cell) override;
     void ClueDidGetActive() override;
     void ClueDidGetInactive() override;
 
     void SetHighlighted(bool set);
+    void CageTotalSet(unsigned int total);
 };
 
 #endif // KILLERCAGEWIDGET_H

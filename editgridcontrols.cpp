@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QFrame>
+#include <QButtonGroup>
 
 EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent)
     : QWidget{parent},
@@ -20,6 +21,15 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     verticalLayout->addWidget(mAddDigitsBtn);
     verticalLayout->addWidget(mDrawRegionsBtn);
     verticalLayout->addWidget(mDrawKillersBtn);
+    QButtonGroup* btnGroup = new QButtonGroup(this);
+    btnGroup->addButton(mAddDigitsBtn);
+    btnGroup->addButton(mDrawRegionsBtn);
+    btnGroup->addButton(mDrawKillersBtn);
+    btnGroup->setId(mAddDigitsBtn, MainWindowContent::ViewType::EnterDigits);
+    btnGroup->setId(mDrawRegionsBtn, MainWindowContent::ViewType::DrawRegions);
+    btnGroup->setId(mDrawKillersBtn, MainWindowContent::ViewType::DrawKiller);
+
+
     QFrame* line = new QFrame();
     line->setFrameStyle(QFrame::HLine | QFrame::Sunken);
     verticalLayout->addWidget(line);
@@ -30,72 +40,18 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     // buttons mode
     mAddDigitsBtn->setCheckable(true);
     mAddDigitsBtn->setChecked(true);
-    AddDigitsBtn_Toggled(true);
     mDrawRegionsBtn->setCheckable(true);
     mDrawKillersBtn->setCheckable(true);
 
     // events
-    connect(mAddDigitsBtn, SIGNAL(toggled(bool)), this, SLOT(AddDigitsBtn_Toggled(bool)));
-    connect(mDrawRegionsBtn, SIGNAL(toggled(bool)), this, SLOT(DrawRegionsBtn_Toggled(bool)));
-    connect(mDrawKillersBtn, SIGNAL(toggled(bool)), this, SLOT(DrawKillersBtn_Toggled(bool)));
+    connect(btnGroup, SIGNAL(idClicked(int)), this, SLOT(ViewButtonClicked(int)));
     connect(mPositiveDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(PositiveDiagonalCheckbox_OnChange(int)));
     connect(mNegativeDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(NegativeDiagonalCheckbox_OnChange(int)));
-
-
 }
 
-MainWindowContent::ViewType EditGridControls::GetViewForButton(QPushButton *btn)
+void EditGridControls::ViewButtonClicked(int btnId)
 {
-    MainWindowContent::ViewType result = MainWindowContent::ViewType::EnterDigits;
-    if(btn == mAddDigitsBtn)
-    {
-        result = MainWindowContent::ViewType::EnterDigits;
-    }
-    else if(btn == mDrawRegionsBtn)
-    {
-        result = MainWindowContent::ViewType::DrawRegions;
-    }
-    else if(btn == mDrawKillersBtn)
-    {
-        result = MainWindowContent::ViewType::DrawKiller;
-    }
-    return result;
-}
-
-void EditGridControls::AddDigitsBtn_Toggled(bool checked)
-{
-    if(checked)
-    {
-        OnViewButtonChecked(mAddDigitsBtn);
-    }
-}
-
-void EditGridControls::DrawRegionsBtn_Toggled(bool checked)
-{
-    if(checked)
-    {
-        OnViewButtonChecked(mDrawRegionsBtn);
-    }
-}
-
-void EditGridControls::DrawKillersBtn_Toggled(bool checked)
-{
-    if(checked)
-    {
-        OnViewButtonChecked(mDrawKillersBtn);
-    }
-}
-
-void EditGridControls::OnViewButtonChecked(QPushButton *btn)
-{
-    mAddDigitsBtn->setChecked(btn == mAddDigitsBtn);
-    mDrawRegionsBtn->setChecked(btn == mDrawRegionsBtn);
-    mDrawKillersBtn->setChecked(btn == mDrawKillersBtn);
-    mAddDigitsBtn->setAttribute(Qt::WA_TransparentForMouseEvents, btn == mAddDigitsBtn);
-    mDrawRegionsBtn->setAttribute(Qt::WA_TransparentForMouseEvents, btn == mDrawRegionsBtn);
-    mDrawKillersBtn->setAttribute(Qt::WA_TransparentForMouseEvents, btn == mDrawKillersBtn);
-
-    mMainWindowContent->ChangeView(GetViewForButton(btn));
+    mMainWindowContent->ChangeView(static_cast<MainWindowContent::ViewType>(btnId));
 }
 
 void EditGridControls::PositiveDiagonalCheckbox_OnChange(int checked)

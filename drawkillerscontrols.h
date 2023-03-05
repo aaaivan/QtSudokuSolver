@@ -3,6 +3,7 @@
 
 #include "contextmenuwindow.h"
 #include <QWidget>
+#include <QSpinBox>
 #include <QStackedLayout>
 
 class MainWindowContent;
@@ -17,7 +18,10 @@ public:
     explicit DrawKillersControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private slots:
-    void ClearKillersBtn_Clicked();
+    void DeleteAllKillersBtn_Clicked();
+    void EditingDoneBtn_Clicked();
+    void DeleteActiveKillerBtn_Clicked();
+    void CageTotal_ValueChanged(int value);
 
 private:
     enum MenuView: int
@@ -29,10 +33,12 @@ private:
     SudokuGridWidget* mGrid;
     MenuView mCurrentView;
     QStackedLayout* mStackedLayout;
+    QSpinBox* mCageTotal;
 
     void hideEvent(QHideEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
+    void UpdateCageTotalLimits(KillerCageWidget* activeCage);
     void SwitchView(MenuView newView);
     void CellClickedInMainView(SudokuCellWidget* cell);
     void CellClickedInEditView(SudokuCellWidget* cell);
@@ -42,7 +48,8 @@ public:
     void CellClicked(SudokuCellWidget* cell) override;
     void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
     void ClueAdded(QWidget* clue) override;
-    void ClueRemoved(QWidget* clue) override;
+    void ClueDidGetActive(QWidget* clue) override;
+    void ClueDidGetInactive(QWidget* clue) override;
 };
 
 #endif // DRAWKILLERSCONTROLS_H

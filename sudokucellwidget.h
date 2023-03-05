@@ -18,7 +18,6 @@ class SudokuCellWidget : public QFrame
 public:
     explicit SudokuCellWidget(unsigned short x, unsigned short y, unsigned short gridSize, int cellLength,
                               MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
-    virtual ~SudokuCellWidget();
 
 private:
     enum ContentType

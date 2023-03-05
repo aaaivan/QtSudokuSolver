@@ -8,6 +8,11 @@ VariantClueWidget::VariantClueWidget(int cellLength, SudokuGridWidget *grid, Con
 {
 }
 
+int VariantClueWidget::SizeGet() const
+{
+    return mCells.size();
+}
+
 void VariantClueWidget::ClueDidGetActive()
 {
     return;

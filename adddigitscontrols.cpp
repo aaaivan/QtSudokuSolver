@@ -15,6 +15,7 @@ AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, QWidg
 
 void AddDigitsControls::CellClicked(SudokuCellWidget *cell)
 {
+    Q_UNUSED(cell)
     return;
 }
 
