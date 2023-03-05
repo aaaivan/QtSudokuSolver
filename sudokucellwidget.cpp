@@ -59,7 +59,7 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
     // text font
     mOptionsLabel->setFont(QFont( mOptionsLabel->font().family(), 8));
     mValueLabel->setFont(QFont(mValueLabel->font().family(),20, 500));
-    mRegionIdLabel->setFont(QFont(mValueLabel->font().family(),20, 500));
+    mRegionIdLabel->setFont(QFont(mValueLabel->font().family(),20, 700));
 
     // borders and sizes
     mValueLabel->setFlat(true);
@@ -184,9 +184,9 @@ QString SudokuCellWidget::CreateValueLabelStylesheet() const
 QString SudokuCellWidget::CreateRegionLabelStylesheet() const
 {
     static const QString normalBG = "transparent";
-    static const QString highlightBG = "rgba(0, 160, 200, 0.2)";
+    static const QString highlightBG = "rgba(0, 255, 0, 0.2)";
     static const QString focusBG = "rgba(255, 200, 0, 0.2)";
-    static const QString textColor = "rgb(0, 0, 255)";
+    static const QString textColor = "grey";
 
     // normal styling
     QString style = "QPushButton{\n";

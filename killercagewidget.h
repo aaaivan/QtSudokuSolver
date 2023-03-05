@@ -30,9 +30,7 @@ private:
     //styling variables
     int mPadding;
     bool mHighlighted;
-    int mLineWidth;
-    Qt::GlobalColor mHighlightColour;
-    float mHighlightOpacity;
+    QLabel* mTotalLabel;
 
     unsigned short mMinX;
     unsigned short mMinY;
@@ -42,6 +40,7 @@ private:
     QSet<SudokuCellWidget*> mRemovableCells;
 
     void UpdatePicture();
+    void UpdateLabel();
     QPoint PointMultiplierGet(Direction dir) const;
     void CalculateMinCol();
     void CalculateMinRow();

@@ -7,15 +7,17 @@
 #include <QPicture>
 #include <QPainterPath>
 
+constexpr Qt::GlobalColor kHighlightColour = Qt::green;
+constexpr float kHighlightOpacity = 0.2f;
+constexpr int kLineWidth = 2;
+
 KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, unsigned int total,
                                    SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent)
     : QLabel{parent},
       VariantClueWidget(cellLength, grid, killerContextMenu),
       mPadding(cellLength/10.0),
       mHighlighted(false),
-      mLineWidth(2),
-      mHighlightColour(Qt::green),
-      mHighlightOpacity(0.2),
+      mTotalLabel(new QLabel(this)),
       mMinX(firstCell->ColGet()),
       mMinY(firstCell->RowGet()),
       mMaxCageSize(maxCageSize),
@@ -23,7 +25,8 @@ KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, S
       mAdjacentCells(),
       mRemovableCells()
 {
-    this->setContentsMargins(mPadding - mLineWidth/2, mPadding - mLineWidth/2, mPadding - mLineWidth/2, mPadding - mLineWidth/2);
+    this->setContentsMargins(mPadding - kLineWidth/2, mPadding - kLineWidth/2, mPadding - kLineWidth/2, mPadding - kLineWidth/2);
+    mTotalLabel->setStyleSheet("QLabel{background-color: rgba(255, 255, 255, 0.9);}");
     KillerCageWidget::AddCell(firstCell);
     CageTotalSet(total);
 }
@@ -45,7 +48,7 @@ void KillerCageWidget::UpdatePicture()
     // pen setup
     QPicture pic;
     QPainter painter(&pic);
-    double penWidth = mLineWidth;
+    double penWidth = kLineWidth;
     QPen pen(Qt::GlobalColor::black, penWidth, Qt::CustomDashLine, Qt::FlatCap);
     QVector<qreal> dashes;
     dashes << 2 << 2;
@@ -57,8 +60,8 @@ void KillerCageWidget::UpdatePicture()
 
     if(mHighlighted)
     {
-        QColor col = mHighlightColour;
-        col.setAlphaF(mHighlightOpacity);
+        QColor col = kHighlightColour;
+        col.setAlphaF(kHighlightOpacity);
         painter.setBrush( col );
     }
 
@@ -78,6 +81,14 @@ void KillerCageWidget::UpdatePicture()
     this->setPicture(pic);
     this->adjustSize();
     this->move(mMinX * mCellLength, mMinY * mCellLength);
+    UpdateLabel();
+}
+
+void KillerCageWidget::UpdateLabel()
+{
+    mTotalLabel->setText(QString::number(mCageTotal));
+    mTotalLabel->adjustSize();
+    mTotalLabel->move((mCells[0]->ColGet() - mMinX) * mCellLength + 1,(mCells[0]->RowGet() - mMinY) * mCellLength + 1);
 }
 
 QPoint KillerCageWidget::PointMultiplierGet(Direction dir) const
@@ -391,5 +402,6 @@ void KillerCageWidget::CageTotalSet(unsigned int total)
     {
         mCageTotal = total;
         mGrid->PuzzleDataGet()->KillerCageTotalSet(mCells[0]->CellIdGet(), mCageTotal);
+        UpdateLabel();
     }
 }
