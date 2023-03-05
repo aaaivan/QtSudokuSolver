@@ -1,12 +1,21 @@
 #include "killercagewidget.h"
+#include "gridgraphicaloverlay.h"
 #include "sudokucellwidget.h"
+#include "drawkillerscontrols.h"
+#include "sudokugridwidget.h"
 #include <QPicture>
+#include <QPainterPath>
 
-KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, QWidget *parent)
+KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell,
+                                   SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent)
     : QLabel{parent},
+      VariantClueWidget(cellLength, grid, killerContextMenu),
       mCellLength(cellLength),
       mPadding(cellLength/10.0),
+      mHighlighted(false),
       mLineWidth(2),
+      mHighlightColour(Qt::green),
+      mHighlightOpacity(0.2),
       mMinX(firstCell->ColGet()),
       mMinY(firstCell->RowGet()),
       mMaxCageSize(maxCageSize),
@@ -16,8 +25,17 @@ KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, S
       mRemovableCells()
 {
     this->setContentsMargins(mPadding - mLineWidth/2, mPadding - mLineWidth/2, mPadding - mLineWidth/2, mPadding - mLineWidth/2);
-    AddCellToCage(firstCell);
-    this->setStyleSheet("KillerCageWidget{background-color: rgba(255, 0, 0, 0.2);}");
+    KillerCageWidget::AddCell(firstCell);
+}
+
+KillerCageWidget::~KillerCageWidget()
+{
+    qDebug() << "killer destructor\n";
+
+    for(const auto& c : mCells)
+    {
+        c->RemoveVariantClue(this);
+    }
 }
 
 void KillerCageWidget::UpdatePicture()
@@ -31,23 +49,33 @@ void KillerCageWidget::UpdatePicture()
     dashes << 2 << 2;
     pen.setDashPattern(dashes);
     pen.setColor(QColor(80, 80, 80));
+    pen.setCosmetic(true);
     painter.setPen(pen);
     painter.setRenderHint(QPainter::RenderHint::LosslessImageRendering);
 
+    if(mHighlighted)
+    {
+        QColor col = mHighlightColour;
+        col.setAlphaF(mHighlightOpacity);
+        painter.setBrush( col );
+    }
 
     // draw
+    QPainterPath path;
     QList<QPair<SudokuCellWidget*, Direction>> edges;
     CalculatedEdges(edges);
     int index = 0;
     while (index < edges.size())
     {
-        DrawEdges(painter, edges, index);
+        DrawEdges(path, edges, index);
     }
+    painter.drawPath(path);
     painter.end();
 
     // add picture to label
     this->setPicture(pic);
-    this->move(mMinX, mMinY);
+    this->adjustSize();
+    this->move(mMinX * mCellLength, mMinY * mCellLength);
 }
 
 QPoint KillerCageWidget::PointMultiplierGet(Direction dir) const
@@ -169,7 +197,7 @@ void KillerCageWidget::CalculatedEdges(QList<QPair<SudokuCellWidget*, Direction>
     }
 }
 
-void KillerCageWidget::DrawEdges(QPainter &painter, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const
+void KillerCageWidget::DrawEdges(QPainterPath& path, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const
 {
     const int inLen = mCellLength - (2 * mPadding);
     const int outLen = 2 * mPadding;
@@ -239,11 +267,14 @@ void KillerCageWidget::DrawEdges(QPainter &painter, QList<QPair<SudokuCellWidget
     {
         polygon.remove(0);
     }
+    polygon << polygon[0];
 
-    painter.drawPolygon(polygon);
+    QPainterPath newPath;
+    newPath.addPolygon(polygon);
+    path.addPath(newPath);
 }
 
-void KillerCageWidget::AddCellToCage(SudokuCellWidget *cell)
+void KillerCageWidget::AddCell(SudokuCellWidget *cell)
 {
     if(mCells.size() >= mMaxCageSize)
         return;
@@ -252,6 +283,7 @@ void KillerCageWidget::AddCellToCage(SudokuCellWidget *cell)
        (!mCells.contains(cell) && mAdjacentCells.contains(cell)))
     {
         mCells.push_back(cell);
+        cell->AddVariantClue(this);
         mMinX = std::min(mMinX, cell->ColGet());
         mMinY = std::min(mMinY, cell->RowGet());
 
@@ -265,23 +297,40 @@ void KillerCageWidget::AddCellToCage(SudokuCellWidget *cell)
     }
 }
 
-void KillerCageWidget::RemoveCellFromCage(SudokuCellWidget *cell)
+void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
 {
     if(mRemovableCells.contains(cell))
     {
-        if(mCells.size() > 1)
-        {
-            mCells.removeIf([=](SudokuCellWidget* c){return c == cell;});
-            CalculateMinCol();
-            CalculateMinRow();
-            CalculateAdjacentCells();
-            CalculateRemovableCells();
-            UpdatePicture();
-        }
-        else
-        {
-            // ...
-        }
+        mCells.removeIf([=](SudokuCellWidget* c){return c == cell;});
+        cell->RemoveVariantClue(this);
+        CalculateMinCol();
+        CalculateMinRow();
+        CalculateAdjacentCells();
+        CalculateRemovableCells();
+        UpdatePicture();
 
+        if(mCells.size() == 0)
+        {
+            mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(this);
+        }
+    }
+}
+
+void KillerCageWidget::ClueDidGetActive()
+{
+    SetHighlighted(true);
+}
+
+void KillerCageWidget::ClueDidGetInactive()
+{
+    SetHighlighted(false);
+}
+
+void KillerCageWidget::SetHighlighted(bool highlight)
+{
+    if(mHighlighted != highlight)
+    {
+        mHighlighted = highlight;
+        UpdatePicture();
     }
 }

@@ -7,6 +7,8 @@
 
 class SudokuGridWidget;
 class DrawRegionsControls;
+class DrawKillersControls;
+class ContextMenuWindow;
 
 class MainWindowContent : public QWidget
 {
@@ -27,8 +29,10 @@ private:
     ViewType mCurrentView;
 
 public:
-    DrawRegionsControls* DrawRegionContextMenuGet() const;
+    ContextMenuWindow* ContextMenuGet(ViewType menu) const;
+    ContextMenuWindow* ActiveContextMenuGet();
     SudokuGridWidget* GridGet() const;
+    ViewType CurrentViewGet() const;
     void ChangeView(ViewType view);
 };
 

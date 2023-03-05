@@ -1,16 +1,20 @@
 #ifndef KILLERCAGEWIDGET_H
 #define KILLERCAGEWIDGET_H
 
+#include "variantcluewidget.h"
 #include <QLabel>
 #include <QPainter>
 
 class SudokuCellWidget;
+class DrawKillersControls;
 
-class KillerCageWidget : public QLabel
+class KillerCageWidget : public QLabel, public VariantClueWidget
 {
     Q_OBJECT
 public:
-    explicit KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, QWidget *parent = nullptr);
+    explicit KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell,
+                              SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent = nullptr);
+    virtual ~KillerCageWidget();
 
 private:
     enum Direction: int
@@ -23,9 +27,14 @@ private:
         TOTAL_DIRECTIONS
     };
 
+    //styling variables
     int mCellLength;
     int mPadding;
+    bool mHighlighted;
     int mLineWidth;
+    Qt::GlobalColor mHighlightColour;
+    float mHighlightOpacity;
+
     unsigned short mMinX;
     unsigned short mMinY;
     unsigned short mMaxCageSize;
@@ -46,10 +55,14 @@ private:
     bool AreCellsInCageConnected_Inner(SudokuCellWidget* c1, SudokuCellWidget* c2, QVector<SudokuCellWidget*> &visited) const;
 
     void CalculatedEdges(QList<QPair<SudokuCellWidget*, Direction>>& outEdges) const;
-    void DrawEdges(QPainter& painter, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const;
+    void DrawEdges(QPainterPath& path, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const;
 public:
-    void AddCellToCage(SudokuCellWidget* cell);
-    void RemoveCellFromCage(SudokuCellWidget* cell);
+    void AddCell(SudokuCellWidget* cell) override;
+    void RemoveCell(SudokuCellWidget* cell) override;
+    void ClueDidGetActive() override;
+    void ClueDidGetInactive() override;
+
+    void SetHighlighted(bool set);
 };
 
 #endif // KILLERCAGEWIDGET_H

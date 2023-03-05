@@ -16,6 +16,9 @@ private:
     SudokuCellWidget* mCell;
 
     void keyReleaseEvent(QKeyEvent* event) override;
+
+private slots:
+    void OnClicked();
 };
 
 #endif // CELLCONTENTBUTTON_H

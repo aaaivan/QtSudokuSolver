@@ -1,5 +1,7 @@
 #include "cellcontentbutton.h"
+#include "contextmenuwindow.h"
 #include "sudokucellwidget.h"
+#include "mainwindowcontent.h"
 #include <QKeyEvent>
 
 CellContentButton::CellContentButton(unsigned short numOptions, SudokuCellWidget *parent)
@@ -7,20 +9,16 @@ CellContentButton::CellContentButton(unsigned short numOptions, SudokuCellWidget
       mNumOptions(numOptions),
       mCell(parent)
 {
+    connect(this, SIGNAL(clicked(bool)), this, SLOT(OnClicked()));
 }
 
 void CellContentButton::keyReleaseEvent(QKeyEvent *event)
 {
     QPushButton::keyReleaseEvent(event);
-    bool ok;
-    int num = event->text().toInt(&ok);
+    mCell->MainWindowContentGet()->ActiveContextMenuGet()->KeyboardInput(mCell, event);
+}
 
-    if(ok && num > 0 && num <= mNumOptions)
-    {
-        mCell->SetGivenDigit(static_cast<unsigned short>(num));
-    }
-    else if(event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace)
-    {
-        mCell->RemoveGivenDigit();
-    }
+void CellContentButton::OnClicked()
+{
+    mCell->MainWindowContentGet()->ActiveContextMenuGet()->CellClicked(mCell);
 }

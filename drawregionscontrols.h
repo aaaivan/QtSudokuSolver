@@ -1,6 +1,7 @@
 #ifndef DRAWREGIONSCONTROLS_H
 #define DRAWREGIONSCONTROLS_H
 
+#include "contextmenuwindow.h"
 #include <QWidget>
 #include <QComboBox>
 #include <QPushButton>
@@ -8,12 +9,13 @@
 
 class SudokuCellWidget;
 class SudokuGridWidget;
+class MainWindowContent;
 
-class DrawRegionsControls : public QWidget
+class DrawRegionsControls : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit DrawRegionsControls(SudokuGridWidget* grid, QWidget *parent = nullptr);
+    explicit DrawRegionsControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private:
     SudokuGridWidget* mGrid;
@@ -26,6 +28,9 @@ private slots:
     void ClearRegionsBtn_Clicked();
 
 public:
+    void CellClicked(SudokuCellWidget* cell) override;
+    void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
+
     unsigned short SelectedRegionIdGet() const;
     void UpdateCellCounters(unsigned short regionId);
 };

@@ -18,25 +18,23 @@ public:
     explicit SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
 
 private:
-    // style param
     const int mCellLength;
+    unsigned short mSize;
+    std::shared_ptr<PuzzleData> mPuzzleData;
+    QVector<QVector<SudokuCellWidget*>> mCells;
 
     MainWindowContent* mMainWindowContent;
     GridGraphicalOverlay* mGraphicalOverlay;
-
-    unsigned short mSize;
-    QVector<QVector<SudokuCellWidget*>> mCells;
-    std::shared_ptr<PuzzleData> mPuzzleData;
-
-
 
     void paintEvent(QPaintEvent* event) override;
 
 public:
     // public getters
+    unsigned short CellLengthGet() const;
     unsigned short SizeGet() const;
     const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
     PuzzleData* PuzzleDataGet() const;
+    GridGraphicalOverlay* GraphicalOverlayGet() const;
 
     // public non-const functions
     void SwitchView(MainWindowContent::ViewType view);

@@ -1,4 +1,5 @@
 #include "mainwindowcontent.h"
+#include "adddigitscontrols.h"
 #include "drawkillerscontrols.h"
 #include "sudokugridwidget.h"
 #include "editgridcontrols.h"
@@ -29,10 +30,10 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     // build context menu stacked layout
     mContextMenu->setStackingMode(QStackedLayout::StackingMode::StackOne);
     contextMenuFrame->setLayout(mContextMenu);
-    QWidget* emptyView = new QLabel("To Be Implemented...");
-    DrawKillersControls* drawKillerControls = new DrawKillersControls();
-    DrawRegionsControls* regionsEditControls = new DrawRegionsControls(mGrid);
-    mContextMenu->insertWidget(ViewType::EnterDigits, emptyView);
+    AddDigitsControls* enterDigitsControls = new AddDigitsControls(this);
+    DrawKillersControls* drawKillerControls = new DrawKillersControls(this);
+    DrawRegionsControls* regionsEditControls = new DrawRegionsControls(this);
+    mContextMenu->insertWidget(ViewType::EnterDigits, enterDigitsControls);
     mContextMenu->insertWidget(ViewType::DrawRegions, regionsEditControls);
     mContextMenu->insertWidget(ViewType::DrawKiller, drawKillerControls);
     mContextMenu->setCurrentIndex(ViewType::EnterDigits);
@@ -46,14 +47,24 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 }
 
-DrawRegionsControls *MainWindowContent::DrawRegionContextMenuGet() const
+ContextMenuWindow *MainWindowContent::ActiveContextMenuGet()
 {
-    return dynamic_cast<DrawRegionsControls*>(mContextMenu->widget(ViewType::DrawRegions));
+    return dynamic_cast<ContextMenuWindow*>(mContextMenu->currentWidget());
+}
+
+ContextMenuWindow *MainWindowContent::ContextMenuGet(ViewType menu) const
+{
+    return dynamic_cast<ContextMenuWindow*>(mContextMenu->widget(menu));
 }
 
 SudokuGridWidget *MainWindowContent::GridGet() const
 {
     return mGrid;
+}
+
+MainWindowContent::ViewType MainWindowContent::CurrentViewGet() const
+{
+    return mCurrentView;
 }
 
 void MainWindowContent::ChangeView(ViewType view)

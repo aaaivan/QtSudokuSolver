@@ -7,11 +7,11 @@
 SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
       mCellLength(50),
-      mMainWindowContent(mainWindowContent),
-      mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength)),
       mSize(size),
+      mPuzzleData(std::make_shared<PuzzleData>(size)),
       mCells(),
-      mPuzzleData(std::make_shared<PuzzleData>(size))
+      mMainWindowContent(mainWindowContent),
+      mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength))
 {
     // build stacked layout
     QStackedLayout* stackedLayout = new QStackedLayout(this);
@@ -78,6 +78,11 @@ void SudokuGridWidget::paintEvent(QPaintEvent *event)
     QFrame::paintEvent(event);
 }
 
+unsigned short SudokuGridWidget::CellLengthGet() const
+{
+    return mCellLength;
+}
+
 unsigned short SudokuGridWidget::SizeGet() const
 {
     return mSize;
@@ -91,6 +96,11 @@ const QVector<QVector<SudokuCellWidget *> > &SudokuGridWidget::CellsGet() const
 PuzzleData *SudokuGridWidget::PuzzleDataGet() const
 {
     return mPuzzleData.get();
+}
+
+GridGraphicalOverlay *SudokuGridWidget::GraphicalOverlayGet() const
+{
+    return mGraphicalOverlay;
 }
 
 void SudokuGridWidget::SwitchView(MainWindowContent::ViewType view)

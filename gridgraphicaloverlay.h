@@ -2,7 +2,7 @@
 #define GRIDGRAPHICALOVERLAY_H
 
 #include <QFrame>
-#include <QLabel>
+#include <QWidget>
 
 class SudokuGridWidget;
 
@@ -15,11 +15,17 @@ public:
 private :
     SudokuGridWidget* mGrid;
     const int mCellLength;
-
-    QVector<QLabel*> mOverlayComponents;
+    QSet<QWidget*> mOverlayComponents;
+    QWidget* mActiveComponent;
 
 public:
-    void AddOverlayComponent(QLabel* component);
+    QSet<QWidget*> OverlayComponentsGet() const;
+    QWidget* ActiveComponentGet() const;
+
+    bool AddOverlayComponent(QWidget* component);
+    bool RemoveOverlayComponent(QWidget* component);
+    bool ActiveComponentSet(QWidget *component);
+    void ClearActiveComponent();
 };
 
 #endif // GRIDGRAPHICALOVERLAY_H

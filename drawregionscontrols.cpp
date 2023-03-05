@@ -6,14 +6,16 @@
 #include <QFormLayout>
 #include <QLabel>
 #include <QMessageBox>
+#include <QKeyEvent>
 
 constexpr char kCounterLabelText[] = "Cells in region %1: <b>%2</b>";
 
-DrawRegionsControls::DrawRegionsControls(SudokuGridWidget* grid, QWidget *parent)
+DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, QWidget *parent)
     : QWidget{parent},
-      mGrid(grid),
+      ContextMenuWindow(mainWindowContent),
+      mGrid(mainWindowContent->GridGet()),
       mRegionSelect(new QComboBox()),
-      mCellCounters(grid->SizeGet()),
+      mCellCounters(mGrid->SizeGet()),
       mClearRegionsBtn(new QPushButton("Clear Regions"))
 {
     // build vertical layout
@@ -76,6 +78,41 @@ void DrawRegionsControls::ClearRegionsBtn_Clicked()
             }
         }
         mRegionSelect->setCurrentIndex(0);
+    }
+}
+
+void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
+{
+    unsigned short newId = SelectedRegionIdGet();
+    if(cell->RegionIdGet() == newId)
+    {
+        cell->ResetRegionId();
+    }
+    else
+    {
+        cell->SetRegionId(newId);
+    }
+}
+
+void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
+{
+    bool ok;
+    int num = event->text().toInt(&ok);
+
+    if(ok && num >= 0 && num <= mGrid->SizeGet())
+    {
+        if(cell->RegionIdGet() == num)
+        {
+            cell->ResetRegionId();
+        }
+        else
+        {
+            cell->SetRegionId(num);
+        }
+    }
+    else if(event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace)
+    {
+        cell->ResetRegionId();
     }
 }
 
