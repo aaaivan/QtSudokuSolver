@@ -112,6 +112,16 @@ void DrawRegionsControls::ClearRegionsBtn_Clicked()
 
 void DrawRegionsControls::CellGainedFocus(SudokuCellWidget *cell)
 {
+    Q_UNUSED(cell)
+}
+
+void DrawRegionsControls::CellLostFocus(SudokuCellWidget *cell)
+{
+    Q_UNUSED(cell)
+}
+
+void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
+{
     unsigned short newId = SelectedRegionIdGet();
     if(cell->RegionIdGet() == newId)
     {
@@ -121,11 +131,6 @@ void DrawRegionsControls::CellGainedFocus(SudokuCellWidget *cell)
     {
         cell->SetRegionId(newId);
     }
-}
-
-void DrawRegionsControls::CellLostFocus(SudokuCellWidget *cell)
-{
-    Q_UNUSED(cell)
 }
 
 void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)

@@ -172,6 +172,16 @@ void DrawKillersControls::CreateNewCageFromCell(SudokuCellWidget *cell)
 
 void DrawKillersControls::CellGainedFocus(SudokuCellWidget *cell)
 {
+    Q_UNUSED(cell)
+}
+
+void DrawKillersControls::CellLostFocus(SudokuCellWidget *cell)
+{
+    Q_UNUSED(cell)
+}
+
+void DrawKillersControls::CellClicked(SudokuCellWidget *cell)
+{
     switch (mCurrentView)
     {
     case MenuView::MainView:
@@ -183,11 +193,6 @@ void DrawKillersControls::CellGainedFocus(SudokuCellWidget *cell)
     default:
         break;
     }
-}
-
-void DrawKillersControls::CellLostFocus(SudokuCellWidget *cell)
-{
-    Q_UNUSED(cell)
 }
 
 void DrawKillersControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)

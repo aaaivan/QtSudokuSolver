@@ -43,6 +43,7 @@ private:
 public:
     void CellGainedFocus(SudokuCellWidget* cell) override;
     void CellLostFocus(SudokuCellWidget* cell) override;
+    void CellClicked(SudokuCellWidget* cell) override;
     void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
 };
 

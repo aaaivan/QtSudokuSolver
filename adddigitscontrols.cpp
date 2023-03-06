@@ -117,6 +117,11 @@ void AddDigitsControls::CellLostFocus(SudokuCellWidget *cell)
     }
 }
 
+void AddDigitsControls::CellClicked(SudokuCellWidget *cell)
+{
+    Q_UNUSED(cell)
+}
+
 void AddDigitsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
 {
     bool ok;

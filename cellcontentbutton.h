@@ -18,6 +18,9 @@ private:
     void keyReleaseEvent(QKeyEvent* event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+
+private slots:
+    void CellClicked(bool);
 };
 
 #endif // CELLCONTENTBUTTON_H

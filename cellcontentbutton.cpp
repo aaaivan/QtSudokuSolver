@@ -10,6 +10,7 @@ CellContentButton::CellContentButton(unsigned short numOptions, SudokuCellWidget
       mCell(parent)
 {
     this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
+    connect(this, SIGNAL(clicked(bool)), this, SLOT(CellClicked(bool)));
 }
 
 void CellContentButton::keyReleaseEvent(QKeyEvent *event)
@@ -28,4 +29,10 @@ void CellContentButton::focusOutEvent(QFocusEvent *event)
 {
     QPushButton::focusOutEvent(event);
     mCell->MainWindowContentGet()->ActiveContextMenuGet()->CellLostFocus(mCell);
+}
+
+void CellContentButton::CellClicked(bool checked)
+{
+    Q_UNUSED(checked)
+    mCell->MainWindowContentGet()->ActiveContextMenuGet()->CellClicked(mCell);
 }

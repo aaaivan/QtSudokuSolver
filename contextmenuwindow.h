@@ -16,6 +16,7 @@ public:
 
     virtual void CellGainedFocus(SudokuCellWidget* cell) = 0;
     virtual void CellLostFocus(SudokuCellWidget* cell) = 0;
+    virtual void CellClicked(SudokuCellWidget* cell) = 0;
     virtual void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) = 0;
     virtual void ClueAdded(QWidget* clue);
     virtual void ClueRemoved(QWidget* clue);
