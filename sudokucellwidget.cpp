@@ -25,14 +25,8 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
       mContentType(ContentType::CellOptions),
       mRegionId(0),
       mLength(cellLength),
-      mStyleDirty(true),
-      mOptionsLabelStyleDirty(true),
-      mRegionLabelStyleDirty(true),
-      mValueLabelStyleDirty(true),
       mBoldEdges(None),
-      mBGColour("transparent"),
-      mFocusBGColour("rgba(255, 255, 0, 0.4)"),
-      mRegionLabelHighlighted(false)
+      mHighlighted(false)
 {
     this->setObjectName("cell");
 
@@ -93,30 +87,10 @@ QString SudokuCellWidget::EdgeNameGet(CellEdge edge) const
 
 void SudokuCellWidget::RefreshLayout()
 {
-    if(mStyleDirty)
-    {
-        mStyleDirty = false;
-        this->setStyleSheet(CreateStylesheet());
-    }
-
-    if(mOptionsLabelStyleDirty)
-    {
-        mOptionsLabelStyleDirty = false;
-        mOptionsLabel->setStyleSheet(CreateOptionsLabelStylesheet());
-    }
-
-    if(mRegionLabelStyleDirty)
-    {
-        mRegionLabelStyleDirty = false;
-        mRegionIdLabel->setStyleSheet(CreateRegionLabelStylesheet());
-    }
-
-    // options style
-    if(mValueLabelStyleDirty)
-    {
-        mValueLabelStyleDirty = false;
-        mValueLabel->setStyleSheet(CreateValueLabelStylesheet());
-    }
+    this->setStyleSheet(CreateStylesheet());
+    mOptionsLabel->setStyleSheet(CreateOptionsLabelStylesheet());
+    mRegionIdLabel->setStyleSheet(CreateRegionLabelStylesheet());
+    mValueLabel->setStyleSheet(CreateValueLabelStylesheet());
 }
 
 QString SudokuCellWidget::CreateStylesheet() const
@@ -134,7 +108,7 @@ QString SudokuCellWidget::CreateStylesheet() const
                     (isBold ? "3" : "1") + "px solid black;\n";
         }
     }
-    style += "background-color: " + mBGColour + ";\n";
+    style += "background-color: transparent;\n";
     style += "}\n";
 
     return style;
@@ -147,7 +121,7 @@ QString SudokuCellWidget::CreateOptionsLabelStylesheet() const
 
     // normal styling
     QString style = "QPushButton{\n";
-    style += "background-color: " + normalBG + ";\n";
+    style += "background-color: " + (mHighlighted ? focusBG : normalBG) + ";\n";
     style += "border: 0px;\n";
     style += "color: grey;";
     style += "}\n";
@@ -156,6 +130,7 @@ QString SudokuCellWidget::CreateOptionsLabelStylesheet() const
     style += "QPushButton:focus{\n";
     style += "background-color: " + focusBG + ";\n";
     style += "}\n";
+
     return style;
 }
 
@@ -168,7 +143,7 @@ QString SudokuCellWidget::CreateValueLabelStylesheet() const
     QString textColour = isGiven ? "black" : "grey";
     // normal styling
     QString style = "QPushButton{\n";
-    style += "background-color: " + normalBG + ";\n";
+    style += "background-color: " + (mHighlighted ? focusBG : normalBG) + ";\n";
     style += "border: 0px;\n";
     style +="color: " + textColour + ";";
     style += "}\n";
@@ -190,7 +165,7 @@ QString SudokuCellWidget::CreateRegionLabelStylesheet() const
 
     // normal styling
     QString style = "QPushButton{\n";
-    style += "background-color: " + (mRegionLabelHighlighted ? highlightBG : normalBG) + ";\n";
+    style += "background-color: " + (mHighlighted ? highlightBG : normalBG) + ";\n";
     style += "border: 0px;\n";
     style += "color: " + textColor + ";";
     style += "}\n";
@@ -300,7 +275,6 @@ void SudokuCellWidget::SetEdgeWeight(CellEdge edge, bool bold)
         {
             mBoldEdges = static_cast<CellEdge>(~edge & mBoldEdges);
         }
-        mStyleDirty = true;
     }
 }
 
@@ -334,8 +308,7 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
             }
             edge = edge << 1;
         }
-        mRegionLabelHighlighted = mRegionId == context->SelectedRegionIdGet();
-        mRegionLabelStyleDirty = true;
+        mHighlighted = mRegionId == context->SelectedRegionIdGet();
         RefreshLayout();
     }
 }
@@ -349,12 +322,11 @@ void SudokuCellWidget::NeighboursSet(SudokuCellWidget *top, SudokuCellWidget *ri
     RefreshLayout();
 }
 
-void SudokuCellWidget::HighlightRegionLabel(bool highlight)
+void SudokuCellWidget::SetHighlighted(bool highlight)
 {
-    if(mRegionLabelHighlighted != highlight)
+    if(mHighlighted != highlight)
     {
-        mRegionLabelHighlighted = highlight;
-        mRegionLabelStyleDirty = true;
+        mHighlighted = highlight;
         RefreshLayout();
     }
 }
@@ -376,7 +348,6 @@ void SudokuCellWidget::SetGivenDigit(unsigned short value)
     mValueLabel->setText(QString::number(value));
     mContentType = ContentType::GivenDigit;
     mStackedContent->setCurrentIndex(CellView::Value);
-    mValueLabelStyleDirty = true;
     RefreshLayout();
 }
 
@@ -387,7 +358,6 @@ void SudokuCellWidget::RemoveGivenDigit()
     mValueLabel->setText("");
     mContentType = ContentType::CellOptions;
     mStackedContent->setCurrentIndex(CellView::Options);
-    mValueLabelStyleDirty = true;
     RefreshLayout();
 }
 
@@ -396,7 +366,6 @@ void SudokuCellWidget::SetSolvedDigit(unsigned short value)
     mValueLabel->setText(QString::number(value));
     mContentType = ContentType::SolvedDigit;
     mStackedContent->setCurrentIndex(CellView::Value);
-    mValueLabelStyleDirty = true;
     RefreshLayout();
 }
 

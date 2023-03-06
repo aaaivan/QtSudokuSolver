@@ -38,7 +38,9 @@ private:
     {
         Options,
         Value,
-        RegionId
+        RegionId,
+
+        MAX_VIEWS
     };
 
     unsigned short mCol;
@@ -64,14 +66,8 @@ private:
 
     // Styling variables
     const int mLength;
-    bool mStyleDirty;
-    bool mOptionsLabelStyleDirty;
-    bool mRegionLabelStyleDirty;
-    bool mValueLabelStyleDirty;
     CellEdge mBoldEdges;
-    QString mBGColour;
-    QString mFocusBGColour;
-    bool mRegionLabelHighlighted;
+    bool mHighlighted;
 
     // base class overrides
     QSize sizeHint() const override;
@@ -104,7 +100,7 @@ public:
     // public non-const functions
     void SwitchView(MainWindowContent::ViewType view);
     void NeighboursSet(SudokuCellWidget* top, SudokuCellWidget* right, SudokuCellWidget* btm, SudokuCellWidget* left);
-    void HighlightRegionLabel(bool highlight);
+    void SetHighlighted(bool highlight);
     void ResetRegionId();
     void SetRegionId(unsigned short newId);
     void SetGivenDigit(unsigned short value);

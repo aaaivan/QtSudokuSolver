@@ -322,9 +322,10 @@ void KillerCageWidget::AddCell(SudokuCellWidget *cell)
             unsigned short newId = cell->CellIdGet();
             unsigned short oldId = mCells[1]->CellIdGet();
             mGrid->PuzzleDataGet()->AddCellToKillerCage(oldId, newId);
-            mGrid->PuzzleDataGet()->AddKillerCage(
-                        newId,
-                        mGrid->PuzzleDataGet()->KillerCageGet(oldId));
+
+            std::pair<unsigned int, CellsInRegion> cage;
+            mGrid->PuzzleDataGet()->KillerCageGet(oldId, cage);
+            mGrid->PuzzleDataGet()->AddKillerCage(newId, cage);
             mGrid->PuzzleDataGet()->RemoveKillerCage(oldId);
         }
         else
@@ -352,9 +353,10 @@ void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
                 unsigned short oldId = cell->CellIdGet();
                 unsigned short newId = mCells[0]->CellIdGet();
                 mGrid->PuzzleDataGet()->RemoveCellFromKillerCage(oldId, oldId);
-                mGrid->PuzzleDataGet()->AddKillerCage(
-                            newId,
-                            mGrid->PuzzleDataGet()->KillerCageGet(oldId));
+
+                std::pair<unsigned int, CellsInRegion> cage;
+                mGrid->PuzzleDataGet()->KillerCageGet(oldId, cage);
+                mGrid->PuzzleDataGet()->AddKillerCage(newId, cage);
                 mGrid->PuzzleDataGet()->RemoveKillerCage(oldId);
             }
             else

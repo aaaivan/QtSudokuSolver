@@ -79,7 +79,7 @@ DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, Q
 
 void DrawKillersControls::hideEvent(QHideEvent *event)
 {
-    Q_UNUSED(event)
+    QWidget::hideEvent(event);
     mGrid->GraphicalOverlayGet()->ClearActiveComponent();
 }
 
@@ -170,7 +170,7 @@ void DrawKillersControls::CreateNewCageFromCell(SudokuCellWidget *cell)
     mGrid->GraphicalOverlayGet()->AddOverlayComponent(killerCageWidget);
 }
 
-void DrawKillersControls::CellClicked(SudokuCellWidget *cell)
+void DrawKillersControls::CellGainedFocus(SudokuCellWidget *cell)
 {
     switch (mCurrentView)
     {
@@ -183,6 +183,11 @@ void DrawKillersControls::CellClicked(SudokuCellWidget *cell)
     default:
         break;
     }
+}
+
+void DrawKillersControls::CellLostFocus(SudokuCellWidget *cell)
+{
+    Q_UNUSED(cell)
 }
 
 void DrawKillersControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
@@ -259,7 +264,7 @@ void DrawKillersControls::DeleteActiveKillerBtn_Clicked()
 void DrawKillersControls::CageTotal_ValueChanged(int value)
 {
     KillerCageWidget* cage = dynamic_cast<KillerCageWidget*>(mGrid->GraphicalOverlayGet()->ActiveComponentGet());
-    if(cage)
+    if(cage && mMainWindowContent->ActiveContextMenuGet() == this)
     {
         cage->CageTotalSet(value);
     }

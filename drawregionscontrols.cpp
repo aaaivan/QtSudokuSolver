@@ -52,13 +52,42 @@ DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, Q
     connect(mClearRegionsBtn, SIGNAL(clicked(bool)), this, SLOT(ClearRegionsBtn_Clicked()));
 }
 
-void DrawRegionsControls::RegionSelect_CurrentIndexChanged(int index)
+void DrawRegionsControls::hideEvent(QHideEvent *event)
 {
+    QWidget::hideEvent(event);
     for(const auto& vect : mGrid->CellsGet())
     {
         for(const auto& c : vect)
         {
-            c->HighlightRegionLabel(c->RegionIdGet() == index);
+            c->SetHighlighted(false);
+        }
+    }
+}
+
+void DrawRegionsControls::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    for(const auto& vect : mGrid->CellsGet())
+    {
+        for(const auto& c : vect)
+        {
+            c->SetHighlighted(c->RegionIdGet() == mRegionSelect->currentIndex());
+        }
+    }
+}
+
+void DrawRegionsControls::RegionSelect_CurrentIndexChanged(int index)
+{
+    if(mMainWindowContent->ActiveContextMenuGet() != this)
+    {
+        return;
+    }
+
+    for(const auto& vect : mGrid->CellsGet())
+    {
+        for(const auto& c : vect)
+        {
+            c->SetHighlighted(c->RegionIdGet() == index);
         }
     }
 }
@@ -81,7 +110,7 @@ void DrawRegionsControls::ClearRegionsBtn_Clicked()
     }
 }
 
-void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
+void DrawRegionsControls::CellGainedFocus(SudokuCellWidget *cell)
 {
     unsigned short newId = SelectedRegionIdGet();
     if(cell->RegionIdGet() == newId)
@@ -92,6 +121,11 @@ void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
     {
         cell->SetRegionId(newId);
     }
+}
+
+void DrawRegionsControls::CellLostFocus(SudokuCellWidget *cell)
+{
+    Q_UNUSED(cell)
 }
 
 void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)

@@ -23,12 +23,16 @@ private:
     QVector<QLabel*> mCellCounters;
     QPushButton* mClearRegionsBtn;
 
+    void hideEvent(QHideEvent* event) override;
+    void showEvent(QShowEvent* event) override;
+
 private slots:
     void RegionSelect_CurrentIndexChanged(int index);
     void ClearRegionsBtn_Clicked();
 
 public:
-    void CellClicked(SudokuCellWidget* cell) override;
+    void CellGainedFocus(SudokuCellWidget* cell) override;
+    void CellLostFocus(SudokuCellWidget* cell) override;
     void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
 
     unsigned short SelectedRegionIdGet() const;

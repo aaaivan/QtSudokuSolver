@@ -6,6 +6,7 @@ PuzzleData::PuzzleData(unsigned short size):
     mRegions(size),
     mKillerCages(),
     mGivens(),
+    mHints(),
     mPositiveDiagonal(false),
     mNegativeDiagonal(false)
 {
@@ -31,13 +32,20 @@ bool PuzzleData::HasNegativeDiagonalConstraint() const
     return mNegativeDiagonal;
 }
 
-const std::pair<unsigned int, CellsInRegion> PuzzleData::KillerCageGet(CellCoord id) const
+void PuzzleData::KillerCageGet(CellCoord id, std::pair<unsigned int, CellsInRegion> outCage) const
 {
     if(mKillerCages.count(id))
     {
-        return mKillerCages.at(id);
+        outCage = mKillerCages.at(id);
     }
-    return {};
+}
+
+void PuzzleData::HintsGet(CellCoord id, std::set<unsigned short>& outHints) const
+{
+    if(mHints.count(id))
+    {
+        outHints = mHints.at(id);
+    }
 }
 
 void PuzzleData::AddCellToRegion(unsigned short regionId, CellCoord cellId)
@@ -144,4 +152,35 @@ void PuzzleData::KillerCageTotalSet(CellCoord cageId, unsigned int total)
     {
         mKillerCages[cageId] = {total, {}};
     }
+}
+
+void PuzzleData::AddHint(CellCoord cageId, unsigned short value)
+{
+    auto it = mHints.find(cageId);
+    if(it != mHints.end())
+    {
+        it->second.insert(value);
+    }
+    else
+    {
+        mHints[cageId] = {value};
+    }
+}
+
+void PuzzleData::RemoveHint(CellCoord cageId, unsigned short value)
+{
+    auto mapIt = mHints.find(cageId);
+    if(mapIt != mHints.end())
+    {
+        auto setIt = mapIt->second.find(value);
+        if(setIt != mapIt->second.end())
+        {
+            mapIt->second.erase(setIt);
+        }
+    }
+}
+
+void PuzzleData::RemoveAllHints()
+{
+    mHints.clear();
 }

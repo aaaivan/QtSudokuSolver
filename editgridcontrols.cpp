@@ -9,11 +9,11 @@
 EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent)
     : QWidget{parent},
       mMainWindowContent(mainWindowContent),
-      mAddDigitsBtn(new QPushButton("Enter Given Digits")),
-      mDrawRegionsBtn(new QPushButton("Draw Regions")),
-      mDrawKillersBtn(new QPushButton("Draw Killer Cages")),
-      mPositiveDiagonalCheckbox(new QCheckBox("Add positive diagonal constraint")),
-      mNegativeDiagonalCheckbox(new QCheckBox("Add negative diagonal constraint"))
+      mAddDigitsBtn(new QPushButton("Given Digits")),
+      mDrawRegionsBtn(new QPushButton("Regions")),
+      mDrawKillersBtn(new QPushButton("Killer Cages")),
+      mPositiveDiagonalCheckbox(new QCheckBox("Positive diagonal constraint")),
+      mNegativeDiagonalCheckbox(new QCheckBox("Negative diagonal constraint"))
 {
     // build the layout
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
