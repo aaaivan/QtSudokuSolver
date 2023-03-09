@@ -21,8 +21,24 @@ SOURCES += \
     mainwindow.cpp \
     mainwindowcontent.cpp \
     puzzledata.cpp \
+    solver/FishTechniques.cpp \
+    solver/GridProgressManager.cpp \
+    solver/LockedCandidates.cpp \
+    solver/NakedSubsets.cpp \
+    solver/Progress.cpp \
+    solver/Region.cpp \
+    solver/RegionUpdatesManager.cpp \
+    solver/RegionsManager.cpp \
+    solver/SaveLoadManager.cpp \
+    solver/Scanning.cpp \
+    solver/SolvingTechnique.cpp \
+    solver/SudokuCell.cpp \
+    solver/SudokuGrid.cpp \
+    solver/SudokuParser.cpp \
+    solver/VariantConstraints.cpp \
     sudokucellwidget.cpp \
     sudokugridwidget.cpp \
+    sudokusolverthread.cpp \
     variantcluewidget.cpp
 
 HEADERS += \
@@ -37,8 +53,23 @@ HEADERS += \
     mainwindow.h \
     mainwindowcontent.h \
     puzzledata.h \
+    solver/GridProgressManager.h \
+    solver/Progress.h \
+    solver/ProgressTypes.h \
+    solver/Region.h \
+    solver/RegionUpdatesManager.h \
+    solver/RegionsManager.h \
+    solver/SaveLoadManager.h \
+    solver/Scanning.h \
+    solver/SolvingTechnique.h \
+    solver/SudokuCell.h \
+    solver/SudokuGrid.h \
+    solver/SudokuParser.h \
+    solver/Types.h \
+    solver/VariantConstraints.h \
     sudokucellwidget.h \
     sudokugridwidget.h \
+    sudokusolverthread.h \
     variantcluewidget.h
 
 FORMS += \

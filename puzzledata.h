@@ -11,6 +11,12 @@ typedef std::set<CellCoord> CellsInRegion;
 class PuzzleData
 {
 public:
+    enum Diagonal
+    {
+        Diagonal_Negative,
+        Diagonal_Positive
+    };
+
     PuzzleData(unsigned short size);
 
 private:
