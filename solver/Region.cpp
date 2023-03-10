@@ -376,7 +376,7 @@ void Region::AddConfirmedValue(unsigned value)
 
         if (mConfirmedValues.size() == mCells.size())
         {
-            for (const unsigned short& v : mAllowedValues)
+            for (unsigned short v = 1; v <= mSize; ++v)
             {
                 if (mConfirmedValues.count(v) == 0)
                 {
