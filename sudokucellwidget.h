@@ -1,16 +1,16 @@
 #ifndef SUDOKUCELLWIDGET_H
 #define SUDOKUCELLWIDGET_H
 
-#include "mainwindowcontent.h"
-#include <QWidget>
-#include <QLabel>
-#include <QPushButton>
-#include <QStackedLayout>
-#include <QStackedWidget>
+#include <QFrame>
+#include <set>
 
+class MainWindowContent;
 class CellContentButton;
 class CellRegionIdButton;
 class VariantClueWidget;
+class QLabel;
+class QStackedLayout;
+class QStackedWidget;
 
 class SudokuCellWidget : public QFrame
 {
@@ -98,7 +98,7 @@ public:
     const QSet<VariantClueWidget*>& VariantCluesGet() const;
 
     // public non-const functions
-    void SwitchView(MainWindowContent::ViewType view);
+    void SwitchView(size_t view);
     void NeighboursSet(SudokuCellWidget* top, SudokuCellWidget* right, SudokuCellWidget* btm, SudokuCellWidget* left);
     void SetHighlighted(bool highlight);
     void ResetRegionId();
@@ -108,6 +108,7 @@ public:
     void SetSolvedDigit(unsigned short value);
     void AddVariantClue(VariantClueWidget* clue);
     void RemoveVariantClue(VariantClueWidget* clue);
+    void UpdateOptions(const std::set<unsigned short> &options);
 };
 
 #endif // SUDOKUCELLWIDGET_H

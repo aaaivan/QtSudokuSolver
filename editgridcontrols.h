@@ -1,10 +1,11 @@
 #ifndef EDITGRIDCONTROLS_H
 #define EDITGRIDCONTROLS_H
 
-#include "mainwindowcontent.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QCheckBox>
+
+class MainWindowContent;
 
 class EditGridControls : public QWidget
 {
@@ -22,7 +23,6 @@ private:
     QCheckBox* mPositiveDiagonalCheckbox;
     QCheckBox* mNegativeDiagonalCheckbox;
 
-    MainWindowContent::ViewType GetViewForButton(QPushButton* btn);
     void OnViewButtonChecked(QPushButton* btn);
 
 private slots:

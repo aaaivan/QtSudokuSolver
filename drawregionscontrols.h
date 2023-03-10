@@ -3,13 +3,13 @@
 
 #include "contextmenuwindow.h"
 #include <QWidget>
-#include <QComboBox>
-#include <QPushButton>
-#include <QLabel>
 
 class SudokuCellWidget;
 class SudokuGridWidget;
 class MainWindowContent;
+class QComboBox;
+class QPushButton;
+class QLabel;
 
 class DrawRegionsControls : public QWidget, public ContextMenuWindow
 {

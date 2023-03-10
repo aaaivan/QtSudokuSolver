@@ -2,7 +2,6 @@
 #define GRIDGRAPHICALOVERLAY_H
 
 #include <QFrame>
-#include <QWidget>
 
 class SudokuGridWidget;
 

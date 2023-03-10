@@ -1,11 +1,12 @@
 #include "killercagewidget.h"
-#include "gridgraphicaloverlay.h"
-#include "puzzledata.h"
 #include "sudokucellwidget.h"
 #include "drawkillerscontrols.h"
+#include "gridgraphicaloverlay.h"
 #include "sudokugridwidget.h"
+#include "sudokusolverthread.h"
 #include <QPicture>
 #include <QPainterPath>
+#include <QPainter>
 
 constexpr Qt::GlobalColor kHighlightColour = Qt::green;
 constexpr float kHighlightOpacity = 0.2f;
@@ -35,7 +36,7 @@ KillerCageWidget::~KillerCageWidget()
 {
     if(mCells.size() > 0)
     {
-        mGrid->PuzzleDataGet()->RemoveKillerCage(mCells[0]->CellIdGet());
+        mGrid->SolverGet()->RemoveKillerCage(mCells[0]->CellIdGet());
     }
     for(const auto& c : mCells)
     {
@@ -315,23 +316,22 @@ void KillerCageWidget::AddCell(SudokuCellWidget *cell)
         if(mCells.size() == 1)
         {
             unsigned short id = cell->CellIdGet();
-            mGrid->PuzzleDataGet()->AddKillerCage(id, {mCageTotal, {id}});
+            mGrid->SolverGet()->AddKillerCage(id, {mCageTotal, {id}});
         }
         else if(index == 0)
         {
             unsigned short newId = cell->CellIdGet();
             unsigned short oldId = mCells[1]->CellIdGet();
-            mGrid->PuzzleDataGet()->AddCellToKillerCage(oldId, newId);
+            mGrid->SolverGet()->AddCellToKillerCage(oldId, newId);
 
-            std::pair<unsigned int, CellsInRegion> cage;
-            mGrid->PuzzleDataGet()->KillerCageGet(oldId, cage);
-            mGrid->PuzzleDataGet()->AddKillerCage(newId, cage);
-            mGrid->PuzzleDataGet()->RemoveKillerCage(oldId);
+            std::pair<unsigned int, CellsInRegion> cage = mGrid->SolverGet()->KillerCageGet(oldId);
+            mGrid->SolverGet()->AddKillerCage(newId, cage);
+            mGrid->SolverGet()->RemoveKillerCage(oldId);
         }
         else
         {
             unsigned short id = mCells[0]->CellIdGet();
-            mGrid->PuzzleDataGet()->AddCellToKillerCage(id, cell->CellIdGet());
+            mGrid->SolverGet()->AddCellToKillerCage(id, cell->CellIdGet());
         }
 
         UpdatePicture();
@@ -352,17 +352,16 @@ void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
             {
                 unsigned short oldId = cell->CellIdGet();
                 unsigned short newId = mCells[0]->CellIdGet();
-                mGrid->PuzzleDataGet()->RemoveCellFromKillerCage(oldId, oldId);
+                mGrid->SolverGet()->RemoveCellFromKillerCage(oldId, oldId);
 
-                std::pair<unsigned int, CellsInRegion> cage;
-                mGrid->PuzzleDataGet()->KillerCageGet(oldId, cage);
-                mGrid->PuzzleDataGet()->AddKillerCage(newId, cage);
-                mGrid->PuzzleDataGet()->RemoveKillerCage(oldId);
+                std::pair<unsigned int, CellsInRegion> cage = mGrid->SolverGet()->KillerCageGet(oldId);
+                mGrid->SolverGet()->AddKillerCage(newId, cage);
+                mGrid->SolverGet()->RemoveKillerCage(oldId);
             }
             else
             {
                 unsigned short id = mCells[0]->CellIdGet();
-                mGrid->PuzzleDataGet()->RemoveCellFromKillerCage(id, cell->CellIdGet());
+                mGrid->SolverGet()->RemoveCellFromKillerCage(id, cell->CellIdGet());
             }
 
             CalculateMinCol();
@@ -403,7 +402,7 @@ void KillerCageWidget::CageTotalSet(unsigned int total)
     if(mCageTotal != total)
     {
         mCageTotal = total;
-        mGrid->PuzzleDataGet()->KillerCageTotalSet(mCells[0]->CellIdGet(), mCageTotal);
+        mGrid->SolverGet()->KillerCageTotalSet(mCells[0]->CellIdGet(), mCageTotal);
         UpdateLabel();
     }
 }

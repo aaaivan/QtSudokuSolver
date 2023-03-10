@@ -1,9 +1,14 @@
 #include "sudokucellwidget.h"
-#include "drawregionscontrols.h"
-#include "puzzledata.h"
-#include "sudokugridwidget.h"
 #include "cellcontentbutton.h"
 #include "variantcluewidget.h"
+#include "sudokugridwidget.h"
+#include "drawregionscontrols.h"
+#include "mainwindowcontent.h"
+#include "sudokusolverthread.h"
+#include "mainwindow.h"
+#include <QLabel>
+#include <QStackedLayout>
+#include <QStackedWidget>
 
 SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsigned short gridSize,int cellLength,
                                    MainWindowContent* mainWindowContent, QWidget *parent)
@@ -21,7 +26,7 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
       mValueLabel(new CellContentButton(gridSize, this)),
       mRegionIdLabel(new CellContentButton(gridSize, this)),
       mGraphicsOverlay(new QLabel()),
-      mContentString("12345\n6789"),
+      mContentString(""),
       mContentType(ContentType::CellOptions),
       mRegionId(0),
       mLength(cellLength),
@@ -229,9 +234,9 @@ const QSet<VariantClueWidget *> &SudokuCellWidget::VariantCluesGet() const
     return mVariantClues;
 }
 
-void SudokuCellWidget::SwitchView(MainWindowContent::ViewType view)
+void SudokuCellWidget::SwitchView(size_t view)
 {
-    switch (view)
+    switch (static_cast<MainWindowContent::ViewType>(view))
     {
     case MainWindowContent::ViewType::EnterDigits:
         ShowRegionNumber(false);
@@ -280,7 +285,7 @@ void SudokuCellWidget::SetEdgeWeight(CellEdge edge, bool bold)
 
 void SudokuCellWidget::UpdateRegionId(unsigned short newId)
 {
-    auto cellCount = mMainWindowContent->GridGet()->PuzzleDataGet()->CellCountInRegion(newId);
+    auto cellCount = mMainWindowContent->GridGet()->SolverGet()->CellCountInRegion(newId);
     if(cellCount >= mGridSize)
     {
         return;
@@ -290,8 +295,8 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
     {
         DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions));
 
-        mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveCellFromRegion(mRegionId, mId);
-        mMainWindowContent->GridGet()->PuzzleDataGet()->AddCellToRegion(newId, mId);
+        mMainWindowContent->GridGet()->SolverGet()->RemoveCellFromRegion(mRegionId, mId);
+        mMainWindowContent->GridGet()->SolverGet()->AddCellToRegion(newId, mId);
         context->UpdateCellCounters(mRegionId);
         context->UpdateCellCounters(newId);
         mRegionIdLabel->setText(newId ? QString::number(newId) : "-");
@@ -311,6 +316,22 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
         mHighlighted = mRegionId == context->SelectedRegionIdGet();
         RefreshLayout();
     }
+}
+
+void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options)
+{
+    QString text = "";
+    int lineBreak = 0;
+    for (const auto& opt : options)
+    {
+        if(lineBreak == mGridSize/2)
+        {
+            text += '\n';
+        }
+        text += QString::number(opt);
+        lineBreak++;
+    }
+    mOptionsLabel->setText(text);
 }
 
 void SudokuCellWidget::NeighboursSet(SudokuCellWidget *top, SudokuCellWidget *right, SudokuCellWidget *btm, SudokuCellWidget *left)
@@ -343,7 +364,8 @@ void SudokuCellWidget::SetRegionId(unsigned short newId)
 
 void SudokuCellWidget::SetGivenDigit(unsigned short value)
 {
-    mMainWindowContent->GridGet()->PuzzleDataGet()->AddGiven(value, mId);
+    mMainWindowContent->GridGet()->SolverGet()->AddGiven(value, mId);
+    mMainWindowContent->MainWindowGet()->SolverGet()->SubmitChangesToSolver();
 
     mValueLabel->setText(QString::number(value));
     mContentType = ContentType::GivenDigit;
@@ -353,7 +375,8 @@ void SudokuCellWidget::SetGivenDigit(unsigned short value)
 
 void SudokuCellWidget::RemoveGivenDigit()
 {
-    mMainWindowContent->GridGet()->PuzzleDataGet()->RemoveGiven(mId);
+    mMainWindowContent->GridGet()->SolverGet()->RemoveGiven(mId);
+    mMainWindowContent->MainWindowGet()->SolverGet()->SubmitChangesToSolver();
 
     mValueLabel->setText("");
     mContentType = ContentType::CellOptions;

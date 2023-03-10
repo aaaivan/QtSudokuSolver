@@ -1,14 +1,16 @@
 #include "sudokugridwidget.h"
-#include "gridgraphicaloverlay.h"
 #include "sudokucellwidget.h"
-#include "puzzledata.h"
+#include "gridgraphicaloverlay.h"
+#include "mainwindowcontent.h"
+#include "sudokusolverthread.h"
+#include "mainwindow.h"
 #include <QStackedLayout>
+#include <QPainter>
 
 SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
       mCellLength(50),
       mSize(size),
-      mPuzzleData(std::make_shared<PuzzleData>(size)),
       mCells(),
       mMainWindowContent(mainWindowContent),
       mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength))
@@ -57,6 +59,9 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
     gridLayout->setSpacing(0);
     gridLayout->setContentsMargins(0, 0, 0, 0);
     this->setStyleSheet("SudokuGridWidget{background-color: white;}");
+
+    // Solver update event
+    connect(SolverGet(), &SudokuSolverThread::CellUpdated, this, &SudokuGridWidget::UpdateOptionsOfCell);
 }
 
 SudokuGridWidget::~SudokuGridWidget()
@@ -72,16 +77,23 @@ void SudokuGridWidget::paintEvent(QPaintEvent *event)
     pen.setWidth(3);
     painter.setPen(pen);
 
-    if(mPuzzleData->HasNegativeDiagonalConstraint())
+    if(SolverGet()->HasNegativeDiagonalConstraint())
     {
         painter.drawLine(0, 0, sizeHint().width(), sizeHint().height());
     }
-    if(mPuzzleData->HasPositiveDiagonalConstraint())
+    if(SolverGet()->HasPositiveDiagonalConstraint())
     {
         painter.drawLine(sizeHint().width(), 0, 0, sizeHint().height());
     }
 
     QFrame::paintEvent(event);
+}
+
+void SudokuGridWidget::UpdateOptionsOfCell(unsigned short id, const std::set<unsigned short> &content)
+{
+    unsigned short row = id / mSize;
+    unsigned short col = id % mSize;
+    mCells[row][col]->UpdateOptions(content);
 }
 
 unsigned short SudokuGridWidget::CellLengthGet() const
@@ -99,9 +111,9 @@ const QVector<QVector<SudokuCellWidget *> > &SudokuGridWidget::CellsGet() const
     return mCells;
 }
 
-PuzzleData *SudokuGridWidget::PuzzleDataGet() const
+SudokuSolverThread *SudokuGridWidget::SolverGet() const
 {
-    return mPuzzleData.get();
+    return mMainWindowContent->MainWindowGet()->SolverGet();
 }
 
 GridGraphicalOverlay *SudokuGridWidget::GraphicalOverlayGet() const
@@ -109,7 +121,7 @@ GridGraphicalOverlay *SudokuGridWidget::GraphicalOverlayGet() const
     return mGraphicalOverlay;
 }
 
-void SudokuGridWidget::SwitchView(MainWindowContent::ViewType view)
+void SudokuGridWidget::SwitchView(size_t view)
 {
     for(const auto& vect : mCells)
     {

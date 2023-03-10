@@ -1,15 +1,20 @@
 #include "sudokusolverthread.h"
+#include "solver/GridProgressManager.h"
+#include "solver/SudokuCell.h"
+#include "solver/VariantConstraints.h"
+#include <QDebug>
 
-SudokuSolverThread::SudokuSolverThread(QObject *parent)
+SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
     : QThread{parent},
-      mPuzzleData(0),
+      mGrid(gridSize, this),
+      mPuzzleData(gridSize),
       mGivensToAdd(),
       mHintsToAdd(),
-      mRegionsToAdd(),
-      mKillersToAdd(),
-      mDiagonalsToAdd(),
-      mClearCells(false),
-      mClearGrid(false),
+      mAddPositiveDiagonal(false),
+      mAddNegativeDiagonal(false),
+      mReloadCells(false),
+      mReloadGrid(false),
+      mNewInput(false),
       mAbort(false),
       mMutex(),
       mThreadCondition()
@@ -27,57 +32,212 @@ SudokuSolverThread::~SudokuSolverThread()
 
 void SudokuSolverThread::run()
 {
+    GridProgressManager* progressManager = mGrid.ProgressManagerGet();
+    forever
+    {
+        // collect input
+        mMutex.lock();
+        const unsigned short gridSize = mPuzzleData.mSize;
+        const PuzzleData puzzleData = mPuzzleData;
+        std::set<CellCoord> newGivens;
+        std::set<CellCoord> newHints;
+        const bool positiveDiagonal = mAddPositiveDiagonal;
+        const bool negativeDiagonal = mAddNegativeDiagonal;
+        const bool reloadGrid = mReloadGrid;
+        const bool reloadCells = mReloadCells;
 
+        if(!reloadGrid && !reloadCells)
+        {
+            newGivens = mGivensToAdd;
+            newHints = mHintsToAdd;
+        }
+
+        mGivensToAdd.clear();
+        mHintsToAdd.clear();
+        mAddNegativeDiagonal = false;
+        mAddPositiveDiagonal = false;
+        mReloadGrid = false;
+        mReloadCells = false;
+        mNewInput = false;
+        mMutex.unlock();
+
+        if(reloadGrid)
+        {
+            mGrid.Clear();
+            // define regions
+            for (const auto& region : puzzleData.mRegions)
+            {
+                std::vector<std::array<unsigned short, 2>> cells;
+                cells.reserve(region.size());
+                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                {
+                    return {static_cast<unsigned short>(id / gridSize),
+                            static_cast<unsigned short>(id % gridSize)};
+                };
+                std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
+                mGrid.DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
+            }
+            // define killers
+            for (const auto& killer : puzzleData.mKillerCages)
+            {
+                unsigned int killerSum = killer.second.first;
+                const auto& killerCells = killer.second.second;
+                std::vector<std::array<unsigned short, 2>> cells;
+                cells.reserve(killerCells.size());
+                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                {
+                    return {static_cast<unsigned short>(id / gridSize),
+                            static_cast<unsigned short>(id % gridSize)};
+                };
+                std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
+                mGrid.DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
+            }
+        }
+
+        // define negative diagonal
+        if((reloadGrid && puzzleData.mNegativeDiagonal) ||
+           (!reloadGrid && negativeDiagonal))
+        {
+            std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Negative);
+            mGrid.DefineRegion(cells, RegionType::Generic_region);
+        }
+
+        // define positive diagonal
+        if((reloadGrid && puzzleData.mPositiveDiagonal) ||
+           (!reloadGrid && positiveDiagonal))
+        {
+            std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
+            mGrid.DefineRegion(cells, RegionType::Generic_region);
+        }
+
+        // Clear given cells if necessary
+        if(reloadCells)
+        {
+            mGrid.ResetContents();
+        }
+
+        // define givens
+        for (const auto& given : puzzleData.mGivens)
+        {
+            if(reloadCells || newGivens.count(given.first))
+            {
+                mGrid.AddGivenCell(given.first / gridSize, given.first % gridSize, given.second);
+            }
+        }
+
+        // define hints
+        for (const auto& hints : puzzleData.mHints)
+        {
+            if(reloadCells || newHints.count(hints.first))
+            {
+                mGrid.SetCellEliminationHints(hints.first / gridSize, hints.first % gridSize, hints.second);
+            }
+        }
+
+        // solve
+        while (!progressManager->HasFinished())
+        {
+            if(mNewInput)
+            {
+                break;
+            }
+            if(mAbort)
+            {
+                QMutexLocker locked(&mMutex);
+                mAbort = false;
+                return;
+            }
+            progressManager->NextStep();
+        }
+
+        // we axited th esolve loop. There can be two reasons:
+        // 1- the solver has finished (sudoku solved or runout of techniques)
+        // 2- there is a new user input to be processed
+        mMutex.lock();
+        if(mAbort)
+        {
+            mAbort = false;
+            return;
+        }
+        if(!mNewInput)
+        {
+            // pause this thread while there is nothing to do
+            mThreadCondition.wait(&mMutex);
+        }
+        mMutex.unlock();
+    }
 }
 
-void SudokuSolverThread::AddGivenValue(CellCoord cell)
+void SudokuSolverThread::AddGivenValueToSubmissionQueue(CellCoord cell)
 {
-    QMutexLocker locker(&mMutex);
-    mGivensToAdd.push_back(cell);
+    if(mReloadGrid || mReloadCells)
+        return;
+
+    mGivensToAdd.insert(cell);
 }
 
-void SudokuSolverThread::AddHint(CellCoord cell)
+void SudokuSolverThread::AddHintToSubmissionQueue(CellCoord cell)
 {
-    QMutexLocker locker(&mMutex);
-    mHintsToAdd.push_back(cell);
+    if(mReloadGrid || mReloadCells)
+        return;
+
+    mHintsToAdd.insert(cell);
 }
 
-void SudokuSolverThread::AddRegion(unsigned short index)
+void SudokuSolverThread::AddDiagonalToSubmissionQueue(PuzzleData::Diagonal diagonal)
 {
-    QMutexLocker locker(&mMutex);
-    mRegionsToAdd.push_back(index);
+    if(mReloadGrid)
+        return;
+
+    if(diagonal == PuzzleData::Diagonal_Negative)
+    {
+        mAddNegativeDiagonal = true;
+    }
+    else if (diagonal == PuzzleData::Diagonal_Positive)
+    {
+        mAddPositiveDiagonal = true;
+    }
 }
 
-void SudokuSolverThread::AddKiller(CellCoord id)
+void SudokuSolverThread::ReloadCells()
 {
-    QMutexLocker locker(&mMutex);
-    mKillersToAdd.push_back(id);
+    mReloadCells = true;
 }
 
-void SudokuSolverThread::AddDiagonal(PuzzleData::Diagonal diagonal)
+void SudokuSolverThread::ReloadGrid()
 {
-    QMutexLocker locker(&mMutex);
-    mDiagonalsToAdd.push_back(diagonal);
+    mReloadGrid = true;
+    mReloadCells = true;
 }
 
-void SudokuSolverThread::ClearCells(const PuzzleData &puzzle)
+std::vector<std::array<unsigned short, 2>> SudokuSolverThread::DiagonalCellsGet(unsigned short gridSize, PuzzleData::Diagonal diagonal) const
 {
-    QMutexLocker locker(&mMutex);
-    mPuzzleData = puzzle;
-    mClearCells = true;
-}
+    std::vector<std::array<unsigned short, 2>> cells;
+    cells.reserve(gridSize);
 
-void SudokuSolverThread::ClearGrid(const PuzzleData &puzzle)
-{
-    QMutexLocker locker(&mMutex);
-    mPuzzleData = puzzle;
-    mClearGrid = true;
-    mClearCells = true;
+    if(diagonal == PuzzleData::Diagonal_Negative)
+    {
+        for (unsigned short i = 0; i < gridSize; ++i)
+        {
+            cells.push_back({i, i});
+        }
+    }
+    else if(diagonal == PuzzleData::Diagonal_Positive)
+    {
+        for (unsigned short i = 0; i < gridSize; ++i)
+        {
+            cells.push_back({i, static_cast<unsigned short>(gridSize - 1 - i)});
+        }
+    }
+
+    return cells;
 }
 
 void SudokuSolverThread::SubmitChangesToSolver()
 {
     QMutexLocker locker(&mMutex);
+
+    mNewInput = true;
     if (!isRunning())
     {
         start(HighestPriority);
@@ -86,4 +246,9 @@ void SudokuSolverThread::SubmitChangesToSolver()
     {
         mThreadCondition.wakeOne();
     }
+}
+
+void SudokuSolverThread::NotifyCellChanged(SudokuCell *cell)
+{
+    emit CellUpdated(cell->IdGet(), cell->OptionsGet());
 }

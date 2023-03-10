@@ -1,13 +1,16 @@
 #include "adddigitscontrols.h"
-#include "mainwindowcontent.h"
-#include "puzzledata.h"
-#include "qapplication.h"
 #include "sudokucellwidget.h"
 #include "sudokugridwidget.h"
+#include "mainwindowcontent.h"
+#include "sudokusolverthread.h"
 #include <QLabel>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QButtonGroup>
+#include <QStackedLayout>
+#include <QCheckBox>
+#include <QApplication>
+#include <QPushButton>
 #include <set>
 
 AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, QWidget *parent)
@@ -85,8 +88,7 @@ void AddDigitsControls::CellGainedFocus(SudokuCellWidget *cell)
         FocusedCellSet(cell);
         SwitchView(MenuView::DetailedView);
 
-        std::set<unsigned short> hints;
-        mGrid->PuzzleDataGet()->HintsGet(cell->CellIdGet(), hints);
+        std::set<unsigned short> hints = mGrid->SolverGet()->HintsGet(cell->CellIdGet());
         for (int i = 0; i < mGrid->SizeGet(); ++i)
         {
             mCheckBoxes[i]->setChecked(hints.count(i+1) > 0);
@@ -150,7 +152,8 @@ void AddDigitsControls::DeleteAllBtn_Clicked()
                 cells[i][j]->RemoveGivenDigit();
             }
         }
-        mGrid->PuzzleDataGet()->RemoveAllHints();
+        mGrid->SolverGet()->RemoveAllHints();
+        mGrid->SolverGet()->SubmitChangesToSolver();
     }
 }
 
@@ -163,12 +166,14 @@ void AddDigitsControls::HintCheckbox_Toggled(int id, bool checked)
 
     if(checked)
     {
-        mGrid->PuzzleDataGet()->AddHint(mFocusedCell->CellIdGet(), id);
+        mGrid->SolverGet()->AddHint(mFocusedCell->CellIdGet(), id);
     }
     else
     {
-        mGrid->PuzzleDataGet()->RemoveHint(mFocusedCell->CellIdGet(), id);
+        mGrid->SolverGet()->RemoveHint(mFocusedCell->CellIdGet(), id);
     }
+
+    mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
 void AddDigitsControls::DoneBtn_Clicked()

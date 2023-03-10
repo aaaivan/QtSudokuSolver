@@ -3,13 +3,13 @@
 
 #include "contextmenuwindow.h"
 #include <QWidget>
-#include <QSpinBox>
-#include <QStackedLayout>
 
 class MainWindowContent;
 class SudokuGridWidget;
 class SudokuCellWidget;
 class KillerCageWidget;
+class QSpinBox;
+class QStackedLayout;
 
 class DrawKillersControls : public QWidget, public ContextMenuWindow
 {

@@ -1,4 +1,5 @@
 #include "mainwindowcontent.h"
+#include "mainwindow.h"
 #include "adddigitscontrols.h"
 #include "drawkillerscontrols.h"
 #include "sudokugridwidget.h"
@@ -7,9 +8,11 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QTabWidget>
+#include <QStackedLayout>
 
-MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
+MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent)
     : QWidget{parent},
+      mMainWindow(parent),
       mContextMenu(new QStackedLayout()),
       mGrid(new SudokuGridWidget(size, this)),
       mCurrentView(ViewType::EnterDigits)
@@ -47,7 +50,12 @@ MainWindowContent::MainWindowContent(unsigned short size, QWidget *parent)
     this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 }
 
-ContextMenuWindow *MainWindowContent::ActiveContextMenuGet()
+MainWindow *MainWindowContent::MainWindowGet() const
+{
+    return mMainWindow;
+}
+
+ContextMenuWindow *MainWindowContent::ActiveContextMenuGet() const
 {
     return dynamic_cast<ContextMenuWindow*>(mContextMenu->currentWidget());
 }

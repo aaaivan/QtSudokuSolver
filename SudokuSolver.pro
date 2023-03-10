@@ -29,7 +29,6 @@ SOURCES += \
     solver/Region.cpp \
     solver/RegionUpdatesManager.cpp \
     solver/RegionsManager.cpp \
-    solver/SaveLoadManager.cpp \
     solver/Scanning.cpp \
     solver/SolvingTechnique.cpp \
     solver/SudokuCell.cpp \
@@ -59,7 +58,6 @@ HEADERS += \
     solver/Region.h \
     solver/RegionUpdatesManager.h \
     solver/RegionsManager.h \
-    solver/SaveLoadManager.h \
     solver/Scanning.h \
     solver/SolvingTechnique.h \
     solver/SudokuCell.h \

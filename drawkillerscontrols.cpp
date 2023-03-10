@@ -1,15 +1,18 @@
 #include "drawkillerscontrols.h"
-#include "gridgraphicaloverlay.h"
-#include "killercagewidget.h"
 #include "sudokucellwidget.h"
+#include "killercagewidget.h"
+#include "gridgraphicaloverlay.h"
 #include "sudokugridwidget.h"
-#include "variantcluewidget.h"
+#include "mainwindowcontent.h"
+#include "sudokusolverthread.h"
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QFrame>
 #include <QMessageBox>
 #include <QLabel>
 #include <QFormLayout>
+#include <QSpinBox>
+#include <QStackedLayout>
 
 DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, QWidget *parent)
     : QWidget{parent},
@@ -81,6 +84,7 @@ void DrawKillersControls::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
     mGrid->GraphicalOverlayGet()->ClearActiveComponent();
+    mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
 void DrawKillersControls::showEvent(QShowEvent *event)
@@ -224,6 +228,7 @@ void DrawKillersControls::ClueDidGetInactive(QWidget *clue)
     Q_UNUSED(clue)
     mCageTotal->setRange(0, 0);
     SwitchView(MenuView::MainView);
+    mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
 void DrawKillersControls::DeleteAllKillersBtn_Clicked()
@@ -244,6 +249,10 @@ void DrawKillersControls::DeleteAllKillersBtn_Clicked()
         for(const auto& cage : killerCages)
         {
             mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(cage);
+        }
+        if(killerCages.size() > 0)
+        {
+            mGrid->SolverGet()->SubmitChangesToSolver();
         }
     }
 }

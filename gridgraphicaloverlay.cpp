@@ -1,7 +1,7 @@
 #include "gridgraphicaloverlay.h"
-#include "contextmenuwindow.h"
-#include "sudokugridwidget.h"
 #include "variantcluewidget.h"
+#include "sudokugridwidget.h"
+#include "contextmenuwindow.h"
 
 GridGraphicalOverlay::GridGraphicalOverlay(SudokuGridWidget* grid, int cellLength, QWidget *parent)
     : QFrame{parent},

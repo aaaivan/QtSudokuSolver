@@ -1,15 +1,18 @@
 #ifndef SUDOKUGRIDWIDGET_H
 #define SUDOKUGRIDWIDGET_H
 
-#include "mainwindowcontent.h"
-#include <QWidget>
-#include <QLabel>
-#include <QGridLayout>
-#include <QPainter>
+#include <QFrame>
+#include <set>
 
 class SudokuCellWidget;
 class PuzzleData;
 class GridGraphicalOverlay;
+class SudokuSolverThread;
+class MainWindowContent;
+class QWidget;
+class QLabel;
+class QGridLayout;
+class QPainter;
 
 class SudokuGridWidget : public QFrame
 {
@@ -21,7 +24,6 @@ public:
 private:
     const int mCellLength;
     unsigned short mSize;
-    std::shared_ptr<PuzzleData> mPuzzleData;
     QVector<QVector<SudokuCellWidget*>> mCells;
 
     MainWindowContent* mMainWindowContent;
@@ -29,16 +31,18 @@ private:
 
     void paintEvent(QPaintEvent* event) override;
 
+    void UpdateOptionsOfCell(unsigned short id, const std::set<unsigned short>& content);
+
 public:
     // public getters
     unsigned short CellLengthGet() const;
     unsigned short SizeGet() const;
     const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
-    PuzzleData* PuzzleDataGet() const;
+    SudokuSolverThread* SolverGet() const;
     GridGraphicalOverlay* GraphicalOverlayGet() const;
 
     // public non-const functions
-    void SwitchView(MainWindowContent::ViewType view);
+    void SwitchView(size_t view);
 };
 
 #endif // SUDOKUGRIDWIDGET_H

@@ -3,10 +3,10 @@
 
 #include "variantcluewidget.h"
 #include <QLabel>
-#include <QPainter>
 
 class SudokuCellWidget;
 class DrawKillersControls;
+class QPainter;
 
 class KillerCageWidget : public QLabel, public VariantClueWidget
 {

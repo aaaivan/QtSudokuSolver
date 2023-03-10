@@ -1,12 +1,16 @@
 #include "drawregionscontrols.h"
 #include "sudokucellwidget.h"
 #include "sudokugridwidget.h"
-#include "puzzledata.h"
+#include "mainwindowcontent.h"
+#include "sudokusolverthread.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QComboBox>
+#include <QPushButton>
+#include <QLabel>
 
 constexpr char kCounterLabelText[] = "Cells in region %1: <b>%2</b>";
 
@@ -62,6 +66,7 @@ void DrawRegionsControls::hideEvent(QHideEvent *event)
             c->SetHighlighted(false);
         }
     }
+    mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
 void DrawRegionsControls::showEvent(QShowEvent *event)
@@ -165,8 +170,8 @@ void DrawRegionsControls::UpdateCellCounters(unsigned short regionId)
     unsigned short index = regionId - 1;
     if(index < mGrid->SizeGet())
     {
-        PuzzleData* puzzleData = mGrid->PuzzleDataGet();
-        int count = puzzleData->CellCountInRegion(regionId);
+        SudokuSolverThread* solver = mGrid->SolverGet();
+        int count = solver->CellCountInRegion(regionId);
         QString text = kCounterLabelText;
         if(count == mGrid->SizeGet())
         {

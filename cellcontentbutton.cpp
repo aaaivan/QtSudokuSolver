@@ -1,6 +1,6 @@
 #include "cellcontentbutton.h"
-#include "contextmenuwindow.h"
 #include "sudokucellwidget.h"
+#include "contextmenuwindow.h"
 #include "mainwindowcontent.h"
 #include <QKeyEvent>
 

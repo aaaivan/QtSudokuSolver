@@ -2,19 +2,19 @@
 #define MAINWINDOWCONTENT_H
 
 #include <QWidget>
-#include <QStackedLayout>
-#include <memory>
 
 class SudokuGridWidget;
 class DrawRegionsControls;
 class DrawKillersControls;
 class ContextMenuWindow;
+class MainWindow;
+class QStackedLayout;
 
 class MainWindowContent : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MainWindowContent(unsigned short size, QWidget *parent = nullptr);
+    explicit MainWindowContent(unsigned short size, MainWindow *parent);
 
     enum ViewType
     {
@@ -24,13 +24,15 @@ public:
     };
 
 private:
+    MainWindow* mMainWindow;
     QStackedLayout* mContextMenu;
     SudokuGridWidget* mGrid;
     ViewType mCurrentView;
 
 public:
+    MainWindow* MainWindowGet() const;
     ContextMenuWindow* ContextMenuGet(ViewType menu) const;
-    ContextMenuWindow* ActiveContextMenuGet();
+    ContextMenuWindow* ActiveContextMenuGet() const;
     SudokuGridWidget* GridGet() const;
     ViewType CurrentViewGet() const;
     void ChangeView(ViewType view);

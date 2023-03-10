@@ -3,10 +3,10 @@
 
 #include "contextmenuwindow.h"
 #include <QWidget>
-#include <QStackedLayout>
-#include <QCheckBox>
 
 class SudokuGridWidget;
+class QStackedLayout;
+class QCheckBox;
 
 class AddDigitsControls : public QWidget, public ContextMenuWindow
 {

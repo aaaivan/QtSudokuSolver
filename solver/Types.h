@@ -1,7 +1,7 @@
 #ifndef SUDOKU_TYPES_H
 #define SUDOKU_TYPES_H
 
-#define PRINT_LOG_MESSAGES 1
+#define PRINT_LOG_MESSAGES 0
 
 // Includes
 #include "ProgressTypes.h"
@@ -33,12 +33,13 @@ typedef std::pair<unsigned short, CellSet> ValueMapEntry;
 // enums
 enum class RegionType : int
 {
-	House_Row,
-	House_Column,
-	House_Region,
+    House_Row,
+    House_Column,
+    House_Region,
+    Generic_region,
 
-	KillerCage,
+    KillerCage,
 
-	MAX_TYPES
+    MAX_TYPES
 };
 #endif // SUDOKU_TYPES_H
