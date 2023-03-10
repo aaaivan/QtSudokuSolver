@@ -84,7 +84,11 @@ void SudokuCell::MakeGiven(unsigned short value)
     if (value)
     {
         mIsGiven = true;
-        RemoveAllOtherOptions(value);
+        mViableOptions.clear();
+        mViableOptions.insert(value);
+        mValue = value;
+        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GivenCellAdded>(this, *mViableOptions.begin()));
+        mParentGrid->SolverThreadManagerGet()->NotifyCellChanged(this);
     }
 }
 
@@ -96,14 +100,7 @@ void SudokuCell::RemoveOption(unsigned short guess)
         {
             Progress_OptionRemoved notification(this, guess);
             notification.ProcessProgress();
-            if (mIsGiven)
-            {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GivenCellAdded>(this, *mViableOptions.begin()));
-            }
-            else
-            {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleOptionLeftInCell>(this, *mViableOptions.begin()));
-            }
+            mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleOptionLeftInCell>(this, *mViableOptions.begin()));
         }
         else if (mViableOptions.size() == 0)
         {
@@ -168,6 +165,7 @@ void SudokuCell::Reset()
     {
         mViableOptions.emplace_hint(mViableOptions.end(), i);
     }
+    mParentGrid->SolverThreadManagerGet()->NotifyCellChanged(this);
 }
 
 void SudokuCell::ValueSet(unsigned short value)

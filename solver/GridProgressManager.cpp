@@ -32,7 +32,9 @@ const SolvingTechnique* GridProgressManager::TechniqueGet(TechniqueType type) co
 
 bool GridProgressManager::HasFinished() const
 {
-    return mFinished;
+    return  mFinished &&
+            mHighPriorityProgressQueue.empty() &&
+            mProgressQueue.empty();
 }
 
 void GridProgressManager::RegisterProgress(std::shared_ptr<Progress>&& deduction)

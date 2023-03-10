@@ -59,13 +59,13 @@ void EditGridControls::ViewButtonClicked(int btnId)
 void EditGridControls::PositiveDiagonalCheckbox_OnChange(int checked)
 {
     mMainWindowContent->GridGet()->SolverGet()->PositiveDiagonalConstraintSet(checked);
-    mMainWindowContent->MainWindowGet()->SolverGet()->SubmitChangesToSolver();
+    mMainWindowContent->GridGet()->SolverGet()->SubmitChangesToSolver();
     mMainWindowContent->GridGet()->update();
 }
 
 void EditGridControls::NegativeDiagonalCheckbox_OnChange(int checked)
 {
     mMainWindowContent->GridGet()->SolverGet()->NegativeDiagonalConstraintSet(checked);
-    mMainWindowContent->MainWindowGet()->SolverGet()->SubmitChangesToSolver();
+    mMainWindowContent->GridGet()->SolverGet()->SubmitChangesToSolver();
     mMainWindowContent->GridGet()->update();
 }

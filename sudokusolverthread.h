@@ -16,6 +16,8 @@ public:
     explicit SudokuSolverThread(unsigned short gridSize, QObject *parent = nullptr);
     ~SudokuSolverThread();
 
+    void Init();
+
 signals:
     void CellUpdated(unsigned short id, const std::set<unsigned short>& content);
     void PuzzleHasNoSolution(std::string message);
@@ -24,7 +26,7 @@ protected:
     void run() override;
 
 private:
-    SudokuGrid mGrid;
+    std::unique_ptr<SudokuGrid> mGrid;
     PuzzleData mPuzzleData;
 
     std::set<CellCoord> mGivensToAdd;

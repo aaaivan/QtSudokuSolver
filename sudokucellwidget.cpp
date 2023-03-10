@@ -5,7 +5,6 @@
 #include "drawregionscontrols.h"
 #include "mainwindowcontent.h"
 #include "sudokusolverthread.h"
-#include "mainwindow.h"
 #include <QLabel>
 #include <QStackedLayout>
 #include <QStackedWidget>
@@ -365,7 +364,7 @@ void SudokuCellWidget::SetRegionId(unsigned short newId)
 void SudokuCellWidget::SetGivenDigit(unsigned short value)
 {
     mMainWindowContent->GridGet()->SolverGet()->AddGiven(value, mId);
-    mMainWindowContent->MainWindowGet()->SolverGet()->SubmitChangesToSolver();
+    mMainWindowContent->GridGet()->SolverGet()->SubmitChangesToSolver();
 
     mValueLabel->setText(QString::number(value));
     mContentType = ContentType::GivenDigit;
@@ -376,7 +375,7 @@ void SudokuCellWidget::SetGivenDigit(unsigned short value)
 void SudokuCellWidget::RemoveGivenDigit()
 {
     mMainWindowContent->GridGet()->SolverGet()->RemoveGiven(mId);
-    mMainWindowContent->MainWindowGet()->SolverGet()->SubmitChangesToSolver();
+    mMainWindowContent->GridGet()->SolverGet()->SubmitChangesToSolver();
 
     mValueLabel->setText("");
     mContentType = ContentType::CellOptions;

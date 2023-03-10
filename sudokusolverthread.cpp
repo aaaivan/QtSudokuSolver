@@ -6,7 +6,7 @@
 
 SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
     : QThread{parent},
-      mGrid(gridSize, this),
+      mGrid(nullptr),
       mPuzzleData(gridSize),
       mGivensToAdd(),
       mHintsToAdd(),
@@ -30,9 +30,14 @@ SudokuSolverThread::~SudokuSolverThread()
     wait();
 }
 
+void SudokuSolverThread::Init()
+{
+    mGrid = std::make_unique<SudokuGrid>(mPuzzleData.mSize, this);
+}
+
 void SudokuSolverThread::run()
 {
-    GridProgressManager* progressManager = mGrid.ProgressManagerGet();
+    GridProgressManager* progressManager = mGrid->ProgressManagerGet();
     forever
     {
         // collect input
@@ -63,7 +68,7 @@ void SudokuSolverThread::run()
 
         if(reloadGrid)
         {
-            mGrid.Clear();
+            mGrid->Clear();
             // define regions
             for (const auto& region : puzzleData.mRegions)
             {
@@ -75,8 +80,9 @@ void SudokuSolverThread::run()
                             static_cast<unsigned short>(id % gridSize)};
                 };
                 std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
-                mGrid.DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
+                mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
             }
+
             // define killers
             for (const auto& killer : puzzleData.mKillerCages)
             {
@@ -90,7 +96,7 @@ void SudokuSolverThread::run()
                             static_cast<unsigned short>(id % gridSize)};
                 };
                 std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
-                mGrid.DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
+                mGrid->DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
             }
         }
 
@@ -99,7 +105,7 @@ void SudokuSolverThread::run()
            (!reloadGrid && negativeDiagonal))
         {
             std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Negative);
-            mGrid.DefineRegion(cells, RegionType::Generic_region);
+            mGrid->DefineRegion(cells, RegionType::Generic_region);
         }
 
         // define positive diagonal
@@ -107,13 +113,13 @@ void SudokuSolverThread::run()
            (!reloadGrid && positiveDiagonal))
         {
             std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
-            mGrid.DefineRegion(cells, RegionType::Generic_region);
+            mGrid->DefineRegion(cells, RegionType::Generic_region);
         }
 
         // Clear given cells if necessary
         if(reloadCells)
         {
-            mGrid.ResetContents();
+            mGrid->ResetContents();
         }
 
         // define givens
@@ -121,7 +127,7 @@ void SudokuSolverThread::run()
         {
             if(reloadCells || newGivens.count(given.first))
             {
-                mGrid.AddGivenCell(given.first / gridSize, given.first % gridSize, given.second);
+                mGrid->AddGivenCell(given.first / gridSize, given.first % gridSize, given.second);
             }
         }
 
@@ -130,7 +136,7 @@ void SudokuSolverThread::run()
         {
             if(reloadCells || newHints.count(hints.first))
             {
-                mGrid.SetCellEliminationHints(hints.first / gridSize, hints.first % gridSize, hints.second);
+                mGrid->SetCellEliminationHints(hints.first / gridSize, hints.first % gridSize, hints.second);
             }
         }
 
@@ -150,7 +156,7 @@ void SudokuSolverThread::run()
             progressManager->NextStep();
         }
 
-        // we axited th esolve loop. There can be two reasons:
+        // we axited the solve loop. There can be two reasons:
         // 1- the solver has finished (sudoku solved or runout of techniques)
         // 2- there is a new user input to be processed
         mMutex.lock();

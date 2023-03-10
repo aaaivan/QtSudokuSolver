@@ -119,6 +119,18 @@ bool Region::HasConfirmedValue(unsigned short value) const
     }
 }
 
+bool Region::ContainsRegion(Region *r)
+{
+    for(const auto& c : r->CellsGet())
+    {
+        if(mCells.count(c) == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool Region::IsValueAllowed(unsigned short value) const
 {
     if (IsLeafNode())

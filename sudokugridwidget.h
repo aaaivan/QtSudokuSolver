@@ -1,6 +1,7 @@
 #ifndef SUDOKUGRIDWIDGET_H
 #define SUDOKUGRIDWIDGET_H
 
+#include "sudokusolverthread.h"
 #include <QFrame>
 #include <set>
 
@@ -9,6 +10,7 @@ class PuzzleData;
 class GridGraphicalOverlay;
 class SudokuSolverThread;
 class MainWindowContent;
+class SudokuSolverThread;
 class QWidget;
 class QLabel;
 class QGridLayout;
@@ -28,6 +30,7 @@ private:
 
     MainWindowContent* mMainWindowContent;
     GridGraphicalOverlay* mGraphicalOverlay;
+    std::unique_ptr<SudokuSolverThread> mSolver;
 
     void paintEvent(QPaintEvent* event) override;
 

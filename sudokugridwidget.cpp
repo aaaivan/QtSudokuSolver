@@ -2,8 +2,6 @@
 #include "sudokucellwidget.h"
 #include "gridgraphicaloverlay.h"
 #include "mainwindowcontent.h"
-#include "sudokusolverthread.h"
-#include "mainwindow.h"
 #include <QStackedLayout>
 #include <QPainter>
 
@@ -13,7 +11,8 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
       mSize(size),
       mCells(),
       mMainWindowContent(mainWindowContent),
-      mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength))
+      mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength)),
+      mSolver(std::make_unique<SudokuSolverThread>(size, this))
 {
     // build stacked layout
     QStackedLayout* stackedLayout = new QStackedLayout(this);
@@ -61,7 +60,8 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
     this->setStyleSheet("SudokuGridWidget{background-color: white;}");
 
     // Solver update event
-    connect(SolverGet(), &SudokuSolverThread::CellUpdated, this, &SudokuGridWidget::UpdateOptionsOfCell);
+    connect(mSolver.get(), &SudokuSolverThread::CellUpdated, this, &SudokuGridWidget::UpdateOptionsOfCell);
+    mSolver->Init();
 }
 
 SudokuGridWidget::~SudokuGridWidget()
@@ -113,7 +113,7 @@ const QVector<QVector<SudokuCellWidget *> > &SudokuGridWidget::CellsGet() const
 
 SudokuSolverThread *SudokuGridWidget::SolverGet() const
 {
-    return mMainWindowContent->MainWindowGet()->SolverGet();
+    return mSolver.get();
 }
 
 GridGraphicalOverlay *SudokuGridWidget::GraphicalOverlayGet() const
