@@ -93,7 +93,7 @@ void SudokuGridWidget::UpdateOptionsOfCell(unsigned short id, const std::set<uns
 {
     unsigned short row = id / mSize;
     unsigned short col = id % mSize;
-    mCells[row][col]->UpdateOptions(content);
+    mCells[row][col]->UpdateOptions(content, mSolver->HintsGet(id));
 }
 
 unsigned short SudokuGridWidget::CellLengthGet() const

@@ -43,7 +43,6 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
 
     // set overlay graphics
     mGraphicsOverlay->setAttribute(Qt::WA_TransparentForMouseEvents);
-    //mGraphicsOverlay->setPixmap(QPixmap(":/assets/assets/TestBorder.png").scaled(40,40));
 
     // build stacked layout for the different contents of the cell
     mStackedContent->insertWidget(CellView::Options, mOptionsLabel);
@@ -60,7 +59,7 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
     mRegionIdLabel->setFont(QFont(mValueLabel->font().family(),20, 700));
 
     // borders and sizes
-    mValueLabel->setFlat(true);
+    // mValueLabel->setFlat(true);
 }
 
 QSize SudokuCellWidget::sizeHint() const
@@ -124,14 +123,14 @@ QString SudokuCellWidget::CreateOptionsLabelStylesheet() const
     static const QString focusBG = "rgba(255, 200, 0, 0.2)";
 
     // normal styling
-    QString style = "QPushButton{\n";
+    QString style = "CellContentButton{\n";
     style += "background-color: " + (mHighlighted ? focusBG : normalBG) + ";\n";
     style += "border: 0px;\n";
     style += "color: grey;";
     style += "}\n";
 
     // focus styling
-    style += "QPushButton:focus{\n";
+    style += "CellContentButton:focus{\n";
     style += "background-color: " + focusBG + ";\n";
     style += "}\n";
 
@@ -144,14 +143,14 @@ QString SudokuCellWidget::CreateValueLabelStylesheet() const
     static const QString focusBG = "rgba(255, 200, 0, 0.2)";
 
     // normal styling
-    QString style = "QPushButton{\n";
+    QString style = "CellContentButton{\n";
     style += "background-color: " + (mHighlighted ? focusBG : normalBG) + ";\n";
     style += "border: 0px;\n";
     style +="color: black;";
     style += "}\n";
 
     // focus styling
-    style += "QPushButton:focus{\n";
+    style += "CellContentButton:focus{\n";
     style += "background-color: " + focusBG + ";\n";
     style += "}\n";
 
@@ -166,14 +165,14 @@ QString SudokuCellWidget::CreateRegionLabelStylesheet() const
     static const QString textColor = "grey";
 
     // normal styling
-    QString style = "QPushButton{\n";
+    QString style = "CellContentButton{\n";
     style += "background-color: " + (mHighlighted ? highlightBG : normalBG) + ";\n";
     style += "border: 0px;\n";
     style += "color: " + textColor + ";";
     style += "}\n";
 
     // focus styling
-    style += "QPushButton:focus{\n";
+    style += "CellContentButton:focus{\n";
     style += "background-color: " + focusBG + ";\n";
     style += "}\n";
 
@@ -304,7 +303,7 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
     }
 }
 
-void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options)
+void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options, const std::set<unsigned short> &hints)
 {
     QString text = "";
     int lineBreak = 0;
@@ -312,13 +311,27 @@ void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options)
     {
         if(lineBreak == mGridSize/2)
         {
-            text += '\n';
+            text += " ";
         }
         text += QString::number(opt);
         lineBreak++;
     }
+    if(hints.size() > 0)
+    {
+        text += "<font style='color:red;'>";
+        for (const auto& opt : hints)
+        {
+            if(lineBreak == mGridSize/2)
+            {
+                text += " ";
+            }
+            text += QString::number(opt);
+            lineBreak++;
+        }
+        text += "</font>";
+    }
     mOptionsLabel->setText(text);
-    mIsSolved = (options.size() == 1);
+    mIsSolved = (options.size() == 1 && hints.size() == 0);
     mOptionsLabel->setFont(QFont(mValueLabel->font().family(),mIsSolved ? 20 : 8, mIsSolved ? 500 : -1));
 }
 
