@@ -23,7 +23,6 @@ private:
     enum ContentType
     {
         GivenDigit,
-        SolvedDigit,
         CellOptions
     };
     enum CellEdge: int
@@ -47,6 +46,7 @@ private:
     unsigned short mRow;
     unsigned short mGridSize;
     unsigned short mId;
+    bool mIsSolved;
 
     MainWindowContent* mMainWindowContent;
     QList<SudokuCellWidget*> mNeighbours;
@@ -105,7 +105,6 @@ public:
     void SetRegionId(unsigned short newId);
     void SetGivenDigit(unsigned short value);
     void RemoveGivenDigit();
-    void SetSolvedDigit(unsigned short value);
     void AddVariantClue(VariantClueWidget* clue);
     void RemoveVariantClue(VariantClueWidget* clue);
     void UpdateOptions(const std::set<unsigned short> &options);

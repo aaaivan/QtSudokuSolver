@@ -16,6 +16,7 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
       mRow(row),
       mGridSize(gridSize),
       mId(row * gridSize + col),
+      mIsSolved(false),
       mMainWindowContent(mainWindowContent),
       mNeighbours(4, nullptr),
       mVariantClues(),
@@ -55,7 +56,6 @@ SudokuCellWidget::SudokuCellWidget(unsigned short row, unsigned short col, unsig
     mRegionIdLabel->setText(mRegionId ? QString::number(mRegionId) : "-");
 
     // text font
-    mOptionsLabel->setFont(QFont( mOptionsLabel->font().family(), 8));
     mValueLabel->setFont(QFont(mValueLabel->font().family(),20, 500));
     mRegionIdLabel->setFont(QFont(mValueLabel->font().family(),20, 700));
 
@@ -143,13 +143,11 @@ QString SudokuCellWidget::CreateValueLabelStylesheet() const
     static const QString normalBG = "transparent";
     static const QString focusBG = "rgba(255, 200, 0, 0.2)";
 
-    bool isGiven = mContentType == ContentType::GivenDigit;
-    QString textColour = isGiven ? "black" : "grey";
     // normal styling
     QString style = "QPushButton{\n";
     style += "background-color: " + (mHighlighted ? focusBG : normalBG) + ";\n";
     style += "border: 0px;\n";
-    style +="color: " + textColour + ";";
+    style +="color: black;";
     style += "}\n";
 
     // focus styling
@@ -331,6 +329,8 @@ void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options)
         lineBreak++;
     }
     mOptionsLabel->setText(text);
+    mIsSolved = (options.size() == 1);
+    mOptionsLabel->setFont(QFont(mValueLabel->font().family(),mIsSolved ? 20 : 8, mIsSolved ? 500 : -1));
 }
 
 void SudokuCellWidget::NeighboursSet(SudokuCellWidget *top, SudokuCellWidget *right, SudokuCellWidget *btm, SudokuCellWidget *left)
@@ -380,14 +380,6 @@ void SudokuCellWidget::RemoveGivenDigit()
     mValueLabel->setText("");
     mContentType = ContentType::CellOptions;
     mStackedContent->setCurrentIndex(CellView::Options);
-    RefreshLayout();
-}
-
-void SudokuCellWidget::SetSolvedDigit(unsigned short value)
-{
-    mValueLabel->setText(QString::number(value));
-    mContentType = ContentType::SolvedDigit;
-    mStackedContent->setCurrentIndex(CellView::Value);
     RefreshLayout();
 }
 

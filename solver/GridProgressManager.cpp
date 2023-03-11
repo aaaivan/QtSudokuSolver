@@ -2,7 +2,6 @@
 #include "Progress.h"
 #include "Region.h"
 #include "RegionUpdatesManager.h"
-#include "RegionsManager.h"
 
 GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mSudokuGrid(sudoku),
