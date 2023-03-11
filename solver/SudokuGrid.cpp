@@ -124,12 +124,26 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& 
 
 void SudokuGrid::ResetContents()
 {
-    mRegionsManager->Reset();
+    for (size_t i = 0; i < mSize; i++)
+    {
+        for (size_t j = 0; j < mSize; j++)
+        {
+            mGrid.at(i).at(j)->Reset();
+        }
+    }
     mProgressManager->Clear();
+    mRegionsManager->Reset();
 }
 
 void SudokuGrid::Clear()
 {
+    for (size_t i = 0; i < mSize; i++)
+    {
+        for (size_t j = 0; j < mSize; j++)
+        {
+            mGrid.at(i).at(j)->Reset();
+        }
+    }
     mProgressManager->Clear();
     mRegionsManager->Clear();
     DefineRowsAndCols();

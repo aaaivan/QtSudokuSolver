@@ -16,12 +16,7 @@ SudokuCell::SudokuCell(SudokuGrid* grid, unsigned short row, unsigned short col,
     mIsGiven( false ),
     mParentGrid(grid)
 {
-    for (unsigned short i = 1; i <= sudokuSize; ++i)
-    {
-        mViableOptions.emplace_hint(mViableOptions.end(), i);
-    }
-
-    mParentGrid->SolverThreadManagerGet()->NotifyCellChanged(this);
+    Reset();
 }
 
 unsigned short SudokuCell::ValueGet() const
@@ -158,8 +153,8 @@ void SudokuCell::RemoveAllOtherOptions(unsigned short option)
 void SudokuCell::Reset()
 {
     mValue = 0;
-    mEliminationHints.clear();
     mIsGiven = false;
+    mEliminationHints.clear();
     mViableOptions.clear();
     for (unsigned short i = 1; i <= mParentGrid->SizeGet(); ++i)
     {

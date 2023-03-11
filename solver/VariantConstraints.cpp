@@ -41,29 +41,9 @@ void KillerConstraint::Initialise(Region* region)
 {
     VariantConstraint::Initialise(region);
 
-    for (unsigned short v = 1; v <= mRegion->SizeGet(); ++v)
-    {
-        mAllowedValues.insert(v);
-    }
-
-    {
-        std::list<unsigned short> combination;
-        FindCombinations(1, mRegion->SizeGet() + 1, 0, combination);
-        UpdateAllowedAndConfirmedValues();
-    }
-
-    for (const auto& v : mRegion->ConfirmedValuesGet())
-    {
-        RemoveCombinationsWithoutValue(v);
-    }
-
-    for (unsigned short v = 1; v <= mRegion->SizeGet(); ++v)
-    {
-        if (!mRegion->IsValueAllowed(v))
-        {
-            RemoveCombinationsWithValue(v);
-        }
-    }
+    mAllowedValues.insert(mRegion->AllowedValuesGet().begin(), mRegion->AllowedValuesGet().end());
+    FindCombinations();
+    UpdateAllowedAndConfirmedValues();
 }
 
 unsigned short KillerConstraint::SumGet() const
@@ -116,7 +96,22 @@ RegionType KillerConstraint::TypeGet()
     return RegionType::KillerCage;
 }
 
-void KillerConstraint::FindCombinations(unsigned short min, unsigned short max, unsigned int runningTotal, std::list<unsigned short>& combination)
+void KillerConstraint::FindCombinations()
+{
+    std::list<unsigned short> combination;
+    std::list<unsigned short> allowedValues(mAllowedValues.begin(), mAllowedValues.end());
+    unsigned int total = 0;
+    for(const auto& v : mRegion->ConfirmedValuesGet())
+    {
+        total += v;
+        combination.push_back(v);
+        allowedValues.remove(v);
+    }
+    allowedValues.sort();
+    FindCombinationsInner(allowedValues.begin(), allowedValues, total, combination);
+}
+
+void KillerConstraint::FindCombinationsInner(std::list<unsigned short>::const_iterator it, const std::list<unsigned short> &allowedValues, unsigned int runningTotal, std::list<unsigned short>& combination)
 {
     if (combination.size() == mRegion->SizeGet())
     {
@@ -126,18 +121,21 @@ void KillerConstraint::FindCombinations(unsigned short min, unsigned short max, 
         }
         return;
     }
-
-    unsigned short n = mRegion->SizeGet() - combination.size();
-    while (max - min >= n)
+    else
     {
-        unsigned int minRunningTotal = runningTotal + (min * n) + (((n - 1) * n) / 2);
-        if (minRunningTotal > mCageSum) break;
+        int missingValues = mRegion->SizeGet() - combination.size();
+        while(std::distance(it, allowedValues.end()) >= missingValues)
+        {
+            unsigned int v = *it;
+            unsigned int minPossibleTotal = runningTotal + v + (missingValues - 1) * missingValues / 2;
+            if(minPossibleTotal > mCageSum) return;
 
-        combination.push_back(min);
-        FindCombinations(min + 1, max, runningTotal + min, combination);
-        combination.pop_back();
-        ++min;
+            combination.push_back(v);
+            FindCombinationsInner(++it, allowedValues, runningTotal + v, combination);
+            combination.pop_back();
+        }
     }
+
 }
 
 void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
@@ -216,6 +214,7 @@ void KillerConstraint::RemoveAllowedValue(unsigned short value)
 
 void KillerConstraint::UpdateAllowedAndConfirmedValues()
 {
+    std::set<unsigned short> disallowedValues;
     for (const auto& v : mAllowedValues)
     {
         if (mConfirmedValues.count(v) == 0)
@@ -239,8 +238,12 @@ void KillerConstraint::UpdateAllowedAndConfirmedValues()
             }
             else if (!isAllowed)
             {
-                RemoveAllowedValue(v);
+                disallowedValues.insert(v);
             }
         }
+    }
+    for(const auto& v : disallowedValues)
+    {
+        RemoveAllowedValue(v);
     }
 }

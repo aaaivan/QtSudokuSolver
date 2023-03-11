@@ -75,6 +75,11 @@ void Region::Init()
     {
         mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooFewValuesForRegion>(mCells, mAllowedValues));
     }
+
+    for(const auto& constraint : mAdditionalConstraints)
+    {
+        constraint->Initialise(this);
+    }
 }
 
 std::string Region::IdGet() const
@@ -437,10 +442,6 @@ void Region::AddVariantConstraint(std::unique_ptr<VariantConstraint> constraint)
 
 void Region::Reset()
 {
-    for (const auto& c : mCells)
-    {
-        c->Reset();
-    }
     Init();
 }
 

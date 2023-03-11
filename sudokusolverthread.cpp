@@ -72,6 +72,8 @@ void SudokuSolverThread::run()
             // define regions
             for (const auto& region : puzzleData.mRegions)
             {
+                if(region.size() == 0) continue;
+
                 std::vector<std::array<unsigned short, 2>> cells;
                 cells.reserve(region.size());
                 const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
@@ -99,6 +101,11 @@ void SudokuSolverThread::run()
                 mGrid->DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
             }
         }
+        // Clear given cells if necessary
+        else if(reloadCells)
+        {
+            mGrid->ResetContents();
+        }
 
         // define negative diagonal
         if((reloadGrid && puzzleData.mNegativeDiagonal) ||
@@ -114,12 +121,6 @@ void SudokuSolverThread::run()
         {
             std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
             mGrid->DefineRegion(cells, RegionType::Generic_region);
-        }
-
-        // Clear given cells if necessary
-        if(reloadCells)
-        {
-            mGrid->ResetContents();
         }
 
         // define givens
