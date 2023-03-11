@@ -20,7 +20,8 @@ DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, Q
       mGrid(mainWindowContent->GridGet()),
       mRegionSelect(new QComboBox()),
       mCellCounters(mGrid->SizeGet()),
-      mClearRegionsBtn(new QPushButton("Clear Regions"))
+      mClearRegionsBtn(new QPushButton("Clear Regions")),
+      mRegions(mGrid->SizeGet(), std::set<CellCoord>())
 {
     // build vertical layout
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
@@ -66,6 +67,12 @@ void DrawRegionsControls::hideEvent(QHideEvent *event)
             c->SetHighlighted(false);
         }
     }
+
+    for(size_t i = 0; i < mRegions.size(); ++i)
+    {
+        mGrid->SolverGet()->SetRegion(i+1, mRegions.at(i));
+        mRegions.at(i).clear();
+    }
     mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
@@ -77,7 +84,45 @@ void DrawRegionsControls::showEvent(QShowEvent *event)
         for(const auto& c : vect)
         {
             c->SetHighlighted(c->RegionIdGet() == mRegionSelect->currentIndex());
+            if(c->RegionIdGet() > 0)
+            {
+                mRegions.at(c->RegionIdGet() - 1).insert(c->CellIdGet());
+            }
         }
+    }
+}
+
+void DrawRegionsControls::SetRegionIdOfCell(SudokuCellWidget *cell, unsigned short newId)
+{
+    const unsigned short oldId = cell->RegionIdGet();
+    const unsigned short newIndex = newId - 1;
+    const unsigned short oldIndex = oldId - 1;
+    if(newId != oldId)
+    {
+        if(newId == 0)
+        {
+            cell->ResetRegionId();
+            if(auto it = mRegions.at(oldIndex).find(cell->CellIdGet());
+                    it != mRegions.at(oldIndex).end())
+            {
+                mRegions.at(oldIndex).erase(it);
+            }
+        }
+        else if(mRegions.at(newIndex).size() < mGrid->SizeGet())
+        {
+            cell->SetRegionId(newId);
+            mRegions.at(newIndex).insert(cell->CellIdGet());
+            if(oldId != 0)
+            {
+                if(auto it = mRegions.at(oldIndex).find(cell->CellIdGet());
+                        it != mRegions.at(oldIndex).end())
+                {
+                    mRegions.at(oldIndex).erase(it);
+                }
+            }
+        }
+        UpdateCellCounters(oldId);
+        UpdateCellCounters(newId);
     }
 }
 
@@ -108,7 +153,7 @@ void DrawRegionsControls::ClearRegionsBtn_Clicked()
         {
             for(const auto& c : vect)
             {
-                c->ResetRegionId();
+                SetRegionIdOfCell(c, 0);
             }
         }
         mRegionSelect->setCurrentIndex(0);
@@ -128,14 +173,12 @@ void DrawRegionsControls::CellLostFocus(SudokuCellWidget *cell)
 void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
 {
     unsigned short newId = SelectedRegionIdGet();
-    if(cell->RegionIdGet() == newId)
+    const unsigned short oldId = cell->RegionIdGet();
+    if(newId == oldId)
     {
-        cell->ResetRegionId();
+        newId = 0;
     }
-    else
-    {
-        cell->SetRegionId(newId);
-    }
+    SetRegionIdOfCell(cell, newId);
 }
 
 void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
@@ -147,16 +190,16 @@ void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event
     {
         if(cell->RegionIdGet() == num)
         {
-            cell->ResetRegionId();
+            SetRegionIdOfCell(cell, 0);
         }
         else
         {
-            cell->SetRegionId(num);
+            SetRegionIdOfCell(cell, num);
         }
     }
     else if(event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace)
     {
-        cell->ResetRegionId();
+        SetRegionIdOfCell(cell, 0);
     }
 }
 
@@ -170,8 +213,7 @@ void DrawRegionsControls::UpdateCellCounters(unsigned short regionId)
     unsigned short index = regionId - 1;
     if(index < mGrid->SizeGet())
     {
-        SudokuSolverThread* solver = mGrid->SolverGet();
-        int count = solver->CellCountInRegion(regionId);
+        int count = mRegions.at(index).size();
         QString text = kCounterLabelText;
         if(count == mGrid->SizeGet())
         {

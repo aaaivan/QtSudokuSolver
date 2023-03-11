@@ -31,6 +31,7 @@ private:
 
     std::set<CellCoord> mGivensToAdd;
     std::set<CellCoord> mHintsToAdd;
+    std::set<unsigned short> mRegionsToAdd;
     bool mAddPositiveDiagonal;
     bool mAddNegativeDiagonal;
 
@@ -44,20 +45,19 @@ private:
 
     void AddGivenValueToSubmissionQueue(CellCoord cell);
     void AddHintToSubmissionQueue(CellCoord cell);
+    void AddRegionToSubmissionQueue(unsigned short index);
     void AddDiagonalToSubmissionQueue(PuzzleData::Diagonal diagonal);
     void ReloadCells();
     void ReloadGrid();
 
     std::vector<std::array<unsigned short, 2>> DiagonalCellsGet(unsigned short gridSize, PuzzleData::Diagonal diagonal) const;
 public:
-    unsigned short CellCountInRegion(unsigned short regionId) const;
     bool HasPositiveDiagonalConstraint() const;
     bool HasNegativeDiagonalConstraint() const;
     std::pair<unsigned int, CellsInRegion> KillerCageGet(CellCoord id) const;
     std::set<unsigned short> HintsGet(CellCoord id) const;
 
-    void AddCellToRegion(unsigned short regionId, CellCoord cellId);
-    void RemoveCellFromRegion(unsigned short regionId, CellCoord cellId);
+    void SetRegion(unsigned short regionId, const std::set<CellCoord> &cells);
     void PositiveDiagonalConstraintSet(bool set);
     void NegativeDiagonalConstraintSet(bool set);
     void AddGiven(unsigned short value, CellCoord cellId);

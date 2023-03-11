@@ -282,20 +282,9 @@ void SudokuCellWidget::SetEdgeWeight(CellEdge edge, bool bold)
 
 void SudokuCellWidget::UpdateRegionId(unsigned short newId)
 {
-    auto cellCount = mMainWindowContent->GridGet()->SolverGet()->CellCountInRegion(newId);
-    if(cellCount >= mGridSize)
-    {
-        return;
-    }
-
     if(newId != mRegionId)
     {
         DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions));
-
-        mMainWindowContent->GridGet()->SolverGet()->RemoveCellFromRegion(mRegionId, mId);
-        mMainWindowContent->GridGet()->SolverGet()->AddCellToRegion(newId, mId);
-        context->UpdateCellCounters(mRegionId);
-        context->UpdateCellCounters(newId);
         mRegionIdLabel->setText(newId ? QString::number(newId) : "-");
         mRegionId = newId;
 

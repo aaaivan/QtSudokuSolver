@@ -12,17 +12,6 @@ PuzzleData::PuzzleData(unsigned short size):
 {
 }
 
-unsigned short SudokuSolverThread::CellCountInRegion(unsigned short regionId) const
-{
-    unsigned short result = 0;
-    unsigned short index = regionId - 1;
-    if(index < mPuzzleData.mSize)
-    {
-        result = mPuzzleData.mRegions[index].size();
-    }
-    return result;
-}
-
 bool SudokuSolverThread::HasPositiveDiagonalConstraint() const
 {
     return mPuzzleData.mPositiveDiagonal;
@@ -53,33 +42,20 @@ std::set<unsigned short> SudokuSolverThread::HintsGet(CellCoord id) const
     return result;
 }
 
-void SudokuSolverThread::AddCellToRegion(unsigned short regionId, CellCoord cellId)
+void SudokuSolverThread::SetRegion(unsigned short regionId, const std::set<CellCoord> &cells)
 {
     unsigned short index = regionId - 1;
-
-    QMutexLocker locker(&mMutex);
-
-    if(index < mPuzzleData.mSize)
+    if(index < mPuzzleData.mSize && mPuzzleData.mRegions.at(index) != cells)
     {
-        if(mPuzzleData.mRegions[index].insert(cellId).second)
+        if(mPuzzleData.mRegions.at(index).empty())
+        {
+            AddRegionToSubmissionQueue(index);
+        }
+        else
         {
             ReloadGrid();
         }
-    }
-}
-
-void SudokuSolverThread::RemoveCellFromRegion(unsigned short regionId, CellCoord  cellId)
-{
-    QMutexLocker locker(&mMutex);
-
-    unsigned short index = regionId - 1;
-    if(index < mPuzzleData.mSize)
-    {
-        if(auto it = mPuzzleData.mRegions[index].find(cellId); it != mPuzzleData.mRegions[index].end())
-        {
-            mPuzzleData.mRegions[index].erase(it);
-            ReloadGrid();
-        }
+        mPuzzleData.mRegions.at(index) = cells;
     }
 }
 

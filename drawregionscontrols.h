@@ -2,7 +2,9 @@
 #define DRAWREGIONSCONTROLS_H
 
 #include "contextmenuwindow.h"
+#include "puzzledata.h"
 #include <QWidget>
+#include <set>
 
 class SudokuCellWidget;
 class SudokuGridWidget;
@@ -23,8 +25,12 @@ private:
     QVector<QLabel*> mCellCounters;
     QPushButton* mClearRegionsBtn;
 
+    std::vector<std::set<CellCoord>> mRegions;
+
     void hideEvent(QHideEvent* event) override;
     void showEvent(QShowEvent* event) override;
+    void SetRegionIdOfCell(SudokuCellWidget* cell, unsigned short newId);
+    void UpdateCellCounters(unsigned short regionId);
 
 private slots:
     void RegionSelect_CurrentIndexChanged(int index);
@@ -37,7 +43,6 @@ public:
     void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
 
     unsigned short SelectedRegionIdGet() const;
-    void UpdateCellCounters(unsigned short regionId);
 };
 
 #endif // DRAWREGIONSCONTROLS_H

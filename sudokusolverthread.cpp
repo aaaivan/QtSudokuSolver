@@ -10,6 +10,7 @@ SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
       mPuzzleData(gridSize),
       mGivensToAdd(),
       mHintsToAdd(),
+      mRegionsToAdd(),
       mAddPositiveDiagonal(false),
       mAddNegativeDiagonal(false),
       mReloadCells(false),
@@ -46,19 +47,25 @@ void SudokuSolverThread::run()
         const PuzzleData puzzleData = mPuzzleData;
         std::set<CellCoord> newGivens;
         std::set<CellCoord> newHints;
+        std::set<unsigned short> newRegions;
         const bool positiveDiagonal = mAddPositiveDiagonal;
         const bool negativeDiagonal = mAddNegativeDiagonal;
         const bool reloadGrid = mReloadGrid;
         const bool reloadCells = mReloadCells;
 
-        if(!reloadGrid && !reloadCells)
+        if(!reloadCells)
         {
             newGivens = mGivensToAdd;
             newHints = mHintsToAdd;
         }
+        if(!reloadGrid)
+        {
+            newRegions = mRegionsToAdd;
+        }
 
         mGivensToAdd.clear();
         mHintsToAdd.clear();
+        mRegionsToAdd.clear();
         mAddNegativeDiagonal = false;
         mAddPositiveDiagonal = false;
         mReloadGrid = false;
@@ -69,21 +76,6 @@ void SudokuSolverThread::run()
         if(reloadGrid)
         {
             mGrid->Clear();
-            // define regions
-            for (const auto& region : puzzleData.mRegions)
-            {
-                if(region.size() == 0) continue;
-
-                std::vector<std::array<unsigned short, 2>> cells;
-                cells.reserve(region.size());
-                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
-                {
-                    return {static_cast<unsigned short>(id / gridSize),
-                            static_cast<unsigned short>(id % gridSize)};
-                };
-                std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
-                mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
-            }
 
             // define killers
             for (const auto& killer : puzzleData.mKillerCages)
@@ -105,6 +97,26 @@ void SudokuSolverThread::run()
         else if(reloadCells)
         {
             mGrid->ResetContents();
+        }
+
+        // define regions
+        for (size_t i = 0; i < puzzleData.mRegions.size(); ++i)
+        {
+            const auto& region = puzzleData.mRegions.at(i);
+            if(region.size() == 0) continue;
+
+            if(reloadGrid || newRegions.count(i))
+            {
+                std::vector<std::array<unsigned short, 2>> cells;
+                cells.reserve(region.size());
+                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                {
+                    return {static_cast<unsigned short>(id / gridSize),
+                            static_cast<unsigned short>(id % gridSize)};
+                };
+                std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
+                mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
+            }
         }
 
         // define negative diagonal
@@ -189,6 +201,14 @@ void SudokuSolverThread::AddHintToSubmissionQueue(CellCoord cell)
         return;
 
     mHintsToAdd.insert(cell);
+}
+
+void SudokuSolverThread::AddRegionToSubmissionQueue(unsigned short index)
+{
+    if(mReloadGrid)
+        return;
+
+    mRegionsToAdd.insert(index);
 }
 
 void SudokuSolverThread::AddDiagonalToSubmissionQueue(PuzzleData::Diagonal diagonal)
