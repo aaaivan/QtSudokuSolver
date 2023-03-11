@@ -17,11 +17,12 @@ private :
     QSet<QWidget*> mOverlayComponents;
     QWidget* mActiveComponent;
 
+    void ClearActiveComponent(bool willBeDeleted);
 public:
     QSet<QWidget*> OverlayComponentsGet() const;
     QWidget* ActiveComponentGet() const;
 
-    bool AddOverlayComponent(QWidget* component);
+    bool AddOverlayComponent(QWidget* component, bool setSelected);
     bool RemoveOverlayComponent(QWidget* component);
     bool ActiveComponentSet(QWidget *component);
     void ClearActiveComponent();

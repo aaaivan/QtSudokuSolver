@@ -20,7 +20,8 @@ DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, Q
       mGrid(mainWindowContent->GridGet()),
       mCurrentView(MenuView::MainView),
       mStackedLayout(new QStackedLayout()),
-      mCageTotal(new QSpinBox())
+      mCageTotal(new QSpinBox()),
+      mIdOfKillerBeingModified(-1)
 {
     // build stacked layout
     this->setLayout(mStackedLayout);
@@ -84,7 +85,6 @@ void DrawKillersControls::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
     mGrid->GraphicalOverlayGet()->ClearActiveComponent();
-    mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
 void DrawKillersControls::showEvent(QShowEvent *event)
@@ -171,7 +171,7 @@ void DrawKillersControls::CreateNewCageFromCell(SudokuCellWidget *cell)
 {
     KillerCageWidget* killerCageWidget = new KillerCageWidget(mGrid->SizeGet(), mGrid->CellLengthGet(), cell,
                                                               1, mGrid, this, mGrid->GraphicalOverlayGet());
-    mGrid->GraphicalOverlayGet()->AddOverlayComponent(killerCageWidget);
+    mGrid->GraphicalOverlayGet()->AddOverlayComponent(killerCageWidget, true);
 }
 
 void DrawKillersControls::CellGainedFocus(SudokuCellWidget *cell)
@@ -205,14 +205,8 @@ void DrawKillersControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event
     Q_UNUSED(event)
 }
 
-void DrawKillersControls::ClueAdded(QWidget *clue)
-{
-    mGrid->GraphicalOverlayGet()->ActiveComponentSet(clue);
-}
-
 void DrawKillersControls::ClueDidGetActive(QWidget *clue)
 {
-    Q_UNUSED(clue)
     SwitchView(MenuView::EditKiller);
     KillerCageWidget* cage = dynamic_cast<KillerCageWidget*>(clue);
     unsigned int cageTotal = cage->CageTotalGet();
@@ -220,15 +214,61 @@ void DrawKillersControls::ClueDidGetActive(QWidget *clue)
     if(cage)
     {
         mCageTotal->setValue(cageTotal);
+        CellCoord killerId = cage->CageIdGet();
+        mIdOfKillerBeingModified = mGrid->SolverGet()->HasKillerCage(killerId) ? killerId : -1;
     }
 }
 
-void DrawKillersControls::ClueDidGetInactive(QWidget *clue)
+void DrawKillersControls::ClueDidGetInactive(QWidget *clue, bool willBeDeleted)
 {
-    Q_UNUSED(clue)
     mCageTotal->setRange(0, 0);
     SwitchView(MenuView::MainView);
-    mGrid->SolverGet()->SubmitChangesToSolver();
+
+    KillerCageWidget* cage = dynamic_cast<KillerCageWidget*>(clue);
+    CellCoord killerId = mIdOfKillerBeingModified;
+    mIdOfKillerBeingModified = -1;
+    if(!cage)
+    {
+        return;
+    }
+
+    bool newKiller = (killerId == CellCoord(-1));
+    if(newKiller && willBeDeleted)
+    {
+        return;
+    }
+    else if(willBeDeleted)
+    {
+        mGrid->SolverGet()->RemoveKillerCage(killerId);
+        mGrid->SolverGet()->SubmitChangesToSolver();
+        return;
+    }
+
+    CellsInRegion cells;
+    std::transform(cage->CellsGet().begin(),
+                   cage->CellsGet().end(),
+                   std::inserter(cells, cells.begin()),
+                   [&](SudokuCellWidget* const &c){ return c->CellIdGet(); });
+    bool wasModified = true;
+    if(!newKiller)
+    {
+        wasModified = !mGrid->SolverGet()->IsSameKillerCage(killerId, cage->CageTotalGet(), cells);
+    }
+
+    if(newKiller && cells.size() > 0)
+    {
+        mGrid->SolverGet()->AddKillerCage(cage->CageIdGet(), cage->CageTotalGet(), cells);
+        mGrid->SolverGet()->SubmitChangesToSolver();
+    }
+    else if(!newKiller && wasModified)
+    {
+        mGrid->SolverGet()->RemoveKillerCage(killerId);
+        if(cells.size() > 0)
+        {
+            mGrid->SolverGet()->AddKillerCage(cage->CageIdGet(), cage->CageTotalGet(), cells);
+        }
+        mGrid->SolverGet()->SubmitChangesToSolver();
+    }
 }
 
 void DrawKillersControls::DeleteAllKillersBtn_Clicked()
@@ -249,6 +289,7 @@ void DrawKillersControls::DeleteAllKillersBtn_Clicked()
         for(const auto& cage : killerCages)
         {
             mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(cage);
+            mGrid->SolverGet()->RemoveKillerCage(cage->CageIdGet());
         }
         if(killerCages.size() > 0)
         {

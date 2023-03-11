@@ -1,6 +1,7 @@
 #ifndef KILLERCAGEWIDGET_H
 #define KILLERCAGEWIDGET_H
 
+#include "puzzledata.h"
 #include "variantcluewidget.h"
 #include <QLabel>
 
@@ -54,12 +55,13 @@ private:
     void CalculatedEdges(QList<QPair<SudokuCellWidget*, Direction>>& outEdges) const;
     void DrawEdges(QPainterPath& path, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const;
 public:
-    unsigned int CageTotalGet() const;
-
     void AddCell(SudokuCellWidget* cell) override;
     void RemoveCell(SudokuCellWidget* cell) override;
     void ClueDidGetActive() override;
     void ClueDidGetInactive() override;
+
+    unsigned int CageTotalGet() const;
+    CellCoord CageIdGet() const;
 
     void SetHighlighted(bool set);
     void CageTotalSet(unsigned int total);

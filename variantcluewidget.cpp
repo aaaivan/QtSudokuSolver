@@ -13,6 +13,11 @@ int VariantClueWidget::SizeGet() const
     return mCells.size();
 }
 
+const QList<SudokuCellWidget *> &VariantClueWidget::CellsGet() const
+{
+    return mCells;
+}
+
 void VariantClueWidget::ClueDidGetActive()
 {
     return;

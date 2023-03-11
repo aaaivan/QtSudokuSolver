@@ -32,6 +32,7 @@ private:
     std::set<CellCoord> mGivensToAdd;
     std::set<CellCoord> mHintsToAdd;
     std::set<unsigned short> mRegionsToAdd;
+    std::set<CellCoord> mKillersToAdd;
     bool mAddPositiveDiagonal;
     bool mAddNegativeDiagonal;
 
@@ -46,6 +47,7 @@ private:
     void AddGivenValueToSubmissionQueue(CellCoord cell);
     void AddHintToSubmissionQueue(CellCoord cell);
     void AddRegionToSubmissionQueue(unsigned short index);
+    void AddKillerToSubmissionQueue(CellCoord id);
     void AddDiagonalToSubmissionQueue(PuzzleData::Diagonal diagonal);
     void ReloadCells();
     void ReloadGrid();
@@ -54,7 +56,8 @@ private:
 public:
     bool HasPositiveDiagonalConstraint() const;
     bool HasNegativeDiagonalConstraint() const;
-    std::pair<unsigned int, CellsInRegion> KillerCageGet(CellCoord id) const;
+    bool HasKillerCage(CellCoord id) const;
+    bool IsSameKillerCage(CellCoord id, unsigned int otherTotal, const CellsInRegion &cells) const;
     std::set<unsigned short> HintsGet(CellCoord id) const;
 
     void SetRegion(unsigned short regionId, const std::set<CellCoord> &cells);
@@ -62,11 +65,8 @@ public:
     void NegativeDiagonalConstraintSet(bool set);
     void AddGiven(unsigned short value, CellCoord cellId);
     void RemoveGiven(CellCoord cellId);
-    void AddCellToKillerCage(CellCoord cageId, CellCoord cellId);
-    void RemoveCellFromKillerCage(CellCoord cageId, CellCoord cellId);
-    void AddKillerCage(CellCoord cageId, const std::pair<unsigned int, CellsInRegion>& cageContent);
+    void AddKillerCage(CellCoord cageId, unsigned int total, const CellsInRegion &cells);
     void RemoveKillerCage(CellCoord cageId);
-    void KillerCageTotalSet(CellCoord cageId, CellCoord cellId);
     void AddHint(CellCoord cellId, unsigned short value);
     void RemoveHint(CellCoord cellId, unsigned short value);
     void RemoveAllHints();

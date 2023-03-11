@@ -24,8 +24,9 @@ void ContextMenuWindow::ClueDidGetActive(QWidget *clue)
     return;
 }
 
-void ContextMenuWindow::ClueDidGetInactive(QWidget *clue)
+void ContextMenuWindow::ClueDidGetInactive(QWidget *clue, bool willBeDeleted)
 {
     Q_UNUSED(clue)
+    Q_UNUSED(willBeDeleted)
     return;
 }

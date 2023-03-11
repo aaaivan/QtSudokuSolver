@@ -21,7 +21,7 @@ public:
     virtual void ClueAdded(QWidget* clue);
     virtual void ClueRemoved(QWidget* clue);
     virtual void ClueDidGetActive(QWidget* clue);
-    virtual void ClueDidGetInactive(QWidget* clue);
+    virtual void ClueDidGetInactive(QWidget* clue, bool willBeDeleted);
 };
 
 #endif // CONTEXTMENUWINDOW_H

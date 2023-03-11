@@ -22,14 +22,26 @@ bool SudokuSolverThread::HasNegativeDiagonalConstraint() const
     return mPuzzleData.mNegativeDiagonal;
 }
 
-std::pair<unsigned int, CellsInRegion> SudokuSolverThread::KillerCageGet(CellCoord id) const
+bool SudokuSolverThread::HasKillerCage(CellCoord id) const
 {
-    std::pair<unsigned int, CellsInRegion> result = {0, {}};
-    if(mPuzzleData.mKillerCages.count(id))
+    return mPuzzleData.mKillerCages.count(id) > 0;
+}
+
+bool SudokuSolverThread::IsSameKillerCage(CellCoord id, unsigned int otherTotal, const CellsInRegion &cells) const
+{
+    bool matching = true;
+    auto it = mPuzzleData.mKillerCages.find(id);
+    if(it != mPuzzleData.mKillerCages.end())
     {
-        result = mPuzzleData.mKillerCages.at(id);
+        const auto& cage = it->second;
+        matching = matching && (cage.first == otherTotal);
+        matching = matching && (cage.second == cells);
     }
-    return result;
+    else
+    {
+        matching = false;
+    }
+    return matching;
 }
 
 std::set<unsigned short> SudokuSolverThread::HintsGet(CellCoord id) const
@@ -44,6 +56,8 @@ std::set<unsigned short> SudokuSolverThread::HintsGet(CellCoord id) const
 
 void SudokuSolverThread::SetRegion(unsigned short regionId, const std::set<CellCoord> &cells)
 {
+    QMutexLocker locker(&mMutex);
+
     unsigned short index = regionId - 1;
     if(index < mPuzzleData.mSize && mPuzzleData.mRegions.at(index) != cells)
     {
@@ -119,51 +133,19 @@ void SudokuSolverThread::RemoveGiven(CellCoord  cellId)
     }
 }
 
-void SudokuSolverThread::AddCellToKillerCage(CellCoord cageId, CellCoord  cellId)
+void SudokuSolverThread::AddKillerCage(CellCoord cageId, unsigned int total, const CellsInRegion &cells)
 {
     QMutexLocker locker(&mMutex);
 
-    auto it = mPuzzleData.mKillerCages.find(cageId);
-    if(it != mPuzzleData.mKillerCages.end())
+    auto it =  mPuzzleData.mKillerCages.find(cageId);
+    if(it == mPuzzleData.mKillerCages.end())
     {
-        if(it->second.second.insert(cellId).second)
+        if(cells.size() > 0)
         {
-            ReloadGrid();
+            mPuzzleData.mKillerCages[cageId] = {total, cells};
+            AddKillerToSubmissionQueue(cageId);
         }
     }
-    else
-    {
-        mPuzzleData.mKillerCages[cageId] = {0, {cellId}};
-        ReloadGrid();
-    }
-}
-
-void SudokuSolverThread::RemoveCellFromKillerCage(CellCoord cageId, CellCoord  cellId)
-{
-    QMutexLocker locker(&mMutex);
-
-    auto mapIt = mPuzzleData.mKillerCages.find(cageId);
-    if(mapIt != mPuzzleData.mKillerCages.end())
-    {
-        auto setIt = mapIt->second.second.find(cellId);
-        if(setIt != mapIt->second.second.end())
-        {
-            mapIt->second.second.erase(setIt);
-            if(mapIt->second.second.size() == 0)
-            {
-                mPuzzleData.mKillerCages.erase(mapIt);
-            }
-            ReloadGrid();
-        }
-    }
-}
-
-void SudokuSolverThread::AddKillerCage(CellCoord cageId, const std::pair<unsigned int, CellsInRegion> &cage)
-{
-    QMutexLocker locker(&mMutex);
-
-    mPuzzleData.mKillerCages[cageId] = cage;
-    ReloadGrid();
 }
 
 void SudokuSolverThread::RemoveKillerCage(CellCoord cageId)
@@ -174,26 +156,6 @@ void SudokuSolverThread::RemoveKillerCage(CellCoord cageId)
     if(it !=  mPuzzleData.mKillerCages.end())
     {
         mPuzzleData.mKillerCages.erase(it);
-        ReloadGrid();
-    }
-}
-
-void SudokuSolverThread::KillerCageTotalSet(CellCoord cageId, unsigned int total)
-{
-    QMutexLocker locker(&mMutex);
-
-    auto it = mPuzzleData.mKillerCages.find(cageId);
-    if(it != mPuzzleData.mKillerCages.end())
-    {
-        if(it->second.first != total)
-        {
-            it->second.first = total;
-            ReloadGrid();
-        }
-    }
-    else
-    {
-        mPuzzleData.mKillerCages[cageId] = {total, {}};
         ReloadGrid();
     }
 }

@@ -25,7 +25,7 @@ QWidget *GridGraphicalOverlay::ActiveComponentGet() const
     return mActiveComponent;
 }
 
-bool GridGraphicalOverlay::AddOverlayComponent(QWidget *component)
+bool GridGraphicalOverlay::AddOverlayComponent(QWidget *component, bool setSelected)
 {
     if(component && !mOverlayComponents.contains(component))
     {
@@ -36,6 +36,10 @@ bool GridGraphicalOverlay::AddOverlayComponent(QWidget *component)
         if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(component); clue)
         {
             clue->ContextMenuGet()->ClueAdded(component);
+        }
+        if(setSelected)
+        {
+            ActiveComponentSet(component);
         }
         return true;
     }
@@ -48,7 +52,7 @@ bool GridGraphicalOverlay::RemoveOverlayComponent(QWidget *component)
     {
         if(mActiveComponent == component)
         {
-            ClearActiveComponent();
+            ClearActiveComponent(true);
         }
         if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(component); clue)
         {
@@ -70,7 +74,7 @@ bool GridGraphicalOverlay::ActiveComponentSet(QWidget *component)
         if(prevClue)
         {
             prevClue->ClueDidGetInactive();
-            prevClue->ContextMenuGet()->ClueDidGetInactive(prevActive);
+            prevClue->ContextMenuGet()->ClueDidGetInactive(prevActive, false);
         }
         VariantClueWidget* newClue = dynamic_cast<VariantClueWidget*>(mActiveComponent);
         if(newClue)
@@ -85,12 +89,17 @@ bool GridGraphicalOverlay::ActiveComponentSet(QWidget *component)
 
 void GridGraphicalOverlay::ClearActiveComponent()
 {
+    ClearActiveComponent(false);
+}
+
+void GridGraphicalOverlay::ClearActiveComponent(bool willBeDeleted)
+{
     QWidget* prevActive = mActiveComponent;
     mActiveComponent = nullptr;
     VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(prevActive);
     if(clue)
     {
         clue->ClueDidGetInactive();
-        clue->ContextMenuGet()->ClueDidGetInactive(prevActive);
+        clue->ContextMenuGet()->ClueDidGetInactive(prevActive, willBeDeleted);
     }
 }

@@ -2,6 +2,7 @@
 #define DRAWKILLERSCONTROLS_H
 
 #include "contextmenuwindow.h"
+#include "puzzledata.h"
 #include <QWidget>
 
 class MainWindowContent;
@@ -35,6 +36,8 @@ private:
     QStackedLayout* mStackedLayout;
     QSpinBox* mCageTotal;
 
+    CellCoord mIdOfKillerBeingModified;
+
     void hideEvent(QHideEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
@@ -49,9 +52,8 @@ public:
     void CellLostFocus(SudokuCellWidget* cell) override;
     void CellClicked(SudokuCellWidget* cell) override;
     void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
-    void ClueAdded(QWidget* clue) override;
     void ClueDidGetActive(QWidget* clue) override;
-    void ClueDidGetInactive(QWidget* clue) override;
+    void ClueDidGetInactive(QWidget* clue, bool willBeDeleted) override;
 };
 
 #endif // DRAWKILLERSCONTROLS_H

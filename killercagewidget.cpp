@@ -293,6 +293,17 @@ unsigned int KillerCageWidget::CageTotalGet() const
     return mCageTotal;
 }
 
+CellCoord KillerCageWidget::CageIdGet() const
+{
+    CellCoord result = -1;
+    if(mCells.size() > 0)
+    {
+        result = mCells.at(0)->CellIdGet();
+    }
+
+    return result;
+}
+
 void KillerCageWidget::AddCell(SudokuCellWidget *cell)
 {
     if(mCells.size() >= mMaxCageSize)
@@ -312,28 +323,6 @@ void KillerCageWidget::AddCell(SudokuCellWidget *cell)
         std::sort(mCells.begin(), mCells.end(), [](const SudokuCellWidget *a, const SudokuCellWidget *b)
             {return a->CellIdGet() < b->CellIdGet();});
 
-        int index = mCells.indexOf(cell);
-        if(mCells.size() == 1)
-        {
-            unsigned short id = cell->CellIdGet();
-            mGrid->SolverGet()->AddKillerCage(id, {mCageTotal, {id}});
-        }
-        else if(index == 0)
-        {
-            unsigned short newId = cell->CellIdGet();
-            unsigned short oldId = mCells[1]->CellIdGet();
-            mGrid->SolverGet()->AddCellToKillerCage(oldId, newId);
-
-            std::pair<unsigned int, CellsInRegion> cage = mGrid->SolverGet()->KillerCageGet(oldId);
-            mGrid->SolverGet()->AddKillerCage(newId, cage);
-            mGrid->SolverGet()->RemoveKillerCage(oldId);
-        }
-        else
-        {
-            unsigned short id = mCells[0]->CellIdGet();
-            mGrid->SolverGet()->AddCellToKillerCage(id, cell->CellIdGet());
-        }
-
         UpdatePicture();
     }
 }
@@ -347,22 +336,6 @@ void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
             int index = mCells.indexOf(cell);
             mCells.removeAt(index);
             cell->RemoveVariantClue(this);
-
-            if(index == 0)
-            {
-                unsigned short oldId = cell->CellIdGet();
-                unsigned short newId = mCells[0]->CellIdGet();
-                mGrid->SolverGet()->RemoveCellFromKillerCage(oldId, oldId);
-
-                std::pair<unsigned int, CellsInRegion> cage = mGrid->SolverGet()->KillerCageGet(oldId);
-                mGrid->SolverGet()->AddKillerCage(newId, cage);
-                mGrid->SolverGet()->RemoveKillerCage(oldId);
-            }
-            else
-            {
-                unsigned short id = mCells[0]->CellIdGet();
-                mGrid->SolverGet()->RemoveCellFromKillerCage(id, cell->CellIdGet());
-            }
 
             CalculateMinCol();
             CalculateMinRow();
@@ -402,7 +375,6 @@ void KillerCageWidget::CageTotalSet(unsigned int total)
     if(mCageTotal != total)
     {
         mCageTotal = total;
-        mGrid->SolverGet()->KillerCageTotalSet(mCells[0]->CellIdGet(), mCageTotal);
         UpdateLabel();
     }
 }

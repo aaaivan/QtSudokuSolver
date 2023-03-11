@@ -48,6 +48,7 @@ void SudokuSolverThread::run()
         std::set<CellCoord> newGivens;
         std::set<CellCoord> newHints;
         std::set<unsigned short> newRegions;
+        std::set<CellCoord> newKillers;
         const bool positiveDiagonal = mAddPositiveDiagonal;
         const bool negativeDiagonal = mAddNegativeDiagonal;
         const bool reloadGrid = mReloadGrid;
@@ -61,11 +62,13 @@ void SudokuSolverThread::run()
         if(!reloadGrid)
         {
             newRegions = mRegionsToAdd;
+            newKillers = mKillersToAdd;
         }
 
         mGivensToAdd.clear();
         mHintsToAdd.clear();
         mRegionsToAdd.clear();
+        mKillersToAdd.clear();
         mAddNegativeDiagonal = false;
         mAddPositiveDiagonal = false;
         mReloadGrid = false;
@@ -76,22 +79,6 @@ void SudokuSolverThread::run()
         if(reloadGrid)
         {
             mGrid->Clear();
-
-            // define killers
-            for (const auto& killer : puzzleData.mKillerCages)
-            {
-                unsigned int killerSum = killer.second.first;
-                const auto& killerCells = killer.second.second;
-                std::vector<std::array<unsigned short, 2>> cells;
-                cells.reserve(killerCells.size());
-                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
-                {
-                    return {static_cast<unsigned short>(id / gridSize),
-                            static_cast<unsigned short>(id % gridSize)};
-                };
-                std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
-                mGrid->DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
-            }
         }
         // Clear given cells if necessary
         else if(reloadCells)
@@ -116,6 +103,25 @@ void SudokuSolverThread::run()
                 };
                 std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
                 mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
+            }
+        }
+
+        // define killers
+        for (const auto& killer : puzzleData.mKillerCages)
+        {
+            if(reloadGrid || newKillers.count(killer.first))
+            {
+                unsigned int killerSum = killer.second.first;
+                const auto& killerCells = killer.second.second;
+                std::vector<std::array<unsigned short, 2>> cells;
+                cells.reserve(killerCells.size());
+                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                {
+                    return {static_cast<unsigned short>(id / gridSize),
+                            static_cast<unsigned short>(id % gridSize)};
+                };
+                std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
+                mGrid->DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
             }
         }
 
@@ -209,6 +215,14 @@ void SudokuSolverThread::AddRegionToSubmissionQueue(unsigned short index)
         return;
 
     mRegionsToAdd.insert(index);
+}
+
+void SudokuSolverThread::AddKillerToSubmissionQueue(CellCoord id)
+{
+    if(mReloadGrid)
+        return;
+
+    mKillersToAdd.insert(id);
 }
 
 void SudokuSolverThread::AddDiagonalToSubmissionQueue(PuzzleData::Diagonal diagonal)
