@@ -350,7 +350,7 @@ void FishTechnique::SearchFish()
 
 void FishTechnique::NotifyFailure()
 {
-    for (Region* r : mRegionsToSearch)
+    for (Region* r : mAvailableRegions)
     {
         mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::Fish, r, nullptr, mCurrentValue);
     }

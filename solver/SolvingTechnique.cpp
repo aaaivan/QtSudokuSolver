@@ -242,7 +242,8 @@ void FishTechnique::UpdateRegions()
 
     for (Region* r : regions)
     {
-        if (r->UpdateManagerGet()->IsRegionReadyForTechnique(mType, mCurrentValue))
+        if (r->UpdateManagerGet()->IsRegionReadyForTechnique(mType, mCurrentValue) &&
+            r->SizeGet() < mGrid->SizeGet()) // The defining set of the fish cannot contain only houses
         {
             mRegionsToSearch.insert(r);
         }
