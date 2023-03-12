@@ -235,7 +235,7 @@ void RegionsManager::RegisterRegion(RegionSPtr regionSPtr, RegionType regionType
             {
                 congruentRegion = r;
             }
-            else
+            else if(r->IsClosed())
             {
                 subsets.push_back(RegionSharedPtrGet(r));
             }
