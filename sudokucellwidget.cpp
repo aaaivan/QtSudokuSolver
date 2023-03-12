@@ -311,7 +311,7 @@ void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options, co
     {
         if(lineBreak == mGridSize/2)
         {
-            text += " ";
+            text += QChar(0x200b);
         }
         text += QString::number(opt);
         lineBreak++;
@@ -323,7 +323,7 @@ void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options, co
         {
             if(lineBreak == mGridSize/2)
             {
-                text += " ";
+                text += QChar(0x200b);
             }
             text += QString::number(opt);
             lineBreak++;
