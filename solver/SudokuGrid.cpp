@@ -3,6 +3,7 @@
 #include "RegionsManager.h"
 #include "GridProgressManager.h"
 #include "SudokuCell.h"
+#include "../sudokusolverthread.h"
 #include <cassert>
 
 SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
@@ -77,11 +78,6 @@ GridProgressManager* SudokuGrid::ProgressManagerGet() const
     return mProgressManager.get();
 }
 
-SudokuSolverThread *SudokuGrid::SolverThreadManagerGet()
-{
-    return mSolverThread;
-}
-
 void SudokuGrid::AddGivenCell(unsigned short row, unsigned short col, unsigned short value)
 {
         assert(	row < mSize &&
@@ -147,6 +143,14 @@ void SudokuGrid::Clear()
     mProgressManager->Clear();
     mRegionsManager->Clear();
     DefineRowsAndCols();
+}
+
+void SudokuGrid::NotifyCellChanged(SudokuCell *cell)
+{
+    if(mSolverThread)
+    {
+        mSolverThread->NotifyCellChanged(cell);
+    }
 }
 
 #if PRINT_LOG_MESSAGES

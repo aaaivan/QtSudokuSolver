@@ -3,7 +3,6 @@
 #include "SudokuGrid.h"
 #include "RegionsManager.h"
 #include "GridProgressManager.h"
-#include "../sudokusolverthread.h"
 #include <cassert>
 
 SudokuCell::SudokuCell(SudokuGrid* grid, unsigned short row, unsigned short col, unsigned short sudokuSize) :
@@ -159,7 +158,7 @@ void SudokuCell::Reset()
     {
         mViableOptions.emplace_hint(mViableOptions.end(), i);
     }
-    mParentGrid->SolverThreadManagerGet()->NotifyCellChanged(this);
+    mParentGrid->NotifyCellChanged(this);
 }
 
 void SudokuCell::ValueSet(unsigned short value)

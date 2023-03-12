@@ -36,15 +36,12 @@ public:
     const SudokuCell* CellGet(unsigned short row, unsigned short col) const;
     RegionsManager* RegionsManagerGet() const;
     GridProgressManager* ProgressManagerGet() const;
-    SudokuSolverThread* SolverThreadManagerGet();
 
 // Non-constant methods
 
 #if PRINT_LOG_MESSAGES
     void Print() const;
 #endif // PRINT_LOG_MESSAGES
-
-// Non-constant methods
 
     /// <summary>
     /// Define a given cell of the puzzle
@@ -76,5 +73,11 @@ public:
     /// Clear the content of the grid, including the regions
     /// </summary>
     void Clear();
+
+    /// <summary>
+    /// Notify the user interface that the content of the cell has changed
+    /// so that it can be displayed
+    /// </summary>
+    void NotifyCellChanged(SudokuCell* cell);
 };
 #endif // SUDOKU_GRID_H

@@ -64,7 +64,7 @@ void Progress_OptionRemoved::ProcessProgress()
 #if PRINT_LOG_MESSAGES && 0
     printf("Option removed form cell: %s != %u\n", mCell->PrintPosition().c_str(), mValue);
 #endif // PRINT_LOG_MESSAGES
-    mCell->GridGet()->SolverThreadManagerGet()->NotifyCellChanged(mCell);
+    mCell->GridGet()->NotifyCellChanged(mCell);
     const RegionSet& intersectingRegions = mCell->GetRegionsWithCell();
     for (Region* region : intersectingRegions)
     {
