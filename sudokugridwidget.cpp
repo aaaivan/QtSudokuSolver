@@ -7,7 +7,7 @@
 
 SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainWindowContent, QWidget *parent)
     : QFrame{parent},
-      mCellLength(50),
+      mCellLength(60),
       mSize(size),
       mCells(),
       mMainWindowContent(mainWindowContent),

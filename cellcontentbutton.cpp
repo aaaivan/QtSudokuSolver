@@ -13,6 +13,7 @@ CellContentButton::CellContentButton(unsigned short numOptions, SudokuCellWidget
     this->setTextFormat(Qt::RichText);
     this->setAlignment(Qt::AlignCenter);
     this->setWordWrap(true);
+    this->setContentsMargins(5, 5, 5, 5);
 }
 
 void CellContentButton::mouseReleaseEvent(QMouseEvent *event)
