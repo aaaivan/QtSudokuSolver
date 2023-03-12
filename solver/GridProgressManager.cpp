@@ -9,7 +9,7 @@ GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mTechniques(static_cast<size_t>(TechniqueType::MAX_TECHNIQUES)),
     mCurrentTechnique(static_cast<TechniqueType>(0)),
     mFinished(false),
-    mPaused(false)
+    mAbort(false)
 {
     mTechniques[static_cast<size_t>(TechniqueType::LockedCandidates)] =
         std::make_unique<LockedCandidatesTechnique>(sudoku, SolvingTechnique::ObserveValues);
@@ -31,9 +31,12 @@ const SolvingTechnique* GridProgressManager::TechniqueGet(TechniqueType type) co
 
 bool GridProgressManager::HasFinished() const
 {
-    return  mFinished &&
-            mHighPriorityProgressQueue.empty() &&
-            mProgressQueue.empty();
+    return  mAbort ||
+            (
+                mFinished &&
+                mHighPriorityProgressQueue.empty() &&
+                mProgressQueue.empty()
+            );
 }
 
 void GridProgressManager::RegisterProgress(std::shared_ptr<Progress>&& deduction)
@@ -71,6 +74,11 @@ void GridProgressManager::RegisterFailure(TechniqueType type, Region* region, Su
 
 void  GridProgressManager::NextStep()
 {
+    if(mAbort)
+    {
+        return;
+    }
+
     if (!mHighPriorityProgressQueue.empty())
     {
         Reset();
@@ -83,7 +91,7 @@ void  GridProgressManager::NextStep()
         mProgressQueue.front()->ProcessProgress();
         mProgressQueue.pop();
     }
-    else if (!mPaused && !mFinished)
+    else if (!mAbort && !mFinished)
     {
         NextTechnique();
     }
@@ -99,6 +107,7 @@ void GridProgressManager::Clear()
         std::queue<std::shared_ptr<Progress>> empty;
         std::swap(mHighPriorityProgressQueue, empty);
     }
+    mAbort = false;
     Reset();
 }
 
@@ -110,6 +119,12 @@ void GridProgressManager::Reset()
     {
         t->Reset();
     }
+}
+
+void GridProgressManager::Abort()
+{
+    mAbort = true;
+    mFinished = true;
 }
 
 void GridProgressManager::NextTechnique()

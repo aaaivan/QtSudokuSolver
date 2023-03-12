@@ -142,7 +142,7 @@ void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
 {
     if (mConfirmedValues.count(value) > 0)
     {
-        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoKillerSum>(this));
+        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoKillerSum>(this, mRegion->GridGet()));
         return;
     }
 
@@ -171,7 +171,7 @@ void KillerConstraint::RemoveCombinationsWithoutValue(unsigned short value)
 {
     if (mAllowedValues.count(value) == 0)
     {
-        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoKillerSum>(this));
+        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoKillerSum>(this, mRegion->GridGet()));
         return;
     }
 

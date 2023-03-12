@@ -110,7 +110,7 @@ void NakedSubsetTechnique::SearchNakedSubsets(const CellSet& cellsToSearch)
             }
             else if (impossible)
             {
-                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooFewValuesForRegion>(std::move(nakedSubset), std::move(candidateValues)));
+                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooFewValuesForRegion>(std::move(nakedSubset), std::move(candidateValues), mGrid));
             }
         }
     }
@@ -241,7 +241,7 @@ void HiddenNakedSubsetTechnique::SearchHiddenNakedSubsets(const std::set<unsigne
             }
             else if (impossible)
             {
-                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooManyValuesForRegion>(std::move(nakedSubset), std::move(candidateValues)));
+                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooManyValuesForRegion>(std::move(nakedSubset), std::move(candidateValues), mGrid));
                 return;
             }
         }

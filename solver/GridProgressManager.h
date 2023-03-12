@@ -20,7 +20,7 @@ class GridProgressManager
     std::vector<std::unique_ptr<SolvingTechnique>> mTechniques;
     TechniqueType mCurrentTechnique;
     bool mFinished;
-    bool mPaused;
+    bool mAbort;
 
 public:
 // Constructors
@@ -47,6 +47,12 @@ public:
     /// So that the solver can go back and check from the first technique
     /// </summary>
     void Reset();
+
+    /// <summary>
+    /// Tells the solver to stop computing a solution. This is ususally because the
+    /// puzzle is impossible.
+    /// </summary>
+    void Abort();
 private:
     void NextTechnique();
 };

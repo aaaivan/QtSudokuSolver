@@ -79,11 +79,7 @@ void SudokuCell::MakeGiven(unsigned short value)
     if (value)
     {
         mIsGiven = true;
-        mViableOptions.clear();
-        mViableOptions.insert(value);
-        mValue = value;
-        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GivenCellAdded>(this, *mViableOptions.begin()));
-        mParentGrid->SolverThreadManagerGet()->NotifyCellChanged(this);
+        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GivenCellAdded>(this, value));
     }
 }
 
@@ -95,21 +91,24 @@ void SudokuCell::RemoveOption(unsigned short guess)
         {
             Progress_OptionRemoved notification(this, guess);
             notification.ProcessProgress();
-            mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleOptionLeftInCell>(this, *mViableOptions.begin()));
+            if(!mIsGiven)
+            {
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleOptionLeftInCell>(this, *mViableOptions.begin()));
+            }
         }
         else if (mViableOptions.size() == 0)
         {
             if (mIsGiven)
             {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashWithGivenCell>(this));
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashWithGivenCell>(this, mParentGrid));
             }
             else if (IsSolved())
             {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashWithSolvedCell>(this));
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashWithSolvedCell>(this, mParentGrid));
             }
             else
             {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoOptionsLeftInCell>(this));
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoOptionsLeftInCell>(this, mParentGrid));
             }
         }
         else
@@ -165,8 +164,10 @@ void SudokuCell::Reset()
 
 void SudokuCell::ValueSet(unsigned short value)
 {
-    assert( value && mViableOptions.find(value) != mViableOptions.end() );
-    mValue = value;
+    if( value && mViableOptions.find(value) != mViableOptions.end() )
+    {
+        mValue = value;
+    }
 }
 
 #if PRINT_LOG_MESSAGES

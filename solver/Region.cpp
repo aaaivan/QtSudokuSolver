@@ -73,7 +73,7 @@ void Region::Init()
     }
     else if (mAllowedValues.size() < mCells.size())
     {
-        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooFewValuesForRegion>(mCells, mAllowedValues));
+        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooFewValuesForRegion>(mCells, mAllowedValues, mParentGrid));
     }
 
     for(const auto& constraint : mAdditionalConstraints)
@@ -369,7 +369,7 @@ void Region::AddConfirmedValue(unsigned value)
 {
     if (mAllowedValues.count(value) == 0) // the value we are trying to add must be in the allowed values
     {
-        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoCellLeftForValueInRegion>(this, value));
+        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoCellLeftForValueInRegion>(this, value, mParentGrid));
         return;
     }
 
@@ -382,7 +382,10 @@ void Region::AddConfirmedValue(unsigned value)
         if (mValueToCellMap.at(value).size() == 1)
         {
             SudokuCell* nakedSingle = *(mValueToCellMap.at(value).begin());
-            mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, value));
+            if(!nakedSingle->IsSolved())
+            {
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, value));
+            }
         }
 
         // Notify the additonal constraints of the new confirmed value
@@ -404,7 +407,7 @@ void Region::AddConfirmedValue(unsigned value)
         }
         else if (mConfirmedValues.size() > mCells.size())
         {
-            mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooManyValuesForRegion>(mCells, mConfirmedValues));
+            mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_TooManyValuesForRegion>(mCells, mConfirmedValues, mParentGrid));
         }
     }
 }
@@ -417,7 +420,10 @@ void Region::UpdateValueMap(unsigned short removedValue, SudokuCell* removedFrom
         if (HasConfirmedValue(removedValue) && mValueToCellMap.at(removedValue).size() == 1)
         {
             SudokuCell* nakedSingle = *(mValueToCellMap.at(removedValue).begin());
-            mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, removedValue));
+            if(!nakedSingle->IsSolved())
+            {
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, removedValue));
+            }
         }
         // Notify the additonal constraints of the removed option
         for (const auto& constraint : mAdditionalConstraints)
@@ -449,7 +455,7 @@ void Region::RemoveAllowedValue(unsigned short value)
 {
     if (mConfirmedValues.count(value) > 0) // the value we are trying to remove must NOT be in the confirmed values
     {
-        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoCellLeftForValueInRegion>(this, value));
+        mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoCellLeftForValueInRegion>(this, value, mParentGrid));
         return;
     }
 

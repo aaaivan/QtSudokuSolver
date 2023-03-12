@@ -4,6 +4,7 @@
 #include "Region.h"
 #include "RegionUpdatesManager.h"
 #include "SudokuGrid.h"
+#include "GridProgressManager.h"
 #include "../sudokusolverthread.h"
 
 void Progress_GivenCellAdded::ProcessProgress()
@@ -197,4 +198,55 @@ void Progress_ValueNotInKiller::ProcessProgress()
 void Progress_ValueForcedInKiller::ProcessProgress()
 {
     mRegion->AddConfirmedValue(mValue);
+}
+
+
+/*
+ * ==========================================================
+ * Impossible Puzzles
+ * ==========================================================
+*/
+void Progress_ImpossiblePuzzle::ProcessProgress()
+{
+    mGrid->ProgressManagerGet()->Abort();
+}
+
+void Impossible_ClashWithGivenCell::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_ClashWithSolvedCell::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_NoOptionsLeftInCell::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_NoCellLeftForValueInRegion::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_TooFewValuesForRegion::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_TooManyValuesForRegion::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_Fish::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_NoKillerSum::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
 }
