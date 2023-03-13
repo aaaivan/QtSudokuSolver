@@ -2,6 +2,7 @@
 #include "Progress.h"
 #include "Region.h"
 #include "RegionUpdatesManager.h"
+#include "SudokuGrid.h"
 
 GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mSudokuGrid(sudoku),
@@ -12,16 +13,29 @@ GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mAbort(false)
 {
     mTechniques[static_cast<size_t>(TechniqueType::LockedCandidates)] =
-        std::make_unique<LockedCandidatesTechnique>(sudoku, SolvingTechnique::ObserveValues);
+        std::make_unique<LockedCandidatesTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
 
     mTechniques[static_cast<size_t>(TechniqueType::NakedSubset)] =
-        std::make_unique<NakedSubsetTechnique>(sudoku, SolvingTechnique::ObserveCells);
+        std::make_unique<NakedSubsetTechnique>(mSudokuGrid, SolvingTechnique::ObserveCells);
 
     mTechniques[static_cast<size_t>(TechniqueType::HiddenNakedSubset)] =
-        std::make_unique<HiddenNakedSubsetTechnique>(sudoku, SolvingTechnique::ObserveValues);
+        std::make_unique<HiddenNakedSubsetTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
 
     mTechniques[static_cast<size_t>(TechniqueType::Fish)] =
-        std::make_unique<FishTechnique>(sudoku, SolvingTechnique::ObserveValues);
+        std::make_unique<FishTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
+
+    unsigned int depth = 0;
+    unsigned int targetDepth = 1;
+    const SudokuGrid* parent = mSudokuGrid->ParentNodeGet();
+    if(parent)
+    {
+        const auto& technique = parent->ProgressManagerGet()->mTechniques[static_cast<size_t>(TechniqueType::Bifurcation)];
+        BifurcationTechnique* bifurcation = static_cast<BifurcationTechnique*>(technique.get());
+        depth = bifurcation->DepthGet() + 1;
+        targetDepth = bifurcation->TargetDepthGet();
+    }
+    mTechniques[static_cast<size_t>(TechniqueType::Bifurcation)] =
+        std::make_unique<BifurcationTechnique>(mSudokuGrid, SolvingTechnique::ObserveNothing, depth, targetDepth);
 }
 
 const SolvingTechnique* GridProgressManager::TechniqueGet(TechniqueType type) const
@@ -36,7 +50,12 @@ bool GridProgressManager::HasFinished() const
                 mFinished &&
                 mHighPriorityProgressQueue.empty() &&
                 mProgressQueue.empty()
-            );
+                );
+}
+
+bool GridProgressManager::HasAborted() const
+{
+    return mAbort;
 }
 
 void GridProgressManager::RegisterProgress(std::shared_ptr<Progress>&& deduction)
@@ -84,12 +103,22 @@ void  GridProgressManager::NextStep()
         Reset();
         mHighPriorityProgressQueue.front()->ProcessProgress();
         mHighPriorityProgressQueue.pop();
+
+        if(mSudokuGrid->IsSolved())
+        {
+            mFinished = true;
+        }
     }
     else if (!mProgressQueue.empty())
     {
         Reset();
         mProgressQueue.front()->ProcessProgress();
         mProgressQueue.pop();
+
+        if(mSudokuGrid->IsSolved())
+        {
+            mFinished = true;
+        }
     }
     else if (!mAbort && !mFinished)
     {

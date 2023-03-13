@@ -92,6 +92,17 @@ const CellSet& Region::CellsGet() const
     return mCells;
 }
 
+std::vector<std::array<unsigned short, 2> > Region::CellCoordsGet() const
+{
+    std::vector<std::array<unsigned short, 2>> cells;
+    cells.reserve(mSize);
+    for(const auto &c : mCells)
+    {
+        cells.push_back({c->RowGet(), c->ColGet()});
+    }
+    return cells;
+}
+
 unsigned short Region::SizeGet() const
 {
     return mSize;
@@ -242,6 +253,11 @@ const VariantConstraint* Region::GetConstraintByType(RegionType type) const
         ++it;
     }
     return nullptr;
+}
+
+const std::list<std::unique_ptr<VariantConstraint> > &Region::VariantConstraintsGet() const
+{
+    return mAdditionalConstraints;
 }
 
 bool Region::IsStartingRegion() const

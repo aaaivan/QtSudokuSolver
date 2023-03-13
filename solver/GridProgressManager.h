@@ -30,6 +30,7 @@ public:
 // Const methods
     const SolvingTechnique* TechniqueGet(TechniqueType type) const;
     bool HasFinished() const;
+    bool HasAborted() const;
 
 // Non-const methods
 

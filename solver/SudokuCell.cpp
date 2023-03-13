@@ -161,6 +161,19 @@ void SudokuCell::Reset()
     mParentGrid->NotifyCellChanged(this);
 }
 
+SudokuCell *SudokuCell::DeepCopy(SudokuGrid* parentGrid) const
+{
+    assert(parentGrid->SizeGet() == mParentGrid->SizeGet());
+
+    SudokuCell* cell = new SudokuCell(parentGrid, mRow, mCol, parentGrid->SizeGet());
+    cell->mValue = this->mValue;
+    cell->mViableOptions = this->mViableOptions;
+    cell->mEliminationHints = this->mEliminationHints;
+    cell->mIsGiven = this->mIsGiven;
+
+    return cell;
+}
+
 void SudokuCell::ValueSet(unsigned short value)
 {
     if( value && mViableOptions.find(value) != mViableOptions.end() )

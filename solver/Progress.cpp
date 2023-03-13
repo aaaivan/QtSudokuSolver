@@ -200,6 +200,19 @@ void Progress_ValueForcedInKiller::ProcessProgress()
     mRegion->AddConfirmedValue(mValue);
 }
 
+void Progress_ValueDisallowedByBifurcation::ProcessProgress()
+{
+    mCell->RemoveMultipleOptions(mValues);
+}
+
+void Progress_OptionRemovedViaGuessing::ProcessProgress()
+{
+    mCell->RemoveOption(mValue);
+}
+
+
+
+
 
 /*
  * ==========================================================
@@ -247,6 +260,11 @@ void Impossible_Fish::ProcessProgress()
 }
 
 void Impossible_NoKillerSum::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_NoSolutionByBifurcation::ProcessProgress()
 {
     Progress_ImpossiblePuzzle::ProcessProgress();
 }

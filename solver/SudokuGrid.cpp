@@ -8,6 +8,7 @@
 
 SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
     mSize(size),
+    mParentNode(nullptr), // needs to be initialized before the progress manager
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
@@ -25,6 +26,37 @@ SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
     }
 
     DefineRowsAndCols();
+}
+
+SudokuGrid::SudokuGrid(const SudokuGrid *grid) :
+    mSize(grid->SizeGet()),
+    mParentNode(grid),
+    mGrid(),
+    mRegionsManager(std::make_unique<RegionsManager>(this)),
+    mProgressManager(std::make_unique<GridProgressManager>(this)),
+    mSolverThread(nullptr)
+{
+    // populate the grid with the cells
+    mGrid.reserve(mSize);
+    for (size_t i = 0; i < mSize; i++)
+    {
+        mGrid.push_back(std::vector<CellUPtr>(mSize));
+        for (size_t j = 0; j < mSize; j++)
+        {
+            mGrid.at(i).at(j) = CellUPtr(grid->mGrid.at(i).at(j)->DeepCopy(this));
+        }
+    }
+
+    // create regions from the leaf regions of the existing grid
+    for(const auto& r : grid->mRegionsManager->RegionsGet())
+    {
+        std::vector<VariantConstraint*> constraints;
+        for (const auto& c : r->VariantConstraintsGet())
+        {
+            constraints.emplace_back(c->DeepCopy());
+        }
+        DefineRegion(r->CellCoordsGet(), RegionType::Generic_region, constraints);
+    }
 }
 
 SudokuGrid::~SudokuGrid()
@@ -63,7 +95,7 @@ unsigned short SudokuGrid::SizeGet() const
     return mSize;
 }
 
-const SudokuCell* SudokuGrid::CellGet(unsigned short row, unsigned short col) const
+SudokuCell* SudokuGrid::CellGet(unsigned short row, unsigned short col) const
 {
     return mGrid.at(row).at(col).get();
 }
@@ -76,6 +108,26 @@ RegionsManager* SudokuGrid::RegionsManagerGet() const
 GridProgressManager* SudokuGrid::ProgressManagerGet() const
 {
     return mProgressManager.get();
+}
+
+bool SudokuGrid::IsSolved() const
+{
+    for (size_t i = 0; i < mSize; i++)
+    {
+        for (size_t j = 0; j < mSize; j++)
+        {
+            if(!mGrid.at(i).at(j)->IsSolved())
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+const SudokuGrid *SudokuGrid::ParentNodeGet()
+{
+    return mParentNode;
 }
 
 void SudokuGrid::AddGivenCell(unsigned short row, unsigned short col, unsigned short value)
@@ -100,7 +152,17 @@ void SudokuGrid::SetCellEliminationHints(unsigned short row, unsigned short col,
     }
 }
 
-void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& cells, RegionType regionType, std::unique_ptr<VariantConstraint> constraint)
+void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& cells, RegionType regionType, VariantConstraint* constraint)
+{
+    std::vector<VariantConstraint*> constraints;
+    if(constraint)
+    {
+        constraints.emplace_back(constraint);
+    }
+    DefineRegion(cells, regionType, constraints);
+}
+
+void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > &cells, RegionType regionType, std::vector<VariantConstraint*> &constraints)
 {
     assert(cells.size() <= mSize && "Index out of bound for a Given Cell");
 
@@ -114,7 +176,10 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& 
     }
 
     RegionSPtr regionSPtr = std::make_shared<Region>(this, std::move(cellList), true);
-    regionSPtr->AddVariantConstraint(std::move(constraint));
+    for (auto& constraint: constraints)
+    {
+        regionSPtr->AddVariantConstraint(std::unique_ptr<VariantConstraint>(constraint));
+    }
     mRegionsManager->RegisterRegion(regionSPtr, regionType);
 }
 

@@ -2,6 +2,7 @@
 #define SOLVING_TECHNIQUE_H
 
 #include "Types.h"
+#include "RandomGuessTreeNode.h"
 
 class SolvingTechnique
 {
@@ -9,7 +10,8 @@ public:
     enum ObservedComponent
     {
         ObserveValues,
-        ObserveCells
+        ObserveCells,
+        ObserveNothing
     };
 
 protected:
@@ -116,4 +118,33 @@ public:
         const SudokuGrid* grid, const unsigned short& fishValue, bool& impossible);
     bool IsFishValid(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap, RegionList& currentSet, const SudokuGrid* grid, const unsigned short& fishValue);
 };
+
+class BifurcationTechnique : public SolvingTechnique
+{
+    static const unsigned int sMaxDepth;
+    const unsigned int mDepth;
+    unsigned int mTargetDepth;
+    std::vector<SudokuCell*> mCells;
+    std::map<SudokuCell*, size_t> mCellOrder;
+    EliminationMatrix mOptionEliminationMatrix;
+    unsigned int mCurrentIndex;
+
+    std::unique_ptr<RandomGuessTreeRoot> mRoot;
+    friend class RandomGuessTreeRoot;
+    friend class RandomGuessTreeNode;
+
+public:
+    BifurcationTechnique(SudokuGrid* grid, ObservedComponent observedComponent, unsigned int depth, unsigned int maxDepth);
+
+    unsigned int DepthGet() const;
+    unsigned int TargetDepthGet() const;
+
+    void NextStep() override;
+    void Reset() override;
+
+private:
+    void Init();
+    void CreateRootNode();
+};
+
 #endif // !SOLVING_TECHNIQUE_H

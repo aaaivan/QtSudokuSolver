@@ -26,6 +26,7 @@ SOURCES += \
     solver/LockedCandidates.cpp \
     solver/NakedSubsets.cpp \
     solver/Progress.cpp \
+    solver/RandomGuessTreeNode.cpp \
     solver/Region.cpp \
     solver/RegionUpdatesManager.cpp \
     solver/RegionsManager.cpp \
@@ -55,6 +56,7 @@ HEADERS += \
     solver/GridProgressManager.h \
     solver/Progress.h \
     solver/ProgressTypes.h \
+    solver/RandomGuessTreeNode.h \
     solver/Region.h \
     solver/RegionUpdatesManager.h \
     solver/RegionsManager.h \

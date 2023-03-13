@@ -91,6 +91,11 @@ void KillerConstraint::OnRegionPartitioned(Region* leftNode, Region* rightNode)
     rightNode->AddVariantConstraint(std::move(kc));
 }
 
+VariantConstraint *KillerConstraint::DeepCopy() const
+{
+    return new KillerConstraint(mCageSum);
+}
+
 RegionType KillerConstraint::TypeGet()
 {
     return RegionType::KillerCage;

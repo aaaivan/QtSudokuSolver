@@ -121,7 +121,7 @@ void SudokuSolverThread::run()
                             static_cast<unsigned short>(id % gridSize)};
                 };
                 std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
-                mGrid->DefineRegion(cells, RegionType::KillerCage, std::make_unique<KillerConstraint>(killerSum));
+                mGrid->DefineRegion(cells, RegionType::KillerCage, new KillerConstraint(killerSum));
             }
         }
 

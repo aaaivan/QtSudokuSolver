@@ -44,6 +44,7 @@ public:
 
     std::string IdGet() const;
     const CellSet& CellsGet() const;
+    std::vector<std::array<unsigned short, 2>> CellCoordsGet() const;
     unsigned short SizeGet() const;
     const std::set<unsigned short>& ConfirmedValuesGet() const;
     const std::set<unsigned short>& AllowedValuesGet() const;
@@ -70,6 +71,7 @@ public:
     /// Get the constraint class of the specified type
     /// </summary>
     const VariantConstraint* GetConstraintByType(RegionType type) const;
+    const std::list<std::unique_ptr<VariantConstraint>>& VariantConstraintsGet() const;
 
 // Constant methods
 

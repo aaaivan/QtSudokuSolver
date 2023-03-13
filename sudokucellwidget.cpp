@@ -283,7 +283,6 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
 {
     if(newId != mRegionId)
     {
-        DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions));
         mRegionIdLabel->setText(newId ? QString::number(newId) : "-");
         mRegionId = newId;
 
@@ -298,7 +297,11 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
             }
             edge = edge << 1;
         }
-        mHighlighted = mRegionId == context->SelectedRegionIdGet();
+        DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions));
+        if(context)
+        {
+            mHighlighted = mRegionId == context->SelectedRegionIdGet();
+        }
         RefreshLayout();
     }
 }

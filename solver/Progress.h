@@ -244,6 +244,33 @@ public:
     void ProcessProgress() override;
 };
 
+class Progress_ValueDisallowedByBifurcation : public Progress
+{
+    SudokuCell* mPivot;
+    SudokuCell* mCell;
+    std::set<unsigned short> mValues;
+public:
+    Progress_ValueDisallowedByBifurcation(SudokuCell* cell, std::set<unsigned short>&& values, SudokuCell* pivot):
+        Progress(ProgressType::ValueDisallowedByBifurcation),
+        mPivot(pivot),
+        mCell(cell),
+        mValues(values)
+    {}
+    void ProcessProgress() override;
+};
+
+class Progress_OptionRemovedViaGuessing : public Progress
+{
+    SudokuCell* mCell;
+    unsigned short mValue;
+public:
+    Progress_OptionRemovedViaGuessing(SudokuCell* cell, unsigned short value):
+        Progress(ProgressType::ValueRemovedViaGuessing),
+        mCell(cell),
+        mValue(value)
+    {}
+    void ProcessProgress() override;
+};
 
 
 
@@ -252,6 +279,11 @@ public:
 
 
 
+/*
+ * ==========================================================
+ * Impossible Puzzles
+ * ==========================================================
+*/
 
 class Progress_ImpossiblePuzzle : public Progress
 {
@@ -370,6 +402,17 @@ public:
     Impossible_NoKillerSum(KillerConstraint* killer, SudokuGrid* grid) :
         Progress_ImpossiblePuzzle(ProgressType::Impossible_NoSumForKillerCage, grid),
         mKiller(killer)
+    {}
+    void ProcessProgress() override;
+};
+
+class Impossible_NoSolutionByBifurcation : public Progress_ImpossiblePuzzle
+{
+    SudokuCell* mPivotCell;
+public:
+    Impossible_NoSolutionByBifurcation(SudokuCell* pivotCell, SudokuGrid* grid) :
+        Progress_ImpossiblePuzzle(ProgressType::Impossible_NoSolutionByBifurcation, grid),
+        mPivotCell(pivotCell)
     {}
     void ProcessProgress() override;
 };

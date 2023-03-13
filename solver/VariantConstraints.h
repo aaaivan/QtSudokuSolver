@@ -45,6 +45,10 @@ public:
     /// Called when the region is partitioned
     /// </summary>
     virtual void OnRegionPartitioned(Region* leftNode, Region* rightNode) = 0;
+    /// <summary>
+    /// Creates a deep copy of the class
+    /// </summary>
+    virtual VariantConstraint* DeepCopy() const = 0;
 };
 
 /// <summary>
@@ -76,6 +80,7 @@ public:
     void OnConfimedValueAdded(unsigned short value) override;
     void OnOptionRemovedFromCell(unsigned short value, SudokuCell* cell) override;
     void OnRegionPartitioned(Region* leftNode, Region* rightNode) override;
+    VariantConstraint* DeepCopy() const override;
 
 private:
     /// <summary>
