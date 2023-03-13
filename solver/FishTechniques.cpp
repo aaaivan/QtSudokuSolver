@@ -314,37 +314,33 @@ void FishTechnique::GetPossibeDefiningRegions(Region* includeRegion, const Regio
 
 void FishTechnique::SearchFish()
 {
-    RegionSet allowedRegions(mAvailableRegions.begin(), mAvailableRegions.end());
-    for (Region* r : mRegionsToSearch)
+    mAllowedRegions.erase(mCurrentRegion);
+    // "value" need to be a confirmed value in each region of the defining set.
+    // This is to ensure that a defining set of size N contains exactly N copies of value.
+    if (mCurrentRegion->HasConfirmedValue(mCurrentValue))
     {
-        allowedRegions.erase(r);
-        // "value" need to be a confirmed value in each region of the defining set.
-        // This is to ensure that a defining set of size N contains exactly N copies of value.
-        if (r->HasConfirmedValue(mCurrentValue))
+        std::list<RegionList> definingSets;
+
+        // Get all possible defining regions of size "size" and containing the region r
+        GetPossibeDefiningRegions(mCurrentRegion, mAllowedRegions, definingSets, mCurrentSize);
+
+        // iterate over the possible defining sets and check whether a secodary set forming a fish exists
+        for (auto& definingSet : definingSets)
         {
-            std::list<RegionList> definingSets;
-
-            // Get all possible defining regions of size "size" and containing the region r
-            GetPossibeDefiningRegions(r, allowedRegions, definingSets, mCurrentSize);
-
-            // iterate over the possible defining sets and check whether a secodary set forming a fish exists
-            for (auto& definingSet : definingSets)
+            bool impossible = false;
+            if (SearchSecondaryFishRegion(definingSet, mCurrentValue, mGrid, impossible))
             {
-                bool impossible = false;
-                if (SearchSecondaryFishRegion(definingSet, mCurrentValue, mGrid, impossible))
-                {
-                    return;
-                }
-                else if (impossible)
-                {
-                    return;
-                }
+                return;
+            }
+            else if (impossible)
+            {
+                return;
             }
         }
-        else
-        {
-            mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::Fish, r, nullptr, mCurrentValue);
-        }
+    }
+    else
+    {
+        mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::Fish, mCurrentRegion, nullptr, mCurrentValue);
     }
 }
 

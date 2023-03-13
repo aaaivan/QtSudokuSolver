@@ -93,6 +93,8 @@ class FishTechnique : public SolvingTechnique
     unsigned short mCurrentValue;
     RegionSet mRegionsToSearch;
     RegionSet mAvailableRegions;
+    RegionSet mAllowedRegions;
+    Region* mCurrentRegion;
     const unsigned short mMinSize;
     unsigned short mCurrentSize;
 

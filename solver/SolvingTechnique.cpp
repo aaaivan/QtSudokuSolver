@@ -199,6 +199,8 @@ FishTechnique::FishTechnique(SudokuGrid* regionsManager, ObservedComponent obser
     mCurrentValue(0),
     mRegionsToSearch(),
     mAvailableRegions(),
+    mAllowedRegions(),
+    mCurrentRegion(nullptr),
     mMinSize(2),
     mCurrentSize(mMinSize)
 {
@@ -215,35 +217,66 @@ void FishTechnique::NextStep()
     {
         mCurrentValue = 1;
         UpdateRegions();
+        mCurrentSize = 0;
     }
 
-    if (mCurrentSize <= mGrid->SizeGet() / 2)
+    if(mCurrentSize == 0)
     {
-        SearchFish();
-        ++mCurrentSize;
-    }
-    else
-    {
-        NotifyFailure();
         mCurrentSize = mMinSize;
-        ++mCurrentValue;
+        mCurrentRegion = nullptr;
+    }
 
-        if (mCurrentValue > mGrid->SizeGet())
+    if(mCurrentRegion == nullptr)
+    {
+        mAllowedRegions.clear();
+        mAllowedRegions.insert(mAvailableRegions.begin(), mAvailableRegions.end());
+        if(mRegionsToSearch.size() > 0)
         {
-            mFinished = true;
+            mCurrentRegion = *mRegionsToSearch.begin();
+        }
+    }
+
+    if(mCurrentValue <= mGrid->SizeGet())
+    {
+        if(mCurrentRegion && mCurrentSize <= mGrid->SizeGet() / 2)
+        {
+            auto it = mRegionsToSearch.find(mCurrentRegion);
+            SearchFish();
+            ++it;
+
+            if(it != mRegionsToSearch.end())
+            {
+                mCurrentRegion = *it;
+            }
+            else
+            {
+                ++mCurrentSize;
+                mCurrentRegion = nullptr;
+            }
         }
         else
         {
-            UpdateRegions();
+            NotifyFailure();
+            mCurrentSize = 0;
+            ++mCurrentValue;
+            if(mCurrentValue <= mGrid->SizeGet())
+            {
+                UpdateRegions();
+            }
         }
+    }
+    else
+    {
+        mFinished = true;
     }
 }
 
 void FishTechnique::Reset()
 {
     mCurrentValue = 0;
-    mCurrentSize = mMinSize;
+    mCurrentSize = 0;
     mFinished = false;
+    mCurrentRegion = nullptr;
 }
 
 void FishTechnique::UpdateRegions()
