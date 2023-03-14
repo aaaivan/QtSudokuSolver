@@ -90,21 +90,20 @@ public:
 
 class FishTechnique : public SolvingTechnique
 {
+    static const std::map<unsigned short, TechniqueType> sFishSizeToTechnique;
     unsigned short mCurrentValue;
     RegionSet mRegionsToSearch;
     RegionSet mAvailableRegions;
     RegionSet mAllowedRegions;
     Region* mCurrentRegion;
-    const unsigned short mMinSize;
-    unsigned short mCurrentSize;
+    const unsigned short mFishSize;
 
 public:
-    FishTechnique(SudokuGrid* grid, ObservedComponent observedComponent);
+    FishTechnique(unsigned short fishSize, SudokuGrid* grid, ObservedComponent observedComponent);
 
     void NextStep() override;
     void Reset() override;
     void UpdateRegions();
-    void NotifyFailure();
 
     /// <summary>
     /// Search a fish of the specified value using a defining set containing at least one of the specified regions.

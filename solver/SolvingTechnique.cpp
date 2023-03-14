@@ -193,17 +193,25 @@ void HiddenNakedSubsetTechnique::Reset()
 
 
 
+const std::map<unsigned short, TechniqueType> FishTechnique::sFishSizeToTechnique{
+    {2, TechniqueType::XWing},
+    {3, TechniqueType::Swordfish},
+    {4, TechniqueType::Jellyfish},
+};
 
-FishTechnique::FishTechnique(SudokuGrid* regionsManager, ObservedComponent observedComponent):
-    SolvingTechnique(regionsManager, TechniqueType::Fish, observedComponent),
+FishTechnique::FishTechnique(unsigned short fishSize, SudokuGrid* regionsManager, ObservedComponent observedComponent):
+    SolvingTechnique(regionsManager, sFishSizeToTechnique.at(fishSize), observedComponent),
     mCurrentValue(0),
     mRegionsToSearch(),
     mAvailableRegions(),
     mAllowedRegions(),
     mCurrentRegion(nullptr),
-    mMinSize(2),
-    mCurrentSize(mMinSize)
+    mFishSize(fishSize)
 {
+    if(mFishSize > mGrid->SizeGet() / 2 || mGrid->ParentNodeGet()) // don't use the fish while bifurcating... it's too slow
+    {
+        mFinished = true;
+    }
 }
 
 void FishTechnique::NextStep()
@@ -217,12 +225,6 @@ void FishTechnique::NextStep()
     {
         mCurrentValue = 1;
         UpdateRegions();
-        mCurrentSize = 0;
-    }
-
-    if(mCurrentSize == 0)
-    {
-        mCurrentSize = mMinSize;
         mCurrentRegion = nullptr;
     }
 
@@ -238,7 +240,7 @@ void FishTechnique::NextStep()
 
     if(mCurrentValue <= mGrid->SizeGet())
     {
-        if(mCurrentRegion && mCurrentSize <= mGrid->SizeGet() / 2)
+        if(mCurrentRegion)
         {
             auto it = mRegionsToSearch.find(mCurrentRegion);
             SearchFish();
@@ -250,14 +252,17 @@ void FishTechnique::NextStep()
             }
             else
             {
-                ++mCurrentSize;
                 mCurrentRegion = nullptr;
+                ++mCurrentValue;
+                if(mCurrentValue <= mGrid->SizeGet())
+                {
+                    UpdateRegions();
+                }
             }
         }
         else
         {
-            NotifyFailure();
-            mCurrentSize = 0;
+            mCurrentRegion = nullptr;
             ++mCurrentValue;
             if(mCurrentValue <= mGrid->SizeGet())
             {
@@ -274,8 +279,11 @@ void FishTechnique::NextStep()
 void FishTechnique::Reset()
 {
     mCurrentValue = 0;
-    mCurrentSize = 0;
     mFinished = false;
+    if(mFishSize > mGrid->SizeGet() / 2 || mGrid->ParentNodeGet()) // don't use the fish while bifurcating... it's too slow
+    {
+        mFinished = true;
+    }
     mCurrentRegion = nullptr;
 }
 
@@ -285,16 +293,13 @@ void FishTechnique::UpdateRegions()
     mRegionsToSearch.clear();
     mAvailableRegions.clear();
 
-    auto HasAtLeastTwoCells = [=](Region* r) {return r->CellsWithValueGet(mCurrentValue).size() >= 2; };
-
     for (Region* r : regions)
     {
-        if (r->UpdateManagerGet()->IsRegionReadyForTechnique(mType, mCurrentValue) &&
-            r->SizeGet() < mGrid->SizeGet()) // The defining set of the fish cannot contain only houses
+        if (r->UpdateManagerGet()->IsRegionReadyForTechnique(mType, mCurrentValue))
         {
             mRegionsToSearch.insert(r);
         }
-        if (r->HasConfirmedValue(mCurrentValue) && HasAtLeastTwoCells(r))
+        if (r->HasConfirmedValue(mCurrentValue))
         {
             mAvailableRegions.insert(r);
         }

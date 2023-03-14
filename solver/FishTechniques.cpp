@@ -322,7 +322,7 @@ void FishTechnique::SearchFish()
         std::list<RegionList> definingSets;
 
         // Get all possible defining regions of size "size" and containing the region r
-        GetPossibeDefiningRegions(mCurrentRegion, mAllowedRegions, definingSets, mCurrentSize);
+        GetPossibeDefiningRegions(mCurrentRegion, mAllowedRegions, definingSets, mFishSize);
 
         // iterate over the possible defining sets and check whether a secodary set forming a fish exists
         for (auto& definingSet : definingSets)
@@ -336,18 +336,14 @@ void FishTechnique::SearchFish()
             {
                 return;
             }
+            else
+            {
+                mGrid->ProgressManagerGet()->RegisterFailure(mType, mCurrentRegion, nullptr, mCurrentValue);
+            }
         }
     }
     else
     {
-        mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::Fish, mCurrentRegion, nullptr, mCurrentValue);
-    }
-}
-
-void FishTechnique::NotifyFailure()
-{
-    for (Region* r : mAvailableRegions)
-    {
-        mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::Fish, r, nullptr, mCurrentValue);
+        mGrid->ProgressManagerGet()->RegisterFailure(mType, mCurrentRegion, nullptr, mCurrentValue);
     }
 }

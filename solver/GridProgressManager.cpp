@@ -21,8 +21,14 @@ GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mTechniques[static_cast<size_t>(TechniqueType::HiddenNakedSubset)] =
         std::make_unique<HiddenNakedSubsetTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
 
-    mTechniques[static_cast<size_t>(TechniqueType::Fish)] =
-        std::make_unique<FishTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
+    mTechniques[static_cast<size_t>(TechniqueType::XWing)] =
+        std::make_unique<FishTechnique>(2, mSudokuGrid, SolvingTechnique::ObserveValues);
+
+    mTechniques[static_cast<size_t>(TechniqueType::Swordfish)] =
+        std::make_unique<FishTechnique>(3, mSudokuGrid, SolvingTechnique::ObserveValues);
+
+    mTechniques[static_cast<size_t>(TechniqueType::Jellyfish)] =
+        std::make_unique<FishTechnique>(4, mSudokuGrid, SolvingTechnique::ObserveValues);
 
     unsigned int depth = 0;
     unsigned int targetDepth = 1;
