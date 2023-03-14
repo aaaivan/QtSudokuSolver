@@ -7,9 +7,7 @@ enum class TechniqueType
     LockedCandidates,
     NakedSubset,
     HiddenNakedSubset,
-    XWing,
-    Swordfish,
-    Jellyfish,
+    Fish,
     Bifurcation,
 
     MAX_TECHNIQUES
