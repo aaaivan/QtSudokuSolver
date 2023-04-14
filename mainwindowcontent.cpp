@@ -5,6 +5,7 @@
 #include "sudokugridwidget.h"
 #include "editgridcontrols.h"
 #include "drawregionscontrols.h"
+#include "solvercontrols.h"
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QTabWidget>
@@ -27,8 +28,10 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent)
     horizontalLayout->addWidget(contextMenuFrame);
 
     // build left-hand side tabs
-    EditGridControls* edit = new EditGridControls(this);
-    tabsLeft->addTab(edit, "Create");
+    EditGridControls* editMenu = new EditGridControls(this);
+    SolverControls* solverMenu = new SolverControls(this);
+    tabsLeft->addTab(editMenu, "Create");
+    tabsLeft->addTab(solverMenu, "Solver");
 
     // build context menu stacked layout
     mContextMenu->setStackingMode(QStackedLayout::StackingMode::StackOne);
@@ -36,9 +39,11 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent)
     AddDigitsControls* enterDigitsControls = new AddDigitsControls(this);
     DrawKillersControls* drawKillerControls = new DrawKillersControls(this);
     DrawRegionsControls* regionsEditControls = new DrawRegionsControls(this);
+
     mContextMenu->insertWidget(ViewType::EnterDigits, enterDigitsControls);
     mContextMenu->insertWidget(ViewType::DrawRegions, regionsEditControls);
     mContextMenu->insertWidget(ViewType::DrawKiller, drawKillerControls);
+
     mContextMenu->setCurrentIndex(ViewType::EnterDigits);
 
     // context menu styling

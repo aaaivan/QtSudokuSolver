@@ -36,6 +36,7 @@ public:
 
     unsigned short SizeGet() const;
     SudokuCell* CellGet(unsigned short row, unsigned short col) const;
+    SudokuCell* CellGet(unsigned int id) const;
     RegionsManager* RegionsManagerGet() const;
     GridProgressManager* ProgressManagerGet() const;
     bool IsSolved() const;

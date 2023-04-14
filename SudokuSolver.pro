@@ -21,6 +21,7 @@ SOURCES += \
     mainwindow.cpp \
     mainwindowcontent.cpp \
     puzzledata.cpp \
+    solver/BruteForceSolver.cpp \
     solver/FishTechniques.cpp \
     solver/GridProgressManager.cpp \
     solver/LockedCandidates.cpp \
@@ -36,9 +37,13 @@ SOURCES += \
     solver/SudokuGrid.cpp \
     solver/SudokuParser.cpp \
     solver/VariantConstraints.cpp \
+    solvercontextmenu.cpp \
+    solvercontrols.cpp \
     sudokucellwidget.cpp \
     sudokugridwidget.cpp \
     sudokusolverthread.cpp \
+    thirdparty/dancing_links.cpp \
+    thirdparty/linked_matrix.cpp \
     variantcluewidget.cpp
 
 HEADERS += \
@@ -53,6 +58,7 @@ HEADERS += \
     mainwindow.h \
     mainwindowcontent.h \
     puzzledata.h \
+    solver/BruteForceSolver.h \
     solver/GridProgressManager.h \
     solver/Progress.h \
     solver/ProgressTypes.h \
@@ -67,9 +73,13 @@ HEADERS += \
     solver/SudokuParser.h \
     solver/Types.h \
     solver/VariantConstraints.h \
+    solvercontextmenu.h \
+    solvercontrols.h \
     sudokucellwidget.h \
     sudokugridwidget.h \
     sudokusolverthread.h \
+    thirdparty/dancing_links.h \
+    thirdparty/linked_matrix.h \
     variantcluewidget.h
 
 FORMS += \

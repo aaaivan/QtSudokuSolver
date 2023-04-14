@@ -90,6 +90,10 @@ void DrawRegionsControls::showEvent(QShowEvent *event)
             }
         }
     }
+    for(size_t i = 1; i <= mRegions.size(); ++i)
+    {
+        UpdateCellCounters(i);
+    }
 }
 
 void DrawRegionsControls::SetRegionIdOfCell(SudokuCellWidget *cell, unsigned short newId)

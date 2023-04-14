@@ -2,11 +2,13 @@
 #include "solver/GridProgressManager.h"
 #include "solver/SudokuCell.h"
 #include "solver/VariantConstraints.h"
+#include "solver/BruteForceSolver.h"
 #include <QDebug>
 
 SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
     : QThread{parent},
       mGrid(nullptr),
+      mBruteForceSolver(),
       mPuzzleData(gridSize),
       mGivensToAdd(),
       mHintsToAdd(),
@@ -17,23 +19,28 @@ SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
       mReloadGrid(false),
       mNewInput(false),
       mAbort(false),
-      mMutex(),
+      mPaused(false),
+      mInputMutex(),
+      mSolverMutex(),
       mThreadCondition()
 {
 }
 
 SudokuSolverThread::~SudokuSolverThread()
 {
-    mMutex.lock();
+    mInputMutex.lock();
+    mSolverMutex.lock();
     mAbort = true;
     mThreadCondition.wakeOne();
-    mMutex.unlock();
+    mSolverMutex.unlock();
+    mInputMutex.unlock();
     wait();
 }
 
 void SudokuSolverThread::Init()
 {
     mGrid = std::make_unique<SudokuGrid>(mPuzzleData.mSize, this);
+    mBruteForceSolver = std::make_unique<BruteForceSolver>(mGrid.get());
 }
 
 void SudokuSolverThread::run()
@@ -42,7 +49,7 @@ void SudokuSolverThread::run()
     forever
     {
         // collect input
-        mMutex.lock();
+        mInputMutex.lock();
         const unsigned short gridSize = mPuzzleData.mSize;
         const PuzzleData puzzleData = mPuzzleData;
         std::set<CellCoord> newGivens;
@@ -53,6 +60,7 @@ void SudokuSolverThread::run()
         const bool negativeDiagonal = mAddNegativeDiagonal;
         const bool reloadGrid = mReloadGrid;
         const bool reloadCells = mReloadCells;
+        const bool newInput = mNewInput;
 
         if(!reloadCells)
         {
@@ -74,111 +82,118 @@ void SudokuSolverThread::run()
         mReloadGrid = false;
         mReloadCells = false;
         mNewInput = false;
-        mMutex.unlock();
+        mInputMutex.unlock();
 
-        if(reloadGrid)
+        if(newInput)
         {
-            mGrid->Clear();
-        }
-        // Clear given cells if necessary
-        else if(reloadCells)
-        {
-            mGrid->ResetContents();
-        }
+            QMutexLocker locker(&mSolverMutex);
+            mBruteForceSolver->DirtySolutions();
 
-        // define regions
-        for (size_t i = 0; i < puzzleData.mRegions.size(); ++i)
-        {
-            const auto& region = puzzleData.mRegions.at(i);
-            if(region.size() == 0) continue;
-
-            if(reloadGrid || newRegions.count(i))
+            if(reloadGrid)
             {
-                std::vector<std::array<unsigned short, 2>> cells;
-                cells.reserve(region.size());
-                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                mGrid->Clear();
+            }
+            // Clear given cells if necessary
+            else if(reloadCells)
+            {
+                mGrid->ResetContents();
+            }
+
+            // define regions
+            for (size_t i = 0; i < puzzleData.mRegions.size(); ++i)
+            {
+                const auto& region = puzzleData.mRegions.at(i);
+                if(region.size() == 0) continue;
+
+                if(reloadGrid || newRegions.count(i))
                 {
-                    return {static_cast<unsigned short>(id / gridSize),
-                            static_cast<unsigned short>(id % gridSize)};
-                };
-                std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
-                mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
+                    std::vector<std::array<unsigned short, 2>> cells;
+                    cells.reserve(region.size());
+                    const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                    {
+                        return {static_cast<unsigned short>(id / gridSize),
+                                static_cast<unsigned short>(id % gridSize)};
+                    };
+                    std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
+                    mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
+                }
             }
-        }
 
-        // define killers
-        for (const auto& killer : puzzleData.mKillerCages)
-        {
-            if(reloadGrid || newKillers.count(killer.first))
+            // define killers
+            for (const auto& killer : puzzleData.mKillerCages)
             {
-                unsigned int killerSum = killer.second.first;
-                const auto& killerCells = killer.second.second;
-                std::vector<std::array<unsigned short, 2>> cells;
-                cells.reserve(killerCells.size());
-                const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                if(reloadGrid || newKillers.count(killer.first))
                 {
-                    return {static_cast<unsigned short>(id / gridSize),
-                            static_cast<unsigned short>(id % gridSize)};
-                };
-                std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
-                mGrid->DefineRegion(cells, RegionType::KillerCage, new KillerConstraint(killerSum));
+                    unsigned int killerSum = killer.second.first;
+                    const auto& killerCells = killer.second.second;
+                    std::vector<std::array<unsigned short, 2>> cells;
+                    cells.reserve(killerCells.size());
+                    const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                    {
+                        return {static_cast<unsigned short>(id / gridSize),
+                                static_cast<unsigned short>(id % gridSize)};
+                    };
+                    std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
+                    mGrid->DefineRegion(cells, RegionType::KillerCage, new KillerConstraint(killerSum));
+                }
             }
-        }
 
-        // define negative diagonal
-        if((reloadGrid && puzzleData.mNegativeDiagonal) ||
-           (!reloadGrid && negativeDiagonal))
-        {
-            std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Negative);
-            mGrid->DefineRegion(cells, RegionType::Generic_region);
-        }
-
-        // define positive diagonal
-        if((reloadGrid && puzzleData.mPositiveDiagonal) ||
-           (!reloadGrid && positiveDiagonal))
-        {
-            std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
-            mGrid->DefineRegion(cells, RegionType::Generic_region);
-        }
-
-        // define givens
-        for (const auto& given : puzzleData.mGivens)
-        {
-            if(reloadCells || newGivens.count(given.first))
+            // define negative diagonal
+            if((reloadGrid && puzzleData.mNegativeDiagonal) ||
+               (!reloadGrid && negativeDiagonal))
             {
-                mGrid->AddGivenCell(given.first / gridSize, given.first % gridSize, given.second);
+                std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Negative);
+                mGrid->DefineRegion(cells, RegionType::Generic_region);
             }
-        }
 
-        // define hints
-        for (const auto& hints : puzzleData.mHints)
-        {
-            if(reloadCells || newHints.count(hints.first))
+            // define positive diagonal
+            if((reloadGrid && puzzleData.mPositiveDiagonal) ||
+               (!reloadGrid && positiveDiagonal))
             {
-                mGrid->SetCellEliminationHints(hints.first / gridSize, hints.first % gridSize, hints.second);
+                std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
+                mGrid->DefineRegion(cells, RegionType::Generic_region);
+            }
+
+            // define givens
+            for (const auto& given : puzzleData.mGivens)
+            {
+                if(reloadCells || newGivens.count(given.first))
+                {
+                    mGrid->AddGivenCell(given.first / gridSize, given.first % gridSize, given.second);
+                }
+            }
+
+            // define hints
+            for (const auto& hints : puzzleData.mHints)
+            {
+                if(reloadCells || newHints.count(hints.first))
+                {
+                    mGrid->SetCellEliminationHints(hints.first / gridSize, hints.first % gridSize, hints.second);
+                }
             }
         }
 
         // solve
         while (!progressManager->HasFinished())
         {
-            if(mNewInput)
+            QMutexLocker locker(&mSolverMutex);
+            if(mNewInput || mPaused)
             {
                 break;
             }
             if(mAbort)
             {
-                QMutexLocker locked(&mMutex);
+                QMutexLocker locked(&mInputMutex);
                 mAbort = false;
                 return;
             }
             progressManager->NextStep();
         }
 
-        // we axited the solve loop. There can be two reasons:
-        // 1- the solver has finished (sudoku solved or runout of techniques)
+        // we exited the solve loop. There can be two reasons:
+        // 1- the solver has finished (sudoku solved or run out of techniques)
         // 2- there is a new user input to be processed
-        mMutex.lock();
+        mInputMutex.lock();
         if(mAbort)
         {
             mAbort = false;
@@ -187,9 +202,9 @@ void SudokuSolverThread::run()
         if(!mNewInput)
         {
             // pause this thread while there is nothing to do
-            mThreadCondition.wait(&mMutex);
+            mThreadCondition.wait(&mInputMutex);
         }
-        mMutex.unlock();
+        mInputMutex.unlock();
     }
 }
 
@@ -276,7 +291,7 @@ std::vector<std::array<unsigned short, 2>> SudokuSolverThread::DiagonalCellsGet(
 
 void SudokuSolverThread::SubmitChangesToSolver()
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     mNewInput = true;
     if (!isRunning())
@@ -292,4 +307,25 @@ void SudokuSolverThread::SubmitChangesToSolver()
 void SudokuSolverThread::NotifyCellChanged(SudokuCell *cell)
 {
     emit CellUpdated(cell->IdGet(), cell->OptionsGet());
+}
+
+void SudokuSolverThread::SetAutoSolverPaused(bool paused)
+{
+    QMutexLocker locker(&mInputMutex);
+    if(mPaused != paused)
+    {
+        mPaused = paused;
+        if(!mPaused && !isRunning())
+        {
+            mThreadCondition.wakeOne();
+        }
+    }
+}
+
+void SudokuSolverThread::CountSolutions(size_t maxSolutionCount, bool useHints)
+{
+    QMutexLocker locker(&mSolverMutex);
+
+    size_t solutions = mBruteForceSolver->GenerateSolutions(maxSolutionCount, useHints);
+    emit NumberOfSolutionsComputed(solutions);
 }

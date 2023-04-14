@@ -100,6 +100,11 @@ SudokuCell* SudokuGrid::CellGet(unsigned short row, unsigned short col) const
     return mGrid.at(row).at(col).get();
 }
 
+SudokuCell *SudokuGrid::CellGet(unsigned int id) const
+{
+    return CellGet(id / mSize, id % mSize);
+}
+
 RegionsManager* SudokuGrid::RegionsManagerGet() const
 {
     return mRegionsManager.get();

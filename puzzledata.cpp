@@ -56,7 +56,7 @@ std::set<unsigned short> SudokuSolverThread::HintsGet(CellCoord id) const
 
 void SudokuSolverThread::SetRegion(unsigned short regionId, const std::set<CellCoord> &cells)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     unsigned short index = regionId - 1;
     if(index < mPuzzleData.mSize && mPuzzleData.mRegions.at(index) != cells)
@@ -75,7 +75,7 @@ void SudokuSolverThread::SetRegion(unsigned short regionId, const std::set<CellC
 
 void SudokuSolverThread::PositiveDiagonalConstraintSet(bool set)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     mPuzzleData.mPositiveDiagonal = set;
     if(set)
@@ -90,7 +90,7 @@ void SudokuSolverThread::PositiveDiagonalConstraintSet(bool set)
 
 void SudokuSolverThread::NegativeDiagonalConstraintSet(bool set)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     mPuzzleData.mNegativeDiagonal = set;
     if(set)
@@ -105,7 +105,7 @@ void SudokuSolverThread::NegativeDiagonalConstraintSet(bool set)
 
 void SudokuSolverThread::AddGiven(unsigned short value, CellCoord  cellId)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     if(value > 0 && value <= mPuzzleData.mSize)
     {
@@ -123,7 +123,7 @@ void SudokuSolverThread::AddGiven(unsigned short value, CellCoord  cellId)
 
 void SudokuSolverThread::RemoveGiven(CellCoord  cellId)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     auto it = mPuzzleData.mGivens.find(cellId);
     if(it != mPuzzleData.mGivens.end())
@@ -135,7 +135,7 @@ void SudokuSolverThread::RemoveGiven(CellCoord  cellId)
 
 void SudokuSolverThread::AddKillerCage(CellCoord cageId, unsigned int total, const CellsInRegion &cells)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     auto it =  mPuzzleData.mKillerCages.find(cageId);
     if(it == mPuzzleData.mKillerCages.end())
@@ -150,7 +150,7 @@ void SudokuSolverThread::AddKillerCage(CellCoord cageId, unsigned int total, con
 
 void SudokuSolverThread::RemoveKillerCage(CellCoord cageId)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     auto it =  mPuzzleData.mKillerCages.find(cageId);
     if(it !=  mPuzzleData.mKillerCages.end())
@@ -162,7 +162,7 @@ void SudokuSolverThread::RemoveKillerCage(CellCoord cageId)
 
 void SudokuSolverThread::AddHint(CellCoord cellId, unsigned short value)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     auto it = mPuzzleData.mHints.find(cellId);
     if(it != mPuzzleData.mHints.end())
@@ -181,7 +181,7 @@ void SudokuSolverThread::AddHint(CellCoord cellId, unsigned short value)
 
 void SudokuSolverThread::RemoveHint(CellCoord cageId, unsigned short value)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     auto mapIt = mPuzzleData.mHints.find(cageId);
     if(mapIt != mPuzzleData.mHints.end())
@@ -197,7 +197,7 @@ void SudokuSolverThread::RemoveHint(CellCoord cageId, unsigned short value)
 
 void SudokuSolverThread::RemoveAllHints()
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mInputMutex);
 
     if(!mPuzzleData.mHints.empty())
     {

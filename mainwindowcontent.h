@@ -20,7 +20,8 @@ public:
     {
         EnterDigits,
         DrawRegions,
-        DrawKiller
+        DrawKiller,
+        Solver
     };
 
 private:

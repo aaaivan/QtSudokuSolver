@@ -72,6 +72,7 @@ public:
 
     unsigned short SumGet() const;
     RegionType TypeGet() override;
+    const std::list<std::set<unsigned short>>& CombinationsGet() const;
 
 // Non-constant methods
 

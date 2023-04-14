@@ -8,6 +8,7 @@
 #include "solver/SudokuGrid.h"
 
 class SudokuCell;
+class BruteForceSolver;
 
 class SudokuSolverThread : public QThread
 {
@@ -21,12 +22,14 @@ public:
 signals:
     void CellUpdated(unsigned short id, const std::set<unsigned short>& content);
     void PuzzleHasNoSolution(std::string message);
+    void NumberOfSolutionsComputed(size_t count);
 
 protected:
     void run() override;
 
 private:
     std::unique_ptr<SudokuGrid> mGrid;
+    std::unique_ptr<BruteForceSolver> mBruteForceSolver;
     PuzzleData mPuzzleData;
 
     std::set<CellCoord> mGivensToAdd;
@@ -40,8 +43,10 @@ private:
     bool mReloadGrid;
     bool mNewInput;
     bool mAbort;
+    bool mPaused;
 
-    QMutex mMutex;
+    QMutex mInputMutex;
+    QMutex mSolverMutex;
     QWaitCondition mThreadCondition;
 
     void AddGivenValueToSubmissionQueue(CellCoord cell);
@@ -73,6 +78,9 @@ public:
 
     void SubmitChangesToSolver();
     void NotifyCellChanged(SudokuCell* cell);
+
+    void SetAutoSolverPaused(bool paused);
+    void CountSolutions(size_t maxSolutionCount, bool useHints);
 };
 
 #endif // SUDOKUSOLVERTHREAD_H

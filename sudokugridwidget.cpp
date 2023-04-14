@@ -63,7 +63,6 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
     connect(mSolver.get(), &SudokuSolverThread::CellUpdated, this, &SudokuGridWidget::UpdateOptionsOfCell);
     mSolver->Init();
 
-
     // temporary code
     std::vector<std::set<CellCoord>> regions(mSize);
     for(unsigned short i = 0; i < mCells.size(); ++i)
@@ -80,7 +79,6 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
         mSolver->SetRegion(i+1, regions.at(i));
     }
     mSolver->SubmitChangesToSolver();
-
 }
 
 SudokuGridWidget::~SudokuGridWidget()

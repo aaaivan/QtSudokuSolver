@@ -101,8 +101,14 @@ RegionType KillerConstraint::TypeGet()
     return RegionType::KillerCage;
 }
 
+const std::list<std::set<unsigned short> > &KillerConstraint::CombinationsGet() const
+{
+    return mCombinations;
+}
+
 void KillerConstraint::FindCombinations()
 {
+    mCombinations.clear();
     std::list<unsigned short> combination;
     std::list<unsigned short> allowedValues(mAllowedValues.begin(), mAllowedValues.end());
     unsigned int total = 0;

@@ -1,0 +1,125 @@
+/*
+    Copyright (C) 2018  Gregory J. Karanikas.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#ifndef DANCING_LINKS_H
+#define DANCING_LINKS_H
+
+#include "linked_matrix.h"
+#include <vector>
+#include <stack>
+#include <list>
+
+/** \file dancing_links.h
+    \brief Definitions of \ref Exact_Cover_Solver() and \ref DLX().
+ */
+
+//! Home of the Exact Cover Problem solver based on the dancing links algorithm.
+namespace dancing_links_GJK
+{
+
+using linked_matrix_GJK::MNode;
+using linked_matrix_GJK::LMatrix;
+using linked_matrix_GJK::Column;
+
+typedef std::vector<size_t> S_Stack;
+
+
+enum class RC {row, column};
+/**
+ \brief Holds the data of a row or column removal (of a matrix determined by context).
+
+        Whether a row or column was removed is determined by \ref RC_Item#type.
+        The field \ref RC_Item#node records the node which was passed to \ref LMatrix#remove_row or \ref LMatrix#remove_column.
+ */
+struct RC_Item {
+    MNode* node;
+    RC type;
+};
+
+//! Each \ref RC_Stack is to hold the data accumulated by a single call to \ref update().
+typedef std::stack<RC_Item> RC_Stack;
+/**
+    \brief A class used to represent the history of a solution finding process (depth first search).
+
+ */
+typedef std::stack<RC_Stack> H_Stack;
+
+/**
+ * @brief Like \ref dancing_links_GJK#Exact_Cover_Solver(bool**,int,int) but without the initial conversion
+ * step.
+ */
+void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount);
+
+/**
+ * @brief Recursively solves the exact cover problem using the *dancing links* algorithm of Donald Knuth.
+ * @param M The matrix.  It is modified during execution.  If a solution is found, @p M will be the empty matrix
+ *            at termination, otherwise it will be unmodified.
+ * @param solution At termination, holds the row indices of a solution
+ *                  if one exists, otherwise is unmodified.
+ * @param history At termination, holds the sequence of row and column deletions
+ *                  traversed in finding the solution if one exists, otherwise is unmodified.  See \ref H_Stack.
+ * @param foundSolutions Holds a list of all the solutions found.
+ * @param maxSolutionsCount stop the algorithm when this number of solutions is found.
+ *
+ *
+ * This procedure implements **Algorithm X**, an obvious backtracking algorithm which can be found on [this wikipedia page](https://en.wikipedia.org/wiki/Knuth%27s_Algorithm_X).
+ * In pseudocode:
+ *
+ *       If the matrix A has no columns, the current partial solution is a valid solution; terminate successfully.
+         Otherwise choose a column c (deterministically).
+         Choose a row r such that Ar, c = 1 (nondeterministically).
+         Include row r in the partial solution.
+         For each column j such that Ar, j = 1,
+             for each row i such that Ai, j = 1,
+                 delete row i from matrix A.
+             delete column j from matrix A.
+         Repeat this algorithm recursively on the reduced matrix A
+ */
+void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount);
+
+
+/**
+ * @brief Column selector.
+ * @param M a matrix.
+ * @return a pointer to the column of @p M with the fewest nodes (ie smallest \ref Column#size() value).  If @p M is empty, return @c NULL.
+ */
+Column* choose_column(LMatrix& M);
+
+
+/**
+ * @brief Uses @p r to branch into the next step of Algorithm X, deleting the appropriate rows and columns of @p M.
+ * @param M a matrix.
+ * @param solution The deleted columns are pushed onto the back of this vector.
+ * @param history The deleted rows and columns are pushed onto this stack.
+ * @param r Indicates the row for the next branch.
+ */
+void update(LMatrix& M, S_Stack& solution, H_Stack& history, MNode *r);
+
+
+/**
+ * @brief Assumes \ref update() has just been called, and reverses the actions performed by \ref update().
+ *
+ * It is *very important* that neither @p M, @p solution, nor @p history have been modified since the last call
+ * to \ref update().  If this condition is not met the behaviour is undefined.
+ *
+ */
+void downdate(LMatrix& M, S_Stack& solution, H_Stack& history);
+
+
+}
+
+#endif
