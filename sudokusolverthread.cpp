@@ -87,6 +87,7 @@ void SudokuSolverThread::run()
         {
             QMutexLocker locker(&mSolverMutex);
             mBruteForceSolver->NotifyGridChanged();
+            mBruteForceSolver->AbortCalculation();
 
             if(reloadGrid)
             {

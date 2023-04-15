@@ -26,6 +26,7 @@ protected:
 
 private:
     std::unique_ptr<BruteForceSolver> mBruteForceSolver;
+    SudokuGrid* mGrid;
 
     size_t mMaxSolutionsCount;
     bool mUseHints;
@@ -42,6 +43,8 @@ public:
 
     void NotifySolutionsCountReady(size_t count, bool stopped);
     void NotifySolutionReady(const std::vector<unsigned short>& solution);
+    void DisplayCandidatesForCell(CellId id);
+    void ResetGridContents();
 };
 
 #endif // BRUTEFORCESOLVERTHREAD_H

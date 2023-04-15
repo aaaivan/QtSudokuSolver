@@ -78,6 +78,7 @@ void SudokuCell::MakeGiven(unsigned short value)
     if (value)
     {
         mIsGiven = true;
+        mValue = value;
         mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GivenCellAdded>(this, value));
     }
 }

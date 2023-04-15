@@ -20,12 +20,14 @@ private:
     QSpinBox* mMaxSolutionsCount;
     QCheckBox* mUseHintsCheckbox;
     QPushButton* mAbortCalculationsBtn;
+    QPushButton* mClearGridBtn;
 
     BruteForceSolverThread* mBruteForceSolver;
 
 private slots:
     void CountSolutionsBtn_Clicked();
     void DisplaySolutionsBtn_Clicked();
+    void ClearGridBtn_Clicked();
     void AbortButton_Clicked();
     void CalculationStarted();
     void CalculationFinished();

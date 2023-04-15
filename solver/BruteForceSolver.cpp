@@ -11,9 +11,11 @@ BruteForceSolver::BruteForceSolver(BruteForceSolverThread* bruteForceThread, Sud
     mGrid(grid)
   , mBruteForceThread(bruteForceThread)
   , mUseHintsAsConstraints(false)
+  , mIncidenceMatrixDirty(true)
   , mSolutionsDirty(true)
   , mMaxSolutionCount(0)
   , mAbort(abortFlag)
+  , mDLXMatrix(nullptr)
   , mSolutions()
   , mSolutionIt(mSolutions.end())
 {
@@ -37,15 +39,19 @@ size_t BruteForceSolver::IndexFromPossibility(CellId id, unsigned short value)
     return id * size + value - 1;
 }
 
-void BruteForceSolver::GenerateIncidenceMatrix()
+void BruteForceSolver::GenerateIncidenceMatrix(bool useHints)
 {
-    if(!mSolutionsDirty)
+    if(useHints != mUseHintsAsConstraints)
+    {
+        mUseHintsAsConstraints = useHints;
+        mIncidenceMatrixDirty = true;
+    }
+    if(!mIncidenceMatrixDirty)
     {
         return;
     }
-    mSolutionsDirty = false;
-    mSolutionIt = mSolutions.end();
-    mSolutions.clear();
+    mIncidenceMatrixDirty = false;
+    mSolutionsDirty = true;
 
     size_t size = mGrid->SizeGet();
     const size_t primary_columns = size * size * size;
@@ -77,7 +83,8 @@ void BruteForceSolver::GenerateIncidenceMatrix()
     FillIncidenceMatrix(M, im_rows);
 
     // convert matrix to 2d doubly linked list
-    linked_matrix_GJK::LMatrix dancingLinksMatrix(M,im_rows,im_cols);
+    mDLXMatrix.reset();
+    mDLXMatrix = std::make_unique<linked_matrix_GJK::LMatrix>(M,im_rows,im_cols);
 
     // delete the temp incidence matrix
     for(size_t i = 0; i < im_rows; i++)
@@ -85,22 +92,32 @@ void BruteForceSolver::GenerateIncidenceMatrix()
         delete[] M[i];
     }
     delete[] M;
+}
 
-    std::list<std::vector<size_t>> solutions;
-    dancing_links_GJK::Exact_Cover_Solver(dancingLinksMatrix, solutions, mMaxSolutionCount, mAbort);
-
-    qDebug() << solutions.size();
-    for(const auto& sol : solutions)
+void BruteForceSolver::SolveExactCoverProblem()
+{
+    if(mSolutionsDirty)
     {
-        mSolutions.push_back(std::vector<unsigned short>(size * size));
-        for (const auto& r : sol)
+        mSolutions.clear();
+        mSolutionIt = mSolutions.end();
+        mSolutionsDirty = false;
+        std::list<std::vector<size_t>> solutions;
+        dancing_links_GJK::Exact_Cover_Solver(*mDLXMatrix, solutions, mMaxSolutionCount, mAbort);
+
+        size_t size = mGrid->SizeGet();
+        const size_t primary_columns = size * size * size;
+        for(const auto& sol : solutions)
         {
-            if(r >= primary_columns)
+            mSolutions.push_back(std::vector<unsigned short>(size * size));
+            for (const auto& r : sol)
             {
-                continue;
+                if(r >= primary_columns)
+                {
+                    continue;
+                }
+                Possibility p = PossibilityFromRowIndex(r);
+                mSolutions.back()[p.first] = p.second;
             }
-            Possibility p = PossibilityFromRowIndex(r);
-            mSolutions.back()[p.first] = p.second;
         }
     }
 }
@@ -242,34 +259,30 @@ void BruteForceSolver::FillIncidenceMatrix(bool** M, const size_t rows)
     }
 }
 
-
 void BruteForceSolver::DirtySolutions()
 {
     mSolutionsDirty = true;
+    mIncidenceMatrixDirty = true;
+    mMaxSolutionCount = 0;
 }
 
-void BruteForceSolver::CountSolutions(size_t maxSolutionsCount, bool useHints)
+void BruteForceSolver::CountSolutions(size_t maxSolutionsCount)
 {
-    if(useHints != mUseHintsAsConstraints)
-    {
-        mUseHintsAsConstraints = useHints;
-        mMaxSolutionCount = maxSolutionsCount;
-        mSolutionsDirty = true;
-    }
+    assert(!mIncidenceMatrixDirty);
     if(maxSolutionsCount > mMaxSolutionCount)
     {
         mMaxSolutionCount = maxSolutionsCount;
         mSolutionsDirty = true;
     }
-    GenerateIncidenceMatrix();
-
-    mBruteForceThread->NotifySolutionsCountReady(mSolutions.size(), mSolutions.size() >= mMaxSolutionCount);
+    SolveExactCoverProblem();
+    bool stopped = mSolutions.size() >= mMaxSolutionCount || *mAbort == true;
+    mBruteForceThread->NotifySolutionsCountReady(mSolutions.size(), stopped);
 }
 
-void BruteForceSolver::FindSolution(size_t maxSolutionsCount, bool useHints)
+void BruteForceSolver::FindSolution(size_t maxSolutionsCount)
 {
+    CountSolutions(maxSolutionsCount);
     std::vector<unsigned short> solution;
-    CountSolutions(maxSolutionsCount, useHints);
 
     if(mSolutions.size() > 0)
     {

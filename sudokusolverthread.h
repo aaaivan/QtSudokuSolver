@@ -77,9 +77,9 @@ public:
 
     void SubmitChangesToSolver();
     void NotifyCellChanged(SudokuCell* cell);
+    void SetLogicalSolverPaused(bool paused);
 
     BruteForceSolverThread* BruteSolverGet() const;
-    void SetLogicalSolverPaused(bool paused);
 };
 
 #endif // SUDOKUSOLVERTHREAD_H

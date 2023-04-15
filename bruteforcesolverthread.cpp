@@ -4,6 +4,7 @@
 
 BruteForceSolverThread::BruteForceSolverThread(QObject *parent)
     : QThread{parent}
+    , mGrid(nullptr)
     , mMaxSolutionsCount(0)
     , mUseHints(false)
     , mDisplaySolution(false)
@@ -25,6 +26,7 @@ void BruteForceSolverThread::Init(SudokuGrid* grid, QMutex* solverMutex)
 {
     mBruteForceSolver = std::make_unique<BruteForceSolver>(this, grid, &mAbort);
     mSolverMutex = solverMutex;
+    mGrid = grid;
 }
 
 void BruteForceSolverThread::run()
@@ -36,17 +38,18 @@ void BruteForceSolverThread::run()
     mInputMutex.unlock();
 
     mSolverMutex->lock();
+    mBruteForceSolver->GenerateIncidenceMatrix(useHints);
+    mSolverMutex->unlock();
     emit CalculationStarted();
     if(displaySolution)
     {
-        mBruteForceSolver->FindSolution(maxSolutionCount, useHints);
+        mBruteForceSolver->FindSolution(maxSolutionCount);
     }
     else
     {
-        mBruteForceSolver->CountSolutions(maxSolutionCount, useHints);
+        mBruteForceSolver->CountSolutions(maxSolutionCount);
     }
     emit CalculationFinished();
-    mSolverMutex->unlock();
 
     qDebug() << "Brute force finished!";
     if(mAbort)
@@ -108,3 +111,20 @@ void BruteForceSolverThread::NotifySolutionReady(const std::vector<unsigned shor
     }
 }
 
+void BruteForceSolverThread::DisplayCandidatesForCell(CellId id)
+{
+    QMutexLocker locker(mSolverMutex);
+    mGrid->NotifyCellChanged(id);
+}
+
+void BruteForceSolverThread::ResetGridContents()
+{
+    mSolverMutex->lock();
+    unsigned short size = mGrid->SizeGet();
+    mSolverMutex->unlock();
+
+    for (unsigned int i = 0; i < size * size; ++i)
+    {
+        DisplayCandidatesForCell(i);
+    }
+}

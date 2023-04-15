@@ -84,6 +84,8 @@ public:
     /// Notify the user interface that the content of the cell has changed
     /// so that it can be displayed
     /// </summary>
-    void NotifyCellChanged(SudokuCell* cell);
+    void NotifyCellChanged(SudokuCell* cell) const;
+    void NotifyCellChanged(unsigned int cellId) const;
+
 };
 #endif // SUDOKU_GRID_H

@@ -215,12 +215,17 @@ void SudokuGrid::Clear()
     DefineRowsAndCols();
 }
 
-void SudokuGrid::NotifyCellChanged(SudokuCell *cell)
+void SudokuGrid::NotifyCellChanged(SudokuCell *cell) const
 {
     if(mSolverThread)
     {
         mSolverThread->NotifyCellChanged(cell);
     }
+}
+
+void SudokuGrid::NotifyCellChanged(unsigned int cellId) const
+{
+    NotifyCellChanged(CellGet(cellId));
 }
 
 #if PRINT_LOG_MESSAGES

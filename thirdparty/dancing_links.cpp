@@ -49,17 +49,13 @@ void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& fo
         return;
     }
     for( MNode *r = c->down(); r != static_cast<MNode*>(c); r = r->down() ) {
-        if(*abort == true)
-        {
-            return;
-        }
         update(M, solution, history, r);
         DLX(M, solution, history, foundSolutions, maxSolutionsCount, abort);
-        if(foundSolutions.size() >= maxSolutionsCount)
+        downdate(M, solution, history);
+        if(*abort == true || foundSolutions.size() >= maxSolutionsCount)
         {
             return;
         }
-        downdate(M, solution, history);
     }
 }
 

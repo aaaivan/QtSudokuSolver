@@ -1,5 +1,6 @@
 #include "solvercontextmenu.h"
 #include "mainwindowcontent.h"
+#include "sudokucellwidget.h"
 #include "sudokugridwidget.h"
 #include <QVBoxLayout>
 
@@ -31,7 +32,9 @@ SolverContextMenu::SolverContextMenu(MainWindowContent* mainWindowContent, QWidg
 void SolverContextMenu::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
-    mMainWindowContent->GridGet()->SolverGet()->BruteSolverGet()->AbortCalculation();
+    BruteForceSolverThread* bruteForceSolver = mMainWindowContent->GridGet()->SolverGet()->BruteSolverGet();
+    bruteForceSolver->AbortCalculation();
+    bruteForceSolver->ResetGridContents();
     mMainWindowContent->GridGet()->SolverGet()->SetLogicalSolverPaused(false);
     mSolverOutput->clear();
 }
@@ -68,20 +71,33 @@ void SolverContextMenu::OnSolutionsCounted(size_t count, bool stopped)
 
 void SolverContextMenu::CellGainedFocus(SudokuCellWidget *cell)
 {
-
+    Q_UNUSED(cell)
 }
 
 void SolverContextMenu::CellLostFocus(SudokuCellWidget *cell)
 {
-
+    Q_UNUSED(cell)
 }
 
 void SolverContextMenu::CellClicked(SudokuCellWidget *cell)
 {
-
+    Q_UNUSED(cell)
 }
 
 void SolverContextMenu::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
 {
+    bool ok;
+    int num = event->text().toInt(&ok);
 
+    SudokuGridWidget* grid = mMainWindowContent->GridGet();
+    BruteForceSolverThread* bruteForceSolver = grid->SolverGet()->BruteSolverGet();
+    if(ok && num > 0 && num <= grid->SizeGet())
+    {
+        cell->SetGivenDigit(static_cast<unsigned short>(num));
+    }
+    else if(event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace)
+    {
+        cell->RemoveGivenDigit();
+        bruteForceSolver->DisplayCandidatesForCell(cell->CellIdGet());
+    }
 }
