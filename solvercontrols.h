@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QSpinBox>
 
 class BruteForceSolverThread;
 
@@ -16,6 +17,7 @@ public:
 private:
     QPushButton* mCountSolutionsBtn;
     QPushButton* mBruteForceSolveBtn;
+    QSpinBox* mMaxSolutionsCount;
     QCheckBox* mUseHintsCheckbox;
     QPushButton* mAbortCalculationsBtn;
 
@@ -25,6 +27,7 @@ private slots:
     void CountSolutionsBtn_Clicked();
     void DisplaySolutionsBtn_Clicked();
     void AbortButton_Clicked();
+    void CalculationStarted();
     void CalculationFinished();
 };
 

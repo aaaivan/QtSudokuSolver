@@ -36,6 +36,7 @@ void BruteForceSolverThread::run()
     mInputMutex.unlock();
 
     mSolverMutex->lock();
+    emit CalculationStarted();
     if(displaySolution)
     {
         mBruteForceSolver->FindSolution(maxSolutionCount, useHints);
@@ -44,6 +45,7 @@ void BruteForceSolverThread::run()
     {
         mBruteForceSolver->CountSolutions(maxSolutionCount, useHints);
     }
+    emit CalculationFinished();
     mSolverMutex->unlock();
 
     qDebug() << "Brute force finished!";
@@ -93,9 +95,9 @@ void BruteForceSolverThread::NotifyGridChanged()
     mBruteForceSolver->DirtySolutions();
 }
 
-void BruteForceSolverThread::NotifySolutionsCountReady(size_t count)
+void BruteForceSolverThread::NotifySolutionsCountReady(size_t count, bool stopped)
 {
-    emit NumberOfSolutionsComputed(count);
+    emit NumberOfSolutionsComputed(count, stopped);
 }
 
 void BruteForceSolverThread::NotifySolutionReady(const std::vector<unsigned short> &solution)

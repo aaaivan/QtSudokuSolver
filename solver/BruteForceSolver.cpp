@@ -263,7 +263,7 @@ void BruteForceSolver::CountSolutions(size_t maxSolutionsCount, bool useHints)
     }
     GenerateIncidenceMatrix();
 
-    mBruteForceThread->NotifySolutionsCountReady(mSolutions.size());
+    mBruteForceThread->NotifySolutionsCountReady(mSolutions.size(), mSolutions.size() >= mMaxSolutionCount);
 }
 
 void BruteForceSolver::FindSolution(size_t maxSolutionsCount, bool useHints)

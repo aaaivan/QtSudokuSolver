@@ -16,7 +16,9 @@ public:
     void Init(SudokuGrid* grid, QMutex* solverMutex);
 
 signals:
-    void NumberOfSolutionsComputed(size_t count);
+    void CalculationStarted();
+    void CalculationFinished();
+    void NumberOfSolutionsComputed(size_t count, bool stopped);
     void CellUpdated(unsigned int id, unsigned short value);
 
 protected:
@@ -38,7 +40,7 @@ public:
     void AbortCalculation();
     void NotifyGridChanged();
 
-    void NotifySolutionsCountReady(size_t count);
+    void NotifySolutionsCountReady(size_t count, bool stopped);
     void NotifySolutionReady(const std::vector<unsigned short>& solution);
 };
 
