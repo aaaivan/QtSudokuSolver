@@ -40,6 +40,7 @@ SOURCES += \
     solver/VariantConstraints.cpp \
     solvercontextmenu.cpp \
     solvercontrols.cpp \
+    startmenu.cpp \
     sudokucellwidget.cpp \
     sudokugridwidget.cpp \
     sudokusolverthread.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     solver/VariantConstraints.h \
     solvercontextmenu.h \
     solvercontrols.h \
+    startmenu.h \
     sudokucellwidget.h \
     sudokugridwidget.h \
     sudokusolverthread.h \
