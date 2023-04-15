@@ -29,18 +29,18 @@ namespace dancing_links_GJK
 
 
 
-void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount)
+void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount, const bool* abort)
 {
     H_Stack history;
     std::vector<size_t> solution;
     solution.reserve(M.number_of_rows());
-    DLX(M, solution, history, foundSolutions, maxSolutionsCount);
+    DLX(M, solution, history, foundSolutions, maxSolutionsCount, abort);
     solution.shrink_to_fit();
 }
 
 
 
-void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount)
+void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount, const bool* abort)
 {
     Column *c = choose_column(M);
     // 'M' is empty => solution successfully found
@@ -49,8 +49,12 @@ void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& fo
         return;
     }
     for( MNode *r = c->down(); r != static_cast<MNode*>(c); r = r->down() ) {
+        if(*abort == true)
+        {
+            return;
+        }
         update(M, solution, history, r);
-        DLX(M, solution, history, foundSolutions, maxSolutionsCount);
+        DLX(M, solution, history, foundSolutions, maxSolutionsCount, abort);
         if(foundSolutions.size() >= maxSolutionsCount)
         {
             return;

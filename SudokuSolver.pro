@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     adddigitscontrols.cpp \
+    bruteforcesolverthread.cpp \
     cellcontentbutton.cpp \
     contextmenuwindow.cpp \
     drawkillerscontrols.cpp \
@@ -48,6 +49,7 @@ SOURCES += \
 
 HEADERS += \
     adddigitscontrols.h \
+    bruteforcesolverthread.h \
     cellcontentbutton.h \
     contextmenuwindow.h \
     drawkillerscontrols.h \

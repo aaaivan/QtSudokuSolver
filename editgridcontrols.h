@@ -17,6 +17,7 @@ private:
 
 
     MainWindowContent* mMainWindowContent;
+    QButtonGroup* mButtonsGroup;
     QPushButton* mAddDigitsBtn;
     QPushButton* mDrawRegionsBtn;
     QPushButton* mDrawKillersBtn;
@@ -29,6 +30,9 @@ private slots:
     void ViewButtonClicked(int btnId);
     void PositiveDiagonalCheckbox_OnChange(int checked);
     void NegativeDiagonalCheckbox_OnChange(int checked);
+
+public:
+    int SelectedButtonIdGet() const;
 };
 
 #endif // EDITGRIDCONTROLS_H

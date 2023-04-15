@@ -2,14 +2,13 @@
 #include "solver/GridProgressManager.h"
 #include "solver/SudokuCell.h"
 #include "solver/VariantConstraints.h"
-#include "solver/BruteForceSolver.h"
 #include <QDebug>
 
 SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
     : QThread{parent},
       mGrid(nullptr),
-      mBruteForceSolver(),
       mPuzzleData(gridSize),
+      mBruteForceSolver(std::make_unique<BruteForceSolverThread>(this)),
       mGivensToAdd(),
       mHintsToAdd(),
       mRegionsToAdd(),
@@ -40,7 +39,7 @@ SudokuSolverThread::~SudokuSolverThread()
 void SudokuSolverThread::Init()
 {
     mGrid = std::make_unique<SudokuGrid>(mPuzzleData.mSize, this);
-    mBruteForceSolver = std::make_unique<BruteForceSolver>(mGrid.get());
+    mBruteForceSolver->Init(mGrid.get(), &mSolverMutex);
 }
 
 void SudokuSolverThread::run()
@@ -87,7 +86,7 @@ void SudokuSolverThread::run()
         if(newInput)
         {
             QMutexLocker locker(&mSolverMutex);
-            mBruteForceSolver->DirtySolutions();
+            mBruteForceSolver->NotifyGridChanged();
 
             if(reloadGrid)
             {
@@ -309,23 +308,20 @@ void SudokuSolverThread::NotifyCellChanged(SudokuCell *cell)
     emit CellUpdated(cell->IdGet(), cell->OptionsGet());
 }
 
-void SudokuSolverThread::SetAutoSolverPaused(bool paused)
+BruteForceSolverThread *SudokuSolverThread::BruteSolverGet() const
+{
+    return mBruteForceSolver.get();
+}
+
+void SudokuSolverThread::SetLogicalSolverPaused(bool paused)
 {
     QMutexLocker locker(&mInputMutex);
     if(mPaused != paused)
     {
         mPaused = paused;
-        if(!mPaused && !isRunning())
+        if(!mPaused)
         {
             mThreadCondition.wakeOne();
         }
     }
-}
-
-void SudokuSolverThread::CountSolutions(size_t maxSolutionCount, bool useHints)
-{
-    QMutexLocker locker(&mSolverMutex);
-
-    size_t solutions = mBruteForceSolver->GenerateSolutions(maxSolutionCount, useHints);
-    emit NumberOfSolutionsComputed(solutions);
 }

@@ -2,7 +2,6 @@
 #include "sudokugridwidget.h"
 #include "mainwindowcontent.h"
 #include "sudokusolverthread.h"
-#include "mainwindow.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QFrame>
@@ -11,6 +10,7 @@
 EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent)
     : QWidget{parent},
       mMainWindowContent(mainWindowContent),
+      mButtonsGroup(new QButtonGroup(this)),
       mAddDigitsBtn(new QPushButton("Given Digits")),
       mDrawRegionsBtn(new QPushButton("Regions")),
       mDrawKillersBtn(new QPushButton("Killer Cages")),
@@ -23,14 +23,13 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     verticalLayout->addWidget(mAddDigitsBtn);
     verticalLayout->addWidget(mDrawRegionsBtn);
     verticalLayout->addWidget(mDrawKillersBtn);
-    QButtonGroup* btnGroup = new QButtonGroup(this);
-    btnGroup->addButton(mAddDigitsBtn);
-    btnGroup->addButton(mDrawRegionsBtn);
-    btnGroup->addButton(mDrawKillersBtn);
-    btnGroup->setId(mAddDigitsBtn, MainWindowContent::ViewType::EnterDigits);
-    btnGroup->setId(mDrawRegionsBtn, MainWindowContent::ViewType::DrawRegions);
-    btnGroup->setId(mDrawKillersBtn, MainWindowContent::ViewType::DrawKiller);
 
+    mButtonsGroup->addButton(mAddDigitsBtn);
+    mButtonsGroup->addButton(mDrawRegionsBtn);
+    mButtonsGroup->addButton(mDrawKillersBtn);
+    mButtonsGroup->setId(mAddDigitsBtn, MainWindowContent::ContextMenuType::EnterDigits_Context);
+    mButtonsGroup->setId(mDrawRegionsBtn, MainWindowContent::ContextMenuType::DrawRegions_Context);
+    mButtonsGroup->setId(mDrawKillersBtn, MainWindowContent::ContextMenuType::DrawKiller_Context);
 
     QFrame* line = new QFrame();
     line->setFrameStyle(QFrame::HLine | QFrame::Sunken);
@@ -46,14 +45,14 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     mDrawKillersBtn->setCheckable(true);
 
     // events
-    connect(btnGroup, SIGNAL(idClicked(int)), this, SLOT(ViewButtonClicked(int)));
+    connect(mButtonsGroup, SIGNAL(idClicked(int)), this, SLOT(ViewButtonClicked(int)));
     connect(mPositiveDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(PositiveDiagonalCheckbox_OnChange(int)));
     connect(mNegativeDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(NegativeDiagonalCheckbox_OnChange(int)));
 }
 
 void EditGridControls::ViewButtonClicked(int btnId)
 {
-    mMainWindowContent->ChangeView(static_cast<MainWindowContent::ViewType>(btnId));
+    mMainWindowContent->ChangeView(static_cast<MainWindowContent::ContextMenuType>(btnId));
 }
 
 void EditGridControls::PositiveDiagonalCheckbox_OnChange(int checked)
@@ -68,4 +67,9 @@ void EditGridControls::NegativeDiagonalCheckbox_OnChange(int checked)
     mMainWindowContent->GridGet()->SolverGet()->NegativeDiagonalConstraintSet(checked);
     mMainWindowContent->GridGet()->SolverGet()->SubmitChangesToSolver();
     mMainWindowContent->GridGet()->update();
+}
+
+int EditGridControls::SelectedButtonIdGet() const
+{
+    return mButtonsGroup->checkedId();
 }

@@ -1,34 +1,51 @@
 #include "solvercontrols.h"
-#include "mainwindowcontent.h"
-#include "sudokugridwidget.h"
-#include "sudokusolverthread.h"
+#include "bruteforcesolverthread.h"
 #include <QVBoxLayout>
 #include <QFrame>
 
-SolverControls::SolverControls(MainWindowContent* mainWindowContent, QWidget *parent)
+SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget *parent)
     : QWidget{parent}
-    , mCountSolutionsButton(new QPushButton("Count Solutions"))
-    , mBruteForceSolve(new QPushButton("Find Solution"))
+    , mCountSolutionsBtn(new QPushButton("Count Solutions"))
+    , mBruteForceSolveBtn(new QPushButton("Find Solution"))
     , mUseHintsCheckbox(new QCheckBox("Use hints as constrainsts"))
-    , mMainWindowContent(mainWindowContent)
+    , mAbortCalculationsBtn(new QPushButton("Abort Calculation"))
+    , mBruteForceSolver(bruteForceSolver)
 {
     // build the layout
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
     this->setLayout(verticalLayout);
-    verticalLayout->addWidget(mCountSolutionsButton);
-    verticalLayout->addWidget(mBruteForceSolve);
+    verticalLayout->addWidget(mCountSolutionsBtn);
+    verticalLayout->addWidget(mBruteForceSolveBtn);
     verticalLayout->addWidget(mUseHintsCheckbox);
+    verticalLayout->addWidget(mAbortCalculationsBtn);
+    mAbortCalculationsBtn->setEnabled(false);
+
     QFrame* line = new QFrame();
     line->setFrameStyle(QFrame::HLine | QFrame::Sunken);
     verticalLayout->addWidget(line);
     verticalLayout->addStretch();
 
     // events
-    connect(mCountSolutionsButton, SIGNAL(clicked(bool)), this, SLOT(CountSolutionsBtn_Clicked()));
+    connect(mCountSolutionsBtn, SIGNAL(clicked(bool)), this, SLOT(CountSolutionsBtn_Clicked()));
+    connect(mAbortCalculationsBtn, SIGNAL(clicked(bool)), this, SLOT(AbortButton_Clicked()));
+    connect(mBruteForceSolver, SIGNAL(NumberOfSolutionsComputed(size_t)), this, SLOT(CalculationFinished()));
 }
 
 void SolverControls::CountSolutionsBtn_Clicked()
 {
-    SudokuSolverThread* solver = mMainWindowContent->GridGet()->SolverGet();
-    solver->CountSolutions(1000, mUseHintsCheckbox->isChecked());
+    mBruteForceSolver->CountSolutions(1000, mUseHintsCheckbox->isChecked());
+    mAbortCalculationsBtn->setEnabled(true);
 }
+
+void SolverControls::AbortButton_Clicked()
+{
+    mBruteForceSolver->AbortCalculation();
+    mAbortCalculationsBtn->setEnabled(false);
+}
+
+void SolverControls::CalculationFinished()
+{
+    mAbortCalculationsBtn->setEnabled(false);
+}
+
+

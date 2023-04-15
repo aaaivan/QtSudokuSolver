@@ -6,11 +6,12 @@
 #include <cassert>
 #include <QDebug>
 
-BruteForceSolver::BruteForceSolver(SudokuGrid* grid):
+BruteForceSolver::BruteForceSolver(SudokuGrid* grid, bool* abortFlag):
     mGrid(grid)
   , mUseHintsAsConstraints(false)
   , mSolutionsDirty(true)
   , mMaxSolutionCount(0)
+  , mAbort(abortFlag)
   , mSolutions()
 {
 }
@@ -82,7 +83,7 @@ void BruteForceSolver::GenerateIncidenceMatrix()
     delete[] M;
 
     std::list<std::vector<size_t>> solutions;
-    dancing_links_GJK::Exact_Cover_Solver(dancingLinksMatrix, solutions, mMaxSolutionCount);
+    dancing_links_GJK::Exact_Cover_Solver(dancingLinksMatrix, solutions, mMaxSolutionCount, mAbort);
 
     qDebug() << solutions.size();
     for(const auto& sol : solutions)

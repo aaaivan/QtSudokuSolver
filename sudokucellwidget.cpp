@@ -232,18 +232,13 @@ const QSet<VariantClueWidget *> &SudokuCellWidget::VariantCluesGet() const
 
 void SudokuCellWidget::SwitchView(size_t view)
 {
-    switch (static_cast<MainWindowContent::ViewType>(view))
+    switch (static_cast<MainWindowContent::ContextMenuType>(view))
     {
-    case MainWindowContent::ViewType::EnterDigits:
-        ShowRegionNumber(false);
-        break;
-    case MainWindowContent::ViewType::DrawRegions:
+    case MainWindowContent::ContextMenuType::DrawRegions_Context:
         ShowRegionNumber(true);
         break;
-    case MainWindowContent::ViewType::DrawKiller:
-        ShowRegionNumber(false);
-        break;
     default:
+        ShowRegionNumber(false);
         break;
     }
 }
@@ -297,7 +292,7 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
             }
             edge = edge << 1;
         }
-        DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions));
+        DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions_Context));
         if(context)
         {
             mHighlighted = mRegionId == context->SelectedRegionIdGet();

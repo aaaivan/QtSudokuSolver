@@ -9,6 +9,7 @@ class DrawKillersControls;
 class ContextMenuWindow;
 class MainWindow;
 class QStackedLayout;
+class QTabWidget;
 
 class MainWindowContent : public QWidget
 {
@@ -16,27 +17,37 @@ class MainWindowContent : public QWidget
 public:
     explicit MainWindowContent(unsigned short size, MainWindow *parent);
 
-    enum ViewType
+    enum ContextMenuType
     {
-        EnterDigits,
-        DrawRegions,
-        DrawKiller,
-        Solver
+        EnterDigits_Context,
+        DrawRegions_Context,
+        DrawKiller_Context,
+        Solver_Context
+    };
+
+    enum ControlsMenuType
+    {
+        CreateTab,
+        SolverTab
     };
 
 private:
     MainWindow* mMainWindow;
+    QTabWidget* mControlsMenu;
     QStackedLayout* mContextMenu;
     SudokuGridWidget* mGrid;
-    ViewType mCurrentView;
+    ContextMenuType mCurrentView;
+
+private slots:
+    void OnTabChanged_ControlsMenu(int tab);
 
 public:
     MainWindow* MainWindowGet() const;
-    ContextMenuWindow* ContextMenuGet(ViewType menu) const;
+    ContextMenuWindow* ContextMenuGet(ContextMenuType menu) const;
     ContextMenuWindow* ActiveContextMenuGet() const;
     SudokuGridWidget* GridGet() const;
-    ViewType CurrentViewGet() const;
-    void ChangeView(ViewType view);
+    ContextMenuType CurrentViewGet() const;
+    void ChangeView(ContextMenuType view);
 };
 
 #endif // MAINWINDOWCONTENT_H

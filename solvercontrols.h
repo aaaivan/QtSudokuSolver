@@ -5,23 +5,26 @@
 #include <QPushButton>
 #include <QCheckBox>
 
-class MainWindowContent;
+class BruteForceSolverThread;
 
 class SolverControls : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SolverControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    explicit SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget *parent = nullptr);
 
 private:
-    QPushButton* mCountSolutionsButton;
-    QPushButton* mBruteForceSolve;
+    QPushButton* mCountSolutionsBtn;
+    QPushButton* mBruteForceSolveBtn;
     QCheckBox* mUseHintsCheckbox;
+    QPushButton* mAbortCalculationsBtn;
 
-    MainWindowContent* mMainWindowContent;
+    BruteForceSolverThread* mBruteForceSolver;
 
 private slots:
     void CountSolutionsBtn_Clicked();
+    void AbortButton_Clicked();
+    void CalculationFinished();
 };
 
 #endif // SOLVERCONTROLS_H

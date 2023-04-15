@@ -6,9 +6,9 @@
 #include <QWaitCondition>
 #include "puzzledata.h"
 #include "solver/SudokuGrid.h"
+#include "bruteforcesolverthread.h"
 
 class SudokuCell;
-class BruteForceSolver;
 
 class SudokuSolverThread : public QThread
 {
@@ -22,15 +22,14 @@ public:
 signals:
     void CellUpdated(unsigned short id, const std::set<unsigned short>& content);
     void PuzzleHasNoSolution(std::string message);
-    void NumberOfSolutionsComputed(size_t count);
 
 protected:
     void run() override;
 
 private:
     std::unique_ptr<SudokuGrid> mGrid;
-    std::unique_ptr<BruteForceSolver> mBruteForceSolver;
     PuzzleData mPuzzleData;
+    std::unique_ptr<BruteForceSolverThread> mBruteForceSolver;
 
     std::set<CellCoord> mGivensToAdd;
     std::set<CellCoord> mHintsToAdd;
@@ -79,8 +78,8 @@ public:
     void SubmitChangesToSolver();
     void NotifyCellChanged(SudokuCell* cell);
 
-    void SetAutoSolverPaused(bool paused);
-    void CountSolutions(size_t maxSolutionCount, bool useHints);
+    BruteForceSolverThread* BruteSolverGet() const;
+    void SetLogicalSolverPaused(bool paused);
 };
 
 #endif // SUDOKUSOLVERTHREAD_H

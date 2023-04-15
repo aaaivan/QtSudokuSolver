@@ -13,11 +13,12 @@ class BruteForceSolver
     bool mUseHintsAsConstraints; // whether the hints should be used as constraints
     bool mSolutionsDirty;        // whether the grid has changed since the last time the solutions were computed
     size_t mMaxSolutionCount;     // max number of solutions to search
+    const bool* mAbort;
 
     std::list<std::vector<unsigned short>> mSolutions;            // list of possible solutions
 
 public:
-    BruteForceSolver(SudokuGrid* grid);
+    BruteForceSolver(SudokuGrid* grid, bool* abortFlag);
 
 private:
     Possibility PossibilityFromRowIndex(size_t row);
