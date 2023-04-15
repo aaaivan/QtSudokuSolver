@@ -6,6 +6,7 @@ BruteForceSolverThread::BruteForceSolverThread(QObject *parent)
     : QThread{parent}
     , mMaxSolutionsCount(0)
     , mUseHints(false)
+    , mDisplaySolution(false)
     , mAbort(false)
     , mInputMutex()
     , mSolverMutex(nullptr)
@@ -22,7 +23,7 @@ BruteForceSolverThread::~BruteForceSolverThread()
 
 void BruteForceSolverThread::Init(SudokuGrid* grid, QMutex* solverMutex)
 {
-    mBruteForceSolver = std::make_unique<BruteForceSolver>(grid, &mAbort);
+    mBruteForceSolver = std::make_unique<BruteForceSolver>(this, grid, &mAbort);
     mSolverMutex = solverMutex;
 }
 
@@ -31,20 +32,24 @@ void BruteForceSolverThread::run()
     mInputMutex.lock();
     size_t maxSolutionCount = mMaxSolutionsCount;
     bool useHints = mUseHints;
+    bool displaySolution = mDisplaySolution;
     mInputMutex.unlock();
 
     mSolverMutex->lock();
-    size_t solutions = mBruteForceSolver->GenerateSolutions(maxSolutionCount, useHints);
+    if(displaySolution)
+    {
+        mBruteForceSolver->FindSolution(maxSolutionCount, useHints);
+    }
+    else
+    {
+        mBruteForceSolver->CountSolutions(maxSolutionCount, useHints);
+    }
     mSolverMutex->unlock();
 
     qDebug() << "Brute force finished!";
     if(mAbort)
     {
         NotifyGridChanged();
-    }
-    else
-    {
-        emit NumberOfSolutionsComputed(solutions);
     }
 }
 
@@ -54,6 +59,20 @@ void BruteForceSolverThread::CountSolutions(size_t maxSolutionCount, bool useHin
     {
         QMutexLocker locker(&mInputMutex);
         mAbort = false;
+        mDisplaySolution = false;
+        mMaxSolutionsCount = maxSolutionCount;
+        mUseHints = useHints;
+        start(HighestPriority);
+    }
+}
+
+void BruteForceSolverThread::DisplaySolution(size_t maxSolutionCount, bool useHints)
+{
+    if(!isRunning())
+    {
+        QMutexLocker locker(&mInputMutex);
+        mAbort = false;
+        mDisplaySolution = true;
         mMaxSolutionsCount = maxSolutionCount;
         mUseHints = useHints;
         start(HighestPriority);
@@ -72,5 +91,18 @@ void BruteForceSolverThread::AbortCalculation()
 void BruteForceSolverThread::NotifyGridChanged()
 {
     mBruteForceSolver->DirtySolutions();
+}
+
+void BruteForceSolverThread::NotifySolutionsCountReady(size_t count)
+{
+    emit NumberOfSolutionsComputed(count);
+}
+
+void BruteForceSolverThread::NotifySolutionReady(const std::vector<unsigned short> &solution)
+{
+    for (unsigned int i = 0; i < solution.size(); ++i)
+    {
+        emit CellUpdated(i, solution[i]);
+    }
 }
 

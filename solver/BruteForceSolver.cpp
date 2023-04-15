@@ -3,16 +3,19 @@
 #include "SudokuCell.h"
 #include "RegionsManager.h"
 #include "thirdparty/dancing_links.h"
+#include "bruteforcesolverthread.h"
 #include <cassert>
 #include <QDebug>
 
-BruteForceSolver::BruteForceSolver(SudokuGrid* grid, bool* abortFlag):
+BruteForceSolver::BruteForceSolver(BruteForceSolverThread* bruteForceThread, SudokuGrid* grid, bool* abortFlag):
     mGrid(grid)
+  , mBruteForceThread(bruteForceThread)
   , mUseHintsAsConstraints(false)
   , mSolutionsDirty(true)
   , mMaxSolutionCount(0)
   , mAbort(abortFlag)
   , mSolutions()
+  , mSolutionIt(mSolutions.end())
 {
 }
 
@@ -41,6 +44,7 @@ void BruteForceSolver::GenerateIncidenceMatrix()
         return;
     }
     mSolutionsDirty = false;
+    mSolutionIt = mSolutions.end();
     mSolutions.clear();
 
     size_t size = mGrid->SizeGet();
@@ -244,7 +248,7 @@ void BruteForceSolver::DirtySolutions()
     mSolutionsDirty = true;
 }
 
-size_t BruteForceSolver::GenerateSolutions(size_t maxSolutionsCount, bool useHints)
+void BruteForceSolver::CountSolutions(size_t maxSolutionsCount, bool useHints)
 {
     if(useHints != mUseHintsAsConstraints)
     {
@@ -259,5 +263,23 @@ size_t BruteForceSolver::GenerateSolutions(size_t maxSolutionsCount, bool useHin
     }
     GenerateIncidenceMatrix();
 
-    return mSolutions.size();
+    mBruteForceThread->NotifySolutionsCountReady(mSolutions.size());
+}
+
+void BruteForceSolver::FindSolution(size_t maxSolutionsCount, bool useHints)
+{
+    std::vector<unsigned short> solution;
+    CountSolutions(maxSolutionsCount, useHints);
+
+    if(mSolutions.size() > 0)
+    {
+        if(mSolutionIt == mSolutions.end())
+        {
+            mSolutionIt = mSolutions.begin();
+        }
+        solution = *mSolutionIt;
+        mSolutionIt++;
+
+        mBruteForceThread->NotifySolutionReady(solution);
+    }
 }

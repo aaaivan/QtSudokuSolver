@@ -20,7 +20,7 @@ public:
     void Init();
 
 signals:
-    void CellUpdated(unsigned short id, const std::set<unsigned short>& content);
+    void CellUpdated(unsigned int id, const std::set<unsigned short>& content);
     void PuzzleHasNoSolution(std::string message);
 
 protected:

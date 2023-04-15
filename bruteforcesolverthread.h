@@ -17,6 +17,7 @@ public:
 
 signals:
     void NumberOfSolutionsComputed(size_t count);
+    void CellUpdated(unsigned int id, unsigned short value);
 
 protected:
     void run() override;
@@ -26,14 +27,19 @@ private:
 
     size_t mMaxSolutionsCount;
     bool mUseHints;
+    bool mDisplaySolution;
     bool mAbort;
     QMutex mInputMutex;
     QMutex* mSolverMutex;
 
 public:
     void CountSolutions(size_t maxSolutionCount, bool useHints);
+    void DisplaySolution(size_t maxSolutionCount, bool useHints);
     void AbortCalculation();
     void NotifyGridChanged();
+
+    void NotifySolutionsCountReady(size_t count);
+    void NotifySolutionReady(const std::vector<unsigned short>& solution);
 };
 
 #endif // BRUTEFORCESOLVERTHREAD_H

@@ -61,6 +61,7 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
 
     // Solver update event
     connect(mSolver.get(), &SudokuSolverThread::CellUpdated, this, &SudokuGridWidget::UpdateOptionsOfCell);
+    connect(mSolver->BruteSolverGet(), &BruteForceSolverThread::CellUpdated, this, &SudokuGridWidget::SetCellValue);
     mSolver->Init();
 
     // temporary code
@@ -106,11 +107,18 @@ void SudokuGridWidget::paintEvent(QPaintEvent *event)
     QFrame::paintEvent(event);
 }
 
-void SudokuGridWidget::UpdateOptionsOfCell(unsigned short id, const std::set<unsigned short> &content)
+void SudokuGridWidget::UpdateOptionsOfCell(unsigned int id, const std::set<unsigned short> &content)
 {
     unsigned short row = id / mSize;
     unsigned short col = id % mSize;
     mCells[row][col]->UpdateOptions(content, mSolver->HintsGet(id));
+}
+
+void SudokuGridWidget::SetCellValue(unsigned int id, unsigned short value)
+{
+    unsigned short row = id / mSize;
+    unsigned short col = id % mSize;
+    mCells[row][col]->UpdateOptions({value}, {});
 }
 
 unsigned short SudokuGridWidget::CellLengthGet() const

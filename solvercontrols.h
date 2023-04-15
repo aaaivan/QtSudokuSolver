@@ -23,6 +23,7 @@ private:
 
 private slots:
     void CountSolutionsBtn_Clicked();
+    void DisplaySolutionsBtn_Clicked();
     void AbortButton_Clicked();
     void CalculationFinished();
 };

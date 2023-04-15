@@ -34,7 +34,8 @@ private:
 
     void paintEvent(QPaintEvent* event) override;
 
-    void UpdateOptionsOfCell(unsigned short id, const std::set<unsigned short>& content);
+    void UpdateOptionsOfCell(unsigned int id, const std::set<unsigned short>& content);
+    void SetCellValue(unsigned int id, unsigned short value);
 
 public:
     // public getters

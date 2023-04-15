@@ -6,7 +6,7 @@
 SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget *parent)
     : QWidget{parent}
     , mCountSolutionsBtn(new QPushButton("Count Solutions"))
-    , mBruteForceSolveBtn(new QPushButton("Find Solution"))
+    , mBruteForceSolveBtn(new QPushButton("Display Solution"))
     , mUseHintsCheckbox(new QCheckBox("Use hints as constrainsts"))
     , mAbortCalculationsBtn(new QPushButton("Abort Calculation"))
     , mBruteForceSolver(bruteForceSolver)
@@ -27,6 +27,7 @@ SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget
 
     // events
     connect(mCountSolutionsBtn, SIGNAL(clicked(bool)), this, SLOT(CountSolutionsBtn_Clicked()));
+    connect(mBruteForceSolveBtn, SIGNAL(clicked(bool)), this, SLOT(DisplaySolutionsBtn_Clicked()));
     connect(mAbortCalculationsBtn, SIGNAL(clicked(bool)), this, SLOT(AbortButton_Clicked()));
     connect(mBruteForceSolver, SIGNAL(NumberOfSolutionsComputed(size_t)), this, SLOT(CalculationFinished()));
 }
@@ -34,6 +35,12 @@ SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget
 void SolverControls::CountSolutionsBtn_Clicked()
 {
     mBruteForceSolver->CountSolutions(1000, mUseHintsCheckbox->isChecked());
+    mAbortCalculationsBtn->setEnabled(true);
+}
+
+void SolverControls::DisplaySolutionsBtn_Clicked()
+{
+    mBruteForceSolver->DisplaySolution(1000, mUseHintsCheckbox->isChecked());
     mAbortCalculationsBtn->setEnabled(true);
 }
 
