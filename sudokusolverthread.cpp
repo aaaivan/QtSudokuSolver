@@ -314,6 +314,12 @@ BruteForceSolverThread *SudokuSolverThread::BruteSolverGet() const
     return mBruteForceSolver.get();
 }
 
+PuzzleData SudokuSolverThread::PuzzleDataGet()
+{
+    QMutexLocker locker(&mInputMutex);
+    return mPuzzleData;
+}
+
 void SudokuSolverThread::SetLogicalSolverPaused(bool paused)
 {
     QMutexLocker locker(&mInputMutex);

@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    IO/SaveLoadManager.cpp \
     adddigitscontrols.cpp \
     bruteforcesolverthread.cpp \
     cellcontentbutton.cpp \
@@ -22,6 +23,7 @@ SOURCES += \
     mainwindow.cpp \
     mainwindowcontent.cpp \
     puzzledata.cpp \
+    savepuzzlethread.cpp \
     solver/BruteForceSolver.cpp \
     solver/FishTechniques.cpp \
     solver/GridProgressManager.cpp \
@@ -49,6 +51,7 @@ SOURCES += \
     variantcluewidget.cpp
 
 HEADERS += \
+    IO/SaveLoadManager.h \
     adddigitscontrols.h \
     bruteforcesolverthread.h \
     cellcontentbutton.h \
@@ -61,6 +64,7 @@ HEADERS += \
     mainwindow.h \
     mainwindowcontent.h \
     puzzledata.h \
+    savepuzzlethread.h \
     solver/BruteForceSolver.h \
     solver/GridProgressManager.h \
     solver/Progress.h \

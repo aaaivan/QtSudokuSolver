@@ -80,6 +80,7 @@ public:
     void SetLogicalSolverPaused(bool paused);
 
     BruteForceSolverThread* BruteSolverGet() const;
+    PuzzleData PuzzleDataGet();
 };
 
 #endif // SUDOKUSOLVERTHREAD_H

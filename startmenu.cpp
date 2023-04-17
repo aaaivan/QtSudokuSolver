@@ -1,9 +1,12 @@
 #include "startmenu.h"
 #include "mainwindow.h"
+#include "puzzledata.h"
+#include "IO/SaveLoadManager.h"
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QFrame>
 #include <QFormLayout>
+#include <QFileDialog>
 
 unsigned short kMinPuzzleSize = 4;
 unsigned short kMaxPuzzleSize = 9;
@@ -84,7 +87,15 @@ void StartMenu::NewPuzzleBtn_clicked()
 
 void StartMenu::LoadPuzzleBtn_clicked()
 {
-
+    QString fileName = QFileDialog::getOpenFileName(this,"Open file", "", "*.sudoku");
+    if(!fileName.isEmpty())
+    {
+        PuzzleData pd(0);
+        if(SaveLoadManager::Get()->LoadSudoku(fileName.toStdString(), pd))
+        {
+            ;
+        }
+    }
 }
 
 void StartMenu::CreatePuzzleBtn_clicked()
