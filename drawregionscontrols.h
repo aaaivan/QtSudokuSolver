@@ -17,7 +17,7 @@ class DrawRegionsControls : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit DrawRegionsControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    explicit DrawRegionsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private:
     SudokuGridWidget* mGrid;

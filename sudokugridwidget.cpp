@@ -136,6 +136,11 @@ const QVector<QVector<SudokuCellWidget *> > &SudokuGridWidget::CellsGet() const
     return mCells;
 }
 
+SudokuCellWidget* SudokuGridWidget::CellGet(CellCoord id) const
+{
+    return mCells[id / mSize][id % mSize];
+}
+
 SudokuSolverThread *SudokuGridWidget::SolverGet() const
 {
     return mSolver.get();

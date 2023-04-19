@@ -10,12 +10,13 @@ class ContextMenuWindow;
 class MainWindow;
 class QStackedLayout;
 class QTabWidget;
+class PuzzleData;
 
 class MainWindowContent : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MainWindowContent(unsigned short size, MainWindow *parent);
+    explicit MainWindowContent(unsigned short size, MainWindow *parent, std::unique_ptr<PuzzleData> loadedGrid = nullptr);
 
     enum ContextMenuType
     {

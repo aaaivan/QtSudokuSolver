@@ -90,10 +90,13 @@ void StartMenu::LoadPuzzleBtn_clicked()
     QString fileName = QFileDialog::getOpenFileName(this,"Open file", "", "*.sudoku");
     if(!fileName.isEmpty())
     {
-        PuzzleData pd(0);
+        std::unique_ptr<PuzzleData> pd;
         if(SaveLoadManager::Get()->LoadSudoku(fileName.toStdString(), pd))
         {
-            ;
+            close();
+            deleteLater();
+            MainWindow* w = new MainWindow(pd->mSize, std::move(pd));
+            w->show();
         }
     }
 }

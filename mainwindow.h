@@ -9,13 +9,14 @@ QT_END_NAMESPACE
 
 class MainWindowContent;
 class SavePuzzleThread;
+class PuzzleData;
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(unsigned short gridSize, QWidget *parent = nullptr);
+    MainWindow(unsigned short gridSize, std::unique_ptr<PuzzleData> loadedGrid = nullptr, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:

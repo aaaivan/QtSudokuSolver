@@ -3,6 +3,7 @@
 
 #include "puzzledata.h"
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <map>
 #include <vector>
@@ -41,12 +42,12 @@ class SaveLoadManager
     SaveLoadManager& operator=(const SaveLoadManager&) = delete;
 
     // De-serialization methods
-    bool ParseGrid(std::ifstream& theFile, PuzzleData& puzzleData) const;
-    bool ParseGiven(std::istringstream& ss, PuzzleData& puzzleData) const;
-    bool ParseHints(std::istringstream& ss, PuzzleData& puzzleData) const;
-    bool ParseConstraints(std::ifstream& theFile, PuzzleData& puzzleData) const;
-    bool ParseRegion(std::istringstream& ss, PuzzleData& puzzleData) const;
-    bool ParseKillerCage(std::istringstream& ss, PuzzleData& puzzleData) const;
+    bool ParseGrid(std::ifstream& theFile, PuzzleData* puzzleData) const;
+    bool ParseGiven(std::istringstream& ss, PuzzleData* puzzleData) const;
+    bool ParseHints(std::istringstream& ss, PuzzleData* puzzleData) const;
+    bool ParseConstraints(std::ifstream& theFile, PuzzleData* puzzleData) const;
+    bool ParseRegion(std::istringstream& ss, PuzzleData* puzzleData) const;
+    bool ParseKillerCage(std::istringstream& ss, PuzzleData* puzzleData) const;
 
     // Serialization methods
     std::string SerializeGrid(const PuzzleData& puzzleData) const;
@@ -60,7 +61,7 @@ public:
     /// <summary>
     /// Parse the file at the specified path and return a SudokuGridfilled  with the parsed values
     /// </summary>
-    bool LoadSudoku(std::string filepath, PuzzleData& puzzleData) const;
+    bool LoadSudoku(std::string filepath, std::unique_ptr<PuzzleData>& puzzleData) const;
     /// <summary>
     /// Save the board to a file at the specified location
     /// </summary>

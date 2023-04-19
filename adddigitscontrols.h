@@ -7,12 +7,13 @@
 class SudokuGridWidget;
 class QStackedLayout;
 class QCheckBox;
+class PuzzleData;
 
 class AddDigitsControls : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit AddDigitsControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    explicit AddDigitsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private slots:
     void DeleteAllBtn_Clicked();

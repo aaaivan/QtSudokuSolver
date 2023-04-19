@@ -42,6 +42,7 @@ public:
     unsigned short CellLengthGet() const;
     unsigned short SizeGet() const;
     const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
+    SudokuCellWidget* CellGet(CellCoord id) const;
     SudokuSolverThread* SolverGet() const;
     GridGraphicalOverlay* GraphicalOverlayGet() const;
 

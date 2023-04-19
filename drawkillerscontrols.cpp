@@ -14,7 +14,7 @@
 #include <QSpinBox>
 #include <QStackedLayout>
 
-DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, QWidget *parent)
+DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       ContextMenuWindow(mainWindowContent),
       mGrid(mainWindowContent->GridGet()),
@@ -78,6 +78,26 @@ DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, Q
         connect(mCageTotal, SIGNAL(valueChanged(int)), this, SLOT(CageTotal_ValueChanged(int)));
         connect(doneBtn, SIGNAL(clicked(bool)), this, SLOT(EditingDoneBtn_Clicked()));
         connect(deleteBtn, SIGNAL(clicked(bool)), this, SLOT(DeleteActiveKillerBtn_Clicked()));
+    }
+
+    // load puzzle
+    if(loadedGrid)
+    {
+        for (const auto& k : loadedGrid->mKillerCages)
+        {
+            SudokuCellWidget* firstCell = mGrid->CellGet(k.first);
+            KillerCageWidget* killerCageWidget = new KillerCageWidget(mGrid->SizeGet(), mGrid->CellLengthGet(), firstCell,
+                                                                      1, mGrid, this, mGrid->GraphicalOverlayGet());
+            for (const auto& cId : k.second.second)
+            {
+                SudokuCellWidget* c = mGrid->CellGet(cId);
+                killerCageWidget->AddCell(c);
+            }
+            killerCageWidget->CageTotalSet(k.second.first);
+            mGrid->GraphicalOverlayGet()->AddOverlayComponent(killerCageWidget, false);
+            mGrid->SolverGet()->AddKillerCage(killerCageWidget->CageIdGet(), killerCageWidget->CageTotalGet(), k.second.second);
+        }
+        mGrid->SolverGet()->SubmitChangesToSolver();
     }
 }
 

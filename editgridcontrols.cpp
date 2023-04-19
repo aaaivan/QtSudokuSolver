@@ -7,7 +7,7 @@
 #include <QFrame>
 #include <QButtonGroup>
 
-EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent)
+EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       mMainWindowContent(mainWindowContent),
       mButtonsGroup(new QButtonGroup(this)),
@@ -48,6 +48,13 @@ EditGridControls::EditGridControls(MainWindowContent* mainWindowContent, QWidget
     connect(mButtonsGroup, SIGNAL(idClicked(int)), this, SLOT(ViewButtonClicked(int)));
     connect(mPositiveDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(PositiveDiagonalCheckbox_OnChange(int)));
     connect(mNegativeDiagonalCheckbox, SIGNAL(stateChanged(int)), this, SLOT(NegativeDiagonalCheckbox_OnChange(int)));
+
+    // loaded puzzle
+    if(loadedGrid)
+    {
+        mPositiveDiagonalCheckbox->setChecked(loadedGrid->mPositiveDiagonal);
+        mNegativeDiagonalCheckbox->setChecked(loadedGrid->mNegativeDiagonal);
+    }
 }
 
 void EditGridControls::ViewButtonClicked(int btnId)

@@ -23,7 +23,7 @@ SaveLoadManager::SaveLoadManager()
 {
 }
 
-bool SaveLoadManager::ParseGrid(std::ifstream& theFile, PuzzleData& puzzleData) const
+bool SaveLoadManager::ParseGrid(std::ifstream& theFile, PuzzleData* puzzleData) const
 {
     if (!theFile.is_open())
         return false;
@@ -56,7 +56,7 @@ bool SaveLoadManager::ParseGrid(std::ifstream& theFile, PuzzleData& puzzleData) 
     return true;
 }
 
-bool SaveLoadManager::ParseGiven(std::istringstream& ss, PuzzleData& puzzleData) const
+bool SaveLoadManager::ParseGiven(std::istringstream& ss, PuzzleData* puzzleData) const
 {
     std::string token;
     int id;
@@ -74,11 +74,11 @@ bool SaveLoadManager::ParseGiven(std::istringstream& ss, PuzzleData& puzzleData)
         return false;
     }
 
-    puzzleData.mGivens[id] = value;
+    puzzleData->mGivens[id] = value;
     return true;
 }
 
-bool SaveLoadManager::ParseHints(std::istringstream& ss, PuzzleData& puzzleData) const
+bool SaveLoadManager::ParseHints(std::istringstream& ss, PuzzleData* puzzleData) const
 {
     std::string token;
     int id;
@@ -88,11 +88,11 @@ bool SaveLoadManager::ParseHints(std::istringstream& ss, PuzzleData& puzzleData)
     {
         ss >> token;
         id = std::stoi(token);
-        puzzleData.mHints[id] = std::set<unsigned short>();
+        puzzleData->mHints[id] = std::set<unsigned short>();
         while(ss >> token)
         {
             value = std::stoi(token);
-            puzzleData.mHints[id].insert(value);
+            puzzleData->mHints[id].insert(value);
         }
     }
     catch (...)
@@ -103,7 +103,7 @@ bool SaveLoadManager::ParseHints(std::istringstream& ss, PuzzleData& puzzleData)
     return true;
 }
 
-bool SaveLoadManager::ParseConstraints(std::ifstream& theFile, PuzzleData& puzzleData) const
+bool SaveLoadManager::ParseConstraints(std::ifstream& theFile, PuzzleData* puzzleData) const
 {
     std::string line;
     std::string token;
@@ -128,11 +128,11 @@ bool SaveLoadManager::ParseConstraints(std::ifstream& theFile, PuzzleData& puzzl
         }
         else if (token == sConstraintIdentifiersMap.at(RegionType::PositiveDiagonal))
         {
-            puzzleData.mPositiveDiagonal = true;
+            puzzleData->mPositiveDiagonal = true;
         }
         else if (token == sConstraintIdentifiersMap.at(RegionType::NegativeDiagonal))
         {
-            puzzleData.mNegativeDiagonal = true;
+            puzzleData->mNegativeDiagonal = true;
         }
         else
         {
@@ -142,7 +142,7 @@ bool SaveLoadManager::ParseConstraints(std::ifstream& theFile, PuzzleData& puzzl
     return true;
 }
 
-bool SaveLoadManager::ParseRegion(std::istringstream &ss, PuzzleData &puzzleData) const
+bool SaveLoadManager::ParseRegion(std::istringstream &ss, PuzzleData *puzzleData) const
 {
     std::string token;
     int id;
@@ -152,12 +152,12 @@ bool SaveLoadManager::ParseRegion(std::istringstream &ss, PuzzleData &puzzleData
     {
         ss >> token;
         id = std::stoi(token);
-        puzzleData.mRegions[id] = std::set<CellCoord>();
+        puzzleData->mRegions[id] = std::set<CellCoord>();
 
         while(ss >> token)
         {
             coord = std::stoi(token);
-            puzzleData.mRegions[id].insert(coord);
+            puzzleData->mRegions[id].insert(coord);
         }
     }
     catch (...)
@@ -168,7 +168,7 @@ bool SaveLoadManager::ParseRegion(std::istringstream &ss, PuzzleData &puzzleData
     return true;
 }
 
-bool SaveLoadManager::ParseKillerCage(std::istringstream &ss, PuzzleData &puzzleData) const
+bool SaveLoadManager::ParseKillerCage(std::istringstream &ss, PuzzleData *puzzleData) const
 {
     std::string token;
     int id;
@@ -181,11 +181,11 @@ bool SaveLoadManager::ParseKillerCage(std::istringstream &ss, PuzzleData &puzzle
         id = std::stoi(token);
         ss >> token;
         total = std::stoi(token);
-        puzzleData.mKillerCages[id] = std::pair<unsigned int, std::set<CellCoord>>(total, {});
+        puzzleData->mKillerCages[id] = std::pair<unsigned int, std::set<CellCoord>>(total, {});
         while(ss >> token)
         {
             coord = std::stoi(token);
-            puzzleData.mKillerCages[id].second.insert(coord);
+            puzzleData->mKillerCages[id].second.insert(coord);
         }
     }
     catch (...)
@@ -326,7 +326,7 @@ const SaveLoadManager* SaveLoadManager::Get()
     return &instance;
 }
 
-bool SaveLoadManager::LoadSudoku(std::string filepath, PuzzleData& puzzleData) const
+bool SaveLoadManager::LoadSudoku(std::string filepath, std::unique_ptr<PuzzleData>& puzzleData) const
 {
     std::ifstream theFile(filepath);
     if (theFile.is_open())
@@ -336,7 +336,7 @@ bool SaveLoadManager::LoadSudoku(std::string filepath, PuzzleData& puzzleData) c
         {
             std::getline(theFile, line);
             int gridSize = std::stoi(line);
-            puzzleData = PuzzleData(gridSize);
+            puzzleData = std::make_unique<PuzzleData>(gridSize);
         }
         catch (...)
         {
@@ -352,7 +352,7 @@ bool SaveLoadManager::LoadSudoku(std::string filepath, PuzzleData& puzzleData) c
             }
         }
         std::vector<std::vector<std::string>> parsedGrid;
-        if (!ParseGrid(theFile, puzzleData)) return false;
+        if (!ParseGrid(theFile, puzzleData.get())) return false;
 
 
         // parse constraints
@@ -363,7 +363,7 @@ bool SaveLoadManager::LoadSudoku(std::string filepath, PuzzleData& puzzleData) c
                 break;
             }
         }
-        if (!ParseConstraints(theFile, puzzleData)) return false;
+        if (!ParseConstraints(theFile, puzzleData.get())) return false;
     }
     else
     {

@@ -13,7 +13,7 @@
 #include <QPushButton>
 #include <set>
 
-AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, QWidget *parent)
+AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       ContextMenuWindow(mainWindowContent),
       mGrid(mainWindowContent->GridGet()),
@@ -79,6 +79,25 @@ AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, QWidg
         connect(deleteBtn, SIGNAL(clicked(bool)), this, SLOT(DeleteBtn_Clicked()));
     }
     connect(qApp, SIGNAL(focusChanged(QWidget*,QWidget*)), this, SLOT(App_FocusChanged(QWidget*,QWidget*)));
+
+    // load puzzle
+    if(loadedGrid)
+    {
+        for (const auto& g : loadedGrid->mGivens)
+        {
+            CellCoord id = g.first;
+            SudokuCellWidget* cell = mGrid->CellGet(id);
+            cell->SetGivenDigit(static_cast<unsigned short>(g.second));
+        }
+
+        for (const auto& hints : loadedGrid->mHints)
+        {
+            for (const auto& h : hints.second)
+            {
+                mGrid->SolverGet()->AddHint(hints.first, h);
+            }
+        }
+    }
 }
 
 void AddDigitsControls::CellGainedFocus(SudokuCellWidget *cell)

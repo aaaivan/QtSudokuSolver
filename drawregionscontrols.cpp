@@ -14,7 +14,7 @@
 
 constexpr char kCounterLabelText[] = "Cells in region %1: <b>%2</b>";
 
-DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, QWidget *parent)
+DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       ContextMenuWindow(mainWindowContent),
       mGrid(mainWindowContent->GridGet()),
@@ -55,6 +55,21 @@ DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, Q
 
     connect(mRegionSelect, SIGNAL(currentIndexChanged(int)), this, SLOT(RegionSelect_CurrentIndexChanged(int)));
     connect(mClearRegionsBtn, SIGNAL(clicked(bool)), this, SLOT(ClearRegionsBtn_Clicked()));
+
+    // load puzzle
+    if(loadedGrid)
+    {
+        for (size_t i = 0; i < loadedGrid->mRegions.size(); ++i)
+        {
+            for (const auto& cId : loadedGrid->mRegions[i])
+            {
+                SudokuCellWidget* c = mGrid->CellGet(cId);
+                c->SetRegionId(i+1);
+            }
+            mGrid->SolverGet()->SetRegion(i+1, loadedGrid->mRegions[i]);
+        }
+        mGrid->SolverGet()->SubmitChangesToSolver();
+    }
 }
 
 void DrawRegionsControls::hideEvent(QHideEvent *event)

@@ -16,7 +16,7 @@ class DrawKillersControls : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit DrawKillersControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    explicit DrawKillersControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private slots:
     void DeleteAllKillersBtn_Clicked();

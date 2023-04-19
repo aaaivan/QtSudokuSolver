@@ -6,12 +6,13 @@
 #include <QCheckBox>
 
 class MainWindowContent;
+class PuzzleData;
 
 class EditGridControls : public QWidget
 {
     Q_OBJECT
 public:
-    explicit EditGridControls(MainWindowContent* mainWindowContent, QWidget *parent = nullptr);
+    explicit EditGridControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private:
 

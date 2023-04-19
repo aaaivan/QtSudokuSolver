@@ -12,7 +12,7 @@
 #include <QTabWidget>
 #include <QStackedLayout>
 
-MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent)
+MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent, std::unique_ptr<PuzzleData> loadedGrid)
     : QWidget{parent},
       mMainWindow(parent),
       mControlsMenu(new QTabWidget()),
@@ -29,7 +29,7 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent)
     horizontalLayout->addWidget(contextMenuFrame);
 
     // build left-hand side tabs
-    EditGridControls* editMenu = new EditGridControls(this);
+    EditGridControls* editMenu = new EditGridControls(this, loadedGrid.get());
     SolverControls* solverMenu = new SolverControls(mGrid->SolverGet()->BruteSolverGet());
     mControlsMenu->addTab(editMenu, "Create");
     mControlsMenu->addTab(solverMenu, "Solver");
@@ -37,9 +37,9 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent)
     // build context menu stacked layout
     mContextMenu->setStackingMode(QStackedLayout::StackingMode::StackOne);
     contextMenuFrame->setLayout(mContextMenu);
-    AddDigitsControls* enterDigitsControls = new AddDigitsControls(this);
-    DrawKillersControls* drawKillerControls = new DrawKillersControls(this);
-    DrawRegionsControls* regionsEditControls = new DrawRegionsControls(this);
+    AddDigitsControls* enterDigitsControls = new AddDigitsControls(this, loadedGrid.get());
+    DrawKillersControls* drawKillerControls = new DrawKillersControls(this, loadedGrid.get());
+    DrawRegionsControls* regionsEditControls = new DrawRegionsControls(this, loadedGrid.get());
     SolverContextMenu* solverContextMenu = new SolverContextMenu(this);
 
     mContextMenu->insertWidget(ContextMenuType::EnterDigits_Context, enterDigitsControls);
