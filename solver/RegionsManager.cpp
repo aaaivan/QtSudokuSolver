@@ -250,7 +250,7 @@ void RegionsManager::RegisterRegion(RegionSPtr regionSPtr, RegionType regionType
             {
                 PartitionRegionsWithCells(sub->CellsGet());
             }
-            else
+            else if(sub->IsLeafNode())
             {
                 PartitionRegionWithCells(sub, region);
             }
