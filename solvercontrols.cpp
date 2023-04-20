@@ -1,11 +1,13 @@
 #include "solvercontrols.h"
 #include "bruteforcesolverthread.h"
+#include "mainwindowcontent.h"
+#include "sudokugridwidget.h"
 #include <QVBoxLayout>
 #include <QFrame>
 #include <QFormLayout>
 #include <QLabel>
 
-SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget *parent)
+SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, MainWindowContent* mainWindow, QWidget *parent)
     : QWidget{parent}
     , mCountSolutionsBtn(new QPushButton("Count Solutions"))
     , mBruteForceSolveBtn(new QPushButton("Display Solution"))
@@ -13,7 +15,10 @@ SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget
     , mUseHintsCheckbox(new QCheckBox("Use hints as constrainsts"))
     , mAbortCalculationsBtn(new QPushButton("Abort Calculation"))
     , mClearGridBtn(new QPushButton("Clear Grid"))
+    , mLogicalStepBtn(new QPushButton("Take Logical Step"))
+    , mMainWindow(mainWindow)
     , mBruteForceSolver(bruteForceSolver)
+    , mSolverThread(mainWindow->GridGet()->SolverGet())
 {
     // build the vertical layout
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
@@ -27,11 +32,11 @@ SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget
 
     QFrame* line = new QFrame();
     line->setFrameStyle(QFrame::HLine | QFrame::Sunken);
-    verticalLayout->addWidget(line);
-    verticalLayout->addWidget(mClearGridBtn);
     line = new QFrame();
     line->setFrameStyle(QFrame::HLine | QFrame::Sunken);
     verticalLayout->addWidget(line);
+    verticalLayout->addWidget(mLogicalStepBtn);
+    verticalLayout->addWidget(mClearGridBtn);
     verticalLayout->addStretch();
 
     // max solutions count layout
@@ -51,28 +56,38 @@ SolverControls::SolverControls(BruteForceSolverThread* bruteForceSolver, QWidget
     connect(mBruteForceSolveBtn, SIGNAL(clicked(bool)), this, SLOT(DisplaySolutionsBtn_Clicked()));
     connect(mAbortCalculationsBtn, SIGNAL(clicked(bool)), this, SLOT(AbortButton_Clicked()));
     connect(mClearGridBtn, SIGNAL(clicked(bool)), this, SLOT(ClearGridBtn_Clicked()));
+    connect(mLogicalStepBtn, SIGNAL(clicked(bool)), this, SLOT(LogicalStepBtn_Clicked()));
     connect(mBruteForceSolver, SIGNAL(CalculationStarted()), this, SLOT(CalculationStarted()));
     connect(mBruteForceSolver, SIGNAL(CalculationFinished()), this, SLOT(CalculationFinished()));
 }
 
 void SolverControls::CountSolutionsBtn_Clicked()
 {
+    mSolverThread->SetLogicalSolverPaused(true);
     mBruteForceSolver->CountSolutions(mMaxSolutionsCount->value(), mUseHintsCheckbox->isChecked());
 }
 
 void SolverControls::DisplaySolutionsBtn_Clicked()
 {
+    mSolverThread->SetLogicalSolverPaused(true);
     mBruteForceSolver->DisplaySolution(mMaxSolutionsCount->value(), mUseHintsCheckbox->isChecked());
 }
 
 void SolverControls::ClearGridBtn_Clicked()
 {
-    mBruteForceSolver->ResetGridContents();
+    mSolverThread->ResetSolver();
 }
 
 void SolverControls::AbortButton_Clicked()
 {
     mBruteForceSolver->AbortCalculation();
+}
+
+void SolverControls::LogicalStepBtn_Clicked()
+{
+    mBruteForceSolver->AbortCalculation();
+    mBruteForceSolver->ResetGridContents();
+    mSolverThread->TakeStep();
 }
 
 void SolverControls::CalculationStarted()
@@ -84,5 +99,3 @@ void SolverControls::CalculationFinished()
 {
     mAbortCalculationsBtn->setEnabled(false);
 }
-
-

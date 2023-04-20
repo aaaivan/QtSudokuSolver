@@ -327,6 +327,28 @@ void KillerCageWidget::AddCell(SudokuCellWidget *cell)
     }
 }
 
+void KillerCageWidget::AddDisconnectedCell(SudokuCellWidget *cell)
+{
+    if(mCells.size() >= mMaxCageSize)
+        return;
+
+    if(!mCells.contains(cell))
+    {
+        mCells.push_back(cell);
+        cell->AddVariantClue(this);
+        mMinX = std::min(mMinX, cell->ColGet());
+        mMinY = std::min(mMinY, cell->RowGet());
+
+        CalculateAdjacentCells();
+        CalculateRemovableCells();
+
+        std::sort(mCells.begin(), mCells.end(), [](const SudokuCellWidget *a, const SudokuCellWidget *b)
+            {return a->CellIdGet() < b->CellIdGet();});
+
+        UpdatePicture();
+    }
+}
+
 void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
 {
     if(mRemovableCells.contains(cell))

@@ -51,7 +51,6 @@ void BruteForceSolverThread::run()
     }
     emit CalculationFinished();
 
-    qDebug() << "Brute force finished!";
     if(mAbort)
     {
         NotifyGridChanged();

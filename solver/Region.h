@@ -15,7 +15,7 @@ class RegionUpdatesManager;
 class Region
 {
 protected:
-    std::string mId;
+    std::string mName;
     CellSet mCells;				// cells that make up the region
     std::set<unsigned short> mConfirmedValues;	// values that must be in this group
     std::set<unsigned short> mAllowedValues;	// values that could be in this group
@@ -72,6 +72,7 @@ public:
     /// </summary>
     const VariantConstraint* GetConstraintByType(RegionType type) const;
     const std::list<std::unique_ptr<VariantConstraint>>& VariantConstraintsGet() const;
+    std::string RegionNameGet() const;
 
 // Constant methods
 
@@ -86,6 +87,7 @@ public:
     void AddConfirmedValue(unsigned value);
     void UpdateValueMap(unsigned short removedValue, SudokuCell* removedFrom);
     void AddVariantConstraint(std::unique_ptr<VariantConstraint> constraint);
+    void RegionNameSet(std::string name);
 
     /// <summary>
     /// clear all the cells in the region

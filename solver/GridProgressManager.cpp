@@ -3,6 +3,7 @@
 #include "Region.h"
 #include "RegionUpdatesManager.h"
 #include "SudokuGrid.h"
+#include "../sudokusolverthread.h"
 
 GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mSudokuGrid(sudoku),
@@ -103,26 +104,38 @@ void  GridProgressManager::NextStep()
         Reset();
         mHighPriorityProgressQueue.front()->ProcessProgress();
         mHighPriorityProgressQueue.pop();
-
-        if(mSudokuGrid->IsSolved())
-        {
-            mFinished = true;
-        }
     }
     else if (!mProgressQueue.empty())
     {
         Reset();
         mProgressQueue.front()->ProcessProgress();
         mProgressQueue.pop();
-
-        if(mSudokuGrid->IsSolved())
-        {
-            mFinished = true;
-        }
     }
     else if (!mAbort && !mFinished)
     {
         NextTechnique();
+    }
+
+    if(mSudokuGrid->IsSolved())
+    {
+        while(!mHighPriorityProgressQueue.empty())
+        {
+            Reset();
+            mHighPriorityProgressQueue.front()->ProcessProgress();
+            mHighPriorityProgressQueue.pop();
+        }
+        while(!mProgressQueue.empty())
+        {
+            Reset();
+            mProgressQueue.front()->ProcessProgress();
+            mProgressQueue.pop();
+        }
+        mFinished = true;
+
+        if(mSudokuGrid->ParentNodeGet() == nullptr)
+        {
+            mSudokuGrid->SolverThreadGet()->NotifyLogicalDeduction("Puzzle Solved!");
+        }
     }
 }
 

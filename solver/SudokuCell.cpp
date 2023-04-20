@@ -13,7 +13,8 @@ SudokuCell::SudokuCell(SudokuGrid* grid, unsigned short row, unsigned short col,
     mViableOptions(),
     mEliminationHints(),
     mIsGiven( false ),
-    mParentGrid(grid)
+    mParentGrid(grid),
+    mName("r" + std::to_string(row + 1) + "c" + std::to_string(col + 1))
 {
     Reset();
 }
@@ -56,6 +57,11 @@ const std::set<unsigned short>& SudokuCell::HintedEliminationsGet() const
 const RegionSet& SudokuCell::GetRegionsWithCell() const
 {
     return GridGet()->RegionsManagerGet()->RegionsWithCellGet(this);
+}
+
+std::string SudokuCell::CellNameGet() const
+{
+    return mName;
 }
 
 bool SudokuCell::HasGuess(unsigned short value) const
@@ -116,6 +122,10 @@ void SudokuCell::RemoveOption(unsigned short guess)
             Progress_OptionRemoved notification(this, guess);
             notification.ProcessProgress();
         }
+        if(!mParentGrid->ParentNodeGet())
+        {
+            mParentGrid->NotifyCellChanged(this);
+        }
     }
 }
 
@@ -159,7 +169,10 @@ void SudokuCell::Reset()
     {
         mViableOptions.emplace_hint(mViableOptions.end(), i);
     }
-    mParentGrid->NotifyCellChanged(this);
+    if(!mParentGrid->ParentNodeGet())
+    {
+        mParentGrid->NotifyCellChanged(this);
+    }
 }
 
 SudokuCell *SudokuCell::DeepCopy(SudokuGrid* parentGrid) const
@@ -177,36 +190,12 @@ SudokuCell *SudokuCell::DeepCopy(SudokuGrid* parentGrid) const
 
 void SudokuCell::ValueSet(unsigned short value)
 {
-    if( value && mViableOptions.find(value) != mViableOptions.end() )
+    if( value != mValue && mViableOptions.count(value) > 0 )
     {
         mValue = value;
+        if(!mParentGrid->ParentNodeGet())
+        {
+            mParentGrid->NotifyCellChanged(this);
+        }
     }
 }
-
-#if PRINT_LOG_MESSAGES
-
-//TODO: these print methods are temporary
-std::string SudokuCell::PrintPosition() const
-{
-    std::string message;
-    message += "r";
-    message += std::to_string(RowGet() + 1);
-    message += "c";
-    message += std::to_string(ColGet() + 1);
-    return message;
-}
-
-//TODO: these print methods are temporary
-std::string SudokuCell::PrintOptions() const
-{
-    std::string message;
-    message += "[ ";
-    for (const auto& option : mViableOptions)
-    {
-        message += std::to_string(option) + " ";
-    }
-    message += "]";
-    return message;
-}
-
-#endif // PRINT_LOG_MESSAGES

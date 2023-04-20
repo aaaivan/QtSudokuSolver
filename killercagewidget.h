@@ -56,6 +56,7 @@ private:
     void DrawEdges(QPainterPath& path, QList<QPair<SudokuCellWidget*, Direction>>& edges, int& fromIndex) const;
 public:
     void AddCell(SudokuCellWidget* cell) override;
+    void AddDisconnectedCell(SudokuCellWidget* cell);
     void RemoveCell(SudokuCellWidget* cell) override;
     void ClueDidGetActive() override;
     void ClueDidGetInactive() override;

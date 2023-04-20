@@ -9,7 +9,7 @@
 #include <sstream>
 
 Region::Region(SudokuGrid* parentGrid, CellSet&& cells, bool startingRegion):
-    mId(),
+    mName(),
     mCells(cells),
     mConfirmedValues(),
     mAllowedValues(),
@@ -22,18 +22,6 @@ Region::Region(SudokuGrid* parentGrid, CellSet&& cells, bool startingRegion):
     mLeftNode(nullptr),
     mParents()
 {
-    // create region id
-    std::vector<unsigned short> cellIds;
-    std::string delimiter = ".";
-    std::stringstream ss;
-    for (const auto& c : mCells)
-    {
-        cellIds.push_back(c->IdGet());
-    }
-    std::sort(cellIds.begin(), cellIds.end());
-    std::copy(cellIds.begin(), cellIds.end(), std::ostream_iterator<unsigned short>(ss, delimiter.c_str()));
-    mId = ss.str();
-
     Init();
 }
 
@@ -84,7 +72,7 @@ void Region::Init()
 
 std::string Region::IdGet() const
 {
-    return mId;
+    return mName;
 }
 
 const CellSet& Region::CellsGet() const
@@ -260,6 +248,16 @@ const std::list<std::unique_ptr<VariantConstraint> > &Region::VariantConstraints
     return mAdditionalConstraints;
 }
 
+std::string Region::RegionNameGet() const
+{
+    if(mParents.size() > 0)
+    {
+        return (*mParents.begin())->RegionNameGet();
+    }
+
+    return mName;
+}
+
 bool Region::IsStartingRegion() const
 {
     return mIsStartingRegion;
@@ -400,7 +398,7 @@ void Region::AddConfirmedValue(unsigned value)
             SudokuCell* nakedSingle = *(mValueToCellMap.at(value).begin());
             if(!nakedSingle->IsSolved())
             {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, value));
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, this, value));
             }
         }
 
@@ -438,7 +436,7 @@ void Region::UpdateValueMap(unsigned short removedValue, SudokuCell* removedFrom
             SudokuCell* nakedSingle = *(mValueToCellMap.at(removedValue).begin());
             if(!nakedSingle->IsSolved())
             {
-                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, removedValue));
+                mParentGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_SingleCellForOption>(nakedSingle, this, removedValue));
             }
         }
         // Notify the additonal constraints of the removed option
@@ -460,6 +458,11 @@ void Region::AddVariantConstraint(std::unique_ptr<VariantConstraint> constraint)
         mAdditionalConstraints.push_back(std::move(constraint));
         mAdditionalConstraints.rbegin()->get()->Initialise(this);
     }
+}
+
+void Region::RegionNameSet(std::string name)
+{
+    mName = name;
 }
 
 void Region::Reset()

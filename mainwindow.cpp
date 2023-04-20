@@ -5,12 +5,12 @@
 #include "mainwindowcontent.h"
 #include <QFileDialog>
 
-MainWindow::MainWindow(unsigned short gridSize, std::unique_ptr<PuzzleData> loadedGrid, QWidget *parent)
+MainWindow::MainWindow(unsigned short gridSize, std::unique_ptr<PuzzleData> loadedGrid, QString loadPath, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , mWindowContent(new MainWindowContent(gridSize, this, std::move(loadedGrid)))
     , mSavePuzzleThread(new SavePuzzleThread(this))
-    , mSaveFilePath()
+    , mSaveFilePath(loadPath)
 {
     ui->setupUi(this);
     this->setCentralWidget(mWindowContent);

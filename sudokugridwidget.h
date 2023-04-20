@@ -34,7 +34,8 @@ private:
 
     void paintEvent(QPaintEvent* event) override;
 
-    void UpdateOptionsOfCell(unsigned int id, const std::set<unsigned short>& content);
+private slots:
+    void UpdateOptionsOfCell(unsigned int id, const std::set<unsigned short>& content, bool isSolved);
     void SetCellValue(unsigned int id, unsigned short value);
 
 public:

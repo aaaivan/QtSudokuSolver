@@ -107,7 +107,7 @@ public:
     void RemoveGivenDigit();
     void AddVariantClue(VariantClueWidget* clue);
     void RemoveVariantClue(VariantClueWidget* clue);
-    void UpdateOptions(const std::set<unsigned short> &options, const std::set<unsigned short> &hints);
+    void UpdateOptions(const std::set<unsigned short> &options, const std::set<unsigned short> &hints, bool isSolved);
 };
 
 #endif // SUDOKUCELLWIDGET_H

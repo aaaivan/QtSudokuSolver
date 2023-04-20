@@ -236,7 +236,7 @@ void HiddenNakedSubsetTechnique::SearchHiddenNakedSubsets(const std::set<unsigne
 
             if (SearchHiddenNakedSubsetInner(valueToCellMap, valueToCellMap.begin(), endIt, excludeValues, candidateValues, nakedSubset, subsetSize, impossible))
             {
-                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_HiddenNakedSubset>(std::move(nakedSubset), std::move(candidateValues)));
+                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_HiddenNakedSubset>(std::move(nakedSubset), mCurrentRegion, std::move(candidateValues)));
                 return;
             }
             else if (impossible)

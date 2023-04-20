@@ -30,7 +30,7 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent, st
 
     // build left-hand side tabs
     EditGridControls* editMenu = new EditGridControls(this, loadedGrid.get());
-    SolverControls* solverMenu = new SolverControls(mGrid->SolverGet()->BruteSolverGet());
+    SolverControls* solverMenu = new SolverControls(mGrid->SolverGet()->BruteSolverGet(), this);
     mControlsMenu->addTab(editMenu, "Create");
     mControlsMenu->addTab(solverMenu, "Solver");
 

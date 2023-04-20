@@ -27,6 +27,11 @@ public:
     /// </summary>
     virtual bool isHighPriotity() const { return false; }
 
+    /// <summary>
+    /// Sends a message to the UI detailing the logical deduction
+    /// </summary>
+    virtual void PrintMessage() const {;}
+
     ProgressType TypeGet() { return mType; }
 };
 
@@ -41,6 +46,7 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_SingleOptionLeftInCell : public Progress
@@ -54,19 +60,23 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_SingleCellForOption : public Progress
 {
     SudokuCell* mCell;
+    Region* mRegion;
     unsigned short mValue;
 public:
-    Progress_SingleCellForOption( SudokuCell* cell, unsigned short value) :
+    Progress_SingleCellForOption( SudokuCell* cell, Region* region, unsigned short value) :
         Progress(ProgressType::SingleCellInRegionForOption),
         mCell(cell),
+        mRegion(region),
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_NakedSubset : public Progress
@@ -80,16 +90,19 @@ public:
         mValues(values)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_HiddenNakedSubset : public Progress
 {
     CellSet mCells;
+    Region* mRegion;
     std::set<unsigned short> mValues;
 public:
-    Progress_HiddenNakedSubset(CellSet&& cells, std::list<unsigned short>&& values) :
+    Progress_HiddenNakedSubset(CellSet&& cells, Region* region, std::list<unsigned short>&& values) :
         Progress(ProgressType::HiddenNakedSubsetFound),
         mCells(cells),
+        mRegion(region),
         mValues(values.begin(), values.end())
     {}
     Progress_HiddenNakedSubset(CellSet& cells, std::set<unsigned short>& values) :
@@ -98,6 +111,7 @@ public:
         mValues(values)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_OptionRemoved : public Progress
@@ -115,17 +129,20 @@ public:
 
 class Progress_LockedCandidates : public Progress
 {
+    Region* mDefiningRegion;
     RegionSet mIntersectingRegions;
     CellSet mIntersection;
     unsigned short mValue;
 public:
-    Progress_LockedCandidates(RegionSet&& intersectingRegions, const CellSet& intersection, unsigned short value) :
+    Progress_LockedCandidates(Region* definingRegion, RegionSet&& intersectingRegions, const CellSet& intersection, unsigned short value) :
         Progress(ProgressType::LockedCandidatesFound),
+        mDefiningRegion(definingRegion),
         mIntersectingRegions(intersectingRegions),
         mIntersection(intersection),
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_AlmostLockedCandidates : public Progress
@@ -141,6 +158,7 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_Fish : public Progress
@@ -159,6 +177,7 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_CannibalFish : public Progress_Fish
@@ -172,6 +191,7 @@ public:
         mType = ProgressType::CannibalFishFound;
     }
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_FinnedFish : public Progress
@@ -192,6 +212,7 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_CannibalFinnedFish : public Progress_FinnedFish
@@ -205,6 +226,7 @@ public:
         mType = ProgressType::CannibalFinnedFishFound;
     }
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_RegionBecameClosed : public Progress
@@ -229,6 +251,7 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_ValueForcedInKiller : public Progress
@@ -257,6 +280,7 @@ public:
         mValues(values)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_OptionRemovedViaGuessing : public Progress
@@ -270,6 +294,7 @@ public:
         mValue(value)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 
@@ -296,6 +321,7 @@ protected:
 public:
     void ProcessProgress() override;
     bool isHighPriotity() const override { return true; }
+    void PrintMessage() const override;
 };
 
 class Impossible_ClashWithGivenCell : public Progress_ImpossiblePuzzle

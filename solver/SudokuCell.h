@@ -20,8 +20,11 @@ private:
     bool mIsGiven;								// whether th ecell is a given clue
     SudokuGrid* mParentGrid;					// pointer to the grid the cell belongs to
 
-    friend class Progress_SingleOptionLeftInCell;
+    std::string mName;
+
     friend class Progress_GivenCellAdded;
+    friend class Progress_SingleOptionLeftInCell;
+    friend class Progress_SingleCellForOption;
 
 public:
 // Constructors
@@ -38,16 +41,13 @@ public:
     const std::set<unsigned short>& OptionsGet() const;
     const std::set<unsigned short>& HintedEliminationsGet() const;
     const RegionSet& GetRegionsWithCell() const;
+    std::string CellNameGet() const;
 
 // Constant methods
 
     bool HasGuess(unsigned short  guess) const;
     bool IsSolved() const;
     bool IsGiven() const;
-#if PRINT_LOG_MESSAGES
-    std::string PrintPosition() const;
-    std::string PrintOptions() const;
-#endif // PRINT_LOG_MESSAGES
 
 // Non-constant methods
 

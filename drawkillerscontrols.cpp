@@ -91,7 +91,7 @@ DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, c
             for (const auto& cId : k.second.second)
             {
                 SudokuCellWidget* c = mGrid->CellGet(cId);
-                killerCageWidget->AddCell(c);
+                killerCageWidget->AddDisconnectedCell(c);
             }
             killerCageWidget->CageTotalSet(k.second.first);
             mGrid->GraphicalOverlayGet()->AddOverlayComponent(killerCageWidget, false);

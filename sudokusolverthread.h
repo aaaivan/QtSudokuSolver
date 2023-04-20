@@ -20,8 +20,10 @@ public:
     void Init();
 
 signals:
-    void CellUpdated(unsigned int id, const std::set<unsigned short>& content);
-    void PuzzleHasNoSolution(std::string message);
+    void CellUpdated(unsigned int id, const std::set<unsigned short>& content, bool isSolved);
+    void PuzzleHasNoSolution(QString message);
+    void NewLogicalStep(QString message);
+    void SolverHasBeenReset();
 
 protected:
     void run() override;
@@ -43,6 +45,7 @@ private:
     bool mNewInput;
     bool mAbort;
     bool mPaused;
+    bool mStep;
 
     QMutex mInputMutex;
     QMutex mSolverMutex;
@@ -76,8 +79,12 @@ public:
     void RemoveAllHints();
 
     void SubmitChangesToSolver();
-    void NotifyCellChanged(SudokuCell* cell);
+    void NotifyCellChanged(SudokuCell* cell, bool isSolved);
+    void NotifyImpossiblePuzzle(std::string message);
+    void NotifyLogicalDeduction(std::string message);
     void SetLogicalSolverPaused(bool paused);
+    void TakeStep();
+    void ResetSolver();
 
     BruteForceSolverThread* BruteSolverGet() const;
     PuzzleData PuzzleDataGet();

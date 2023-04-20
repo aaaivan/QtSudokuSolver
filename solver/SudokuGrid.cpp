@@ -74,7 +74,7 @@ void SudokuGrid::DefineRowsAndCols()
         {
             house.push_back({ row, col });
         }
-        DefineRegion(house, RegionType::House_Row);
+        DefineRegion(house, RegionType::House_Row, nullptr, "row " + std::to_string(row+1));
         house.clear();
     }
 
@@ -85,7 +85,7 @@ void SudokuGrid::DefineRowsAndCols()
         {
             house.push_back({ row, col });
         }
-        DefineRegion(house, RegionType::House_Column);
+        DefineRegion(house, RegionType::House_Column, nullptr, "column " + std::to_string(col+1));
         house.clear();
     }
 }
@@ -135,6 +135,11 @@ const SudokuGrid *SudokuGrid::ParentNodeGet()
     return mParentNode;
 }
 
+SudokuSolverThread *SudokuGrid::SolverThreadGet() const
+{
+    return mSolverThread;
+}
+
 void SudokuGrid::AddGivenCell(unsigned short row, unsigned short col, unsigned short value)
 {
         assert(	row < mSize &&
@@ -157,17 +162,19 @@ void SudokuGrid::SetCellEliminationHints(unsigned short row, unsigned short col,
     }
 }
 
-void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& cells, RegionType regionType, VariantConstraint* constraint)
+void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& cells,
+                              RegionType regionType, VariantConstraint* constraint, std::string name)
 {
     std::vector<VariantConstraint*> constraints;
     if(constraint)
     {
         constraints.emplace_back(constraint);
     }
-    DefineRegion(cells, regionType, constraints);
+    DefineRegion(cells, regionType, constraints, name);
 }
 
-void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > &cells, RegionType regionType, std::vector<VariantConstraint*> &constraints)
+void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > &cells,
+                              RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name)
 {
     assert(cells.size() <= mSize && "Index out of bound for a Given Cell");
 
@@ -185,6 +192,7 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > 
     {
         regionSPtr->AddVariantConstraint(std::unique_ptr<VariantConstraint>(constraint));
     }
+    regionSPtr->RegionNameSet(name);
     mRegionsManager->RegisterRegion(regionSPtr, regionType);
 }
 
@@ -219,7 +227,7 @@ void SudokuGrid::NotifyCellChanged(SudokuCell *cell) const
 {
     if(mSolverThread)
     {
-        mSolverThread->NotifyCellChanged(cell);
+        mSolverThread->NotifyCellChanged(cell, cell->IsSolved());
     }
 }
 
@@ -227,31 +235,3 @@ void SudokuGrid::NotifyCellChanged(unsigned int cellId) const
 {
     NotifyCellChanged(CellGet(cellId));
 }
-
-#if PRINT_LOG_MESSAGES
-//TODO: this print methos is temporary.
-void SudokuGrid::Print() const
-{
-
-    for (size_t row = 0; row < mGrid.size(); row++)
-    {
-        for (size_t col = 0; col < mGrid.size(); col++)
-        {
-            printf("%-22s", mGrid[row][col]->PrintOptions().c_str());
-            if (col % 3 == 2)
-            {
-                printf("|  ");
-            }
-        }
-        printf("\n");
-        if (row % 3 == 2)
-        {
-            printf("------------------------------------------------------------------ ");
-            printf("-------------------------------------------------------------------- ");
-            printf("--------------------------------------------------------------------\n");
-        }
-    }
-    printf("\n\n");
-
-}
-#endif // PRINT_LOG_MESSAGES

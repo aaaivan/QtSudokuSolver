@@ -9,121 +9,245 @@
 
 void Progress_GivenCellAdded::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Given cell added: %s = %u\n", mCell->PrintPosition().c_str(), mValue);
-#endif // PRINT_LOG_MESSAGES
     ScanNaked({ mCell }, { mValue }, mCell->GridGet(), false);
     mCell->ValueSet(mValue);
+
+    PrintMessage();
+}
+
+void Progress_GivenCellAdded::PrintMessage() const
+{
+    SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Scan given " + std::to_string(mValue) + " in " + mCell->CellNameGet() + ".";
+        st->NotifyLogicalDeduction(message);
+    }
 }
 
 void Progress_SingleOptionLeftInCell::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Value of cell found: %s = %u\n", mCell->PrintPosition().c_str(), mValue);
-#endif // PRINT_LOG_MESSAGES
+    if(mCell->IsSolved()) return;
+
     ScanNaked({ mCell }, { mValue }, mCell->GridGet(), false);
     mCell->ValueSet(mValue);
+
+    PrintMessage();
+}
+
+void Progress_SingleOptionLeftInCell::PrintMessage() const
+{
+    SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Naked single in " + mCell->CellNameGet() + ". " +
+                              std::to_string(mValue) + " is the only candidate.";
+        st->NotifyLogicalDeduction(message);
+    }
 }
 
 void Progress_SingleCellForOption::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Naked Single found: %s = %u\n", mCell->PrintPosition().c_str(), mValue);
-#endif // PRINT_LOG_MESSAGES
+    if(mCell->IsSolved()) return;
+
     ScanNaked({ mCell }, { mValue }, mCell->GridGet(), true);
+    mCell->ValueSet(mValue);
+
+    PrintMessage();
+}
+
+void Progress_SingleCellForOption::PrintMessage() const
+{
+    SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Hidden single on " + std::to_string(mValue) + ". " +
+                              "It can only go in " + mCell->CellNameGet() + " in " +
+                              mRegion->RegionNameGet() + ".";
+        st->NotifyLogicalDeduction(message);
+    }
+
 }
 
 void Progress_NakedSubset::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Naked subset found:");
-    for (const auto& c : mCells)
+    auto cIt = mCells.begin();
+    SudokuGrid* grid = (*cIt)->GridGet();
+    ScanNaked(mCells, mValues, grid, false);
+
+    PrintMessage();
+}
+
+void Progress_NakedSubset::PrintMessage() const
+{
+    auto cIt = mCells.begin();
+    SudokuGrid* grid = (*cIt)->GridGet();
+    SudokuSolverThread* st = grid->SolverThreadGet();
+    if(st && mCells.size() < grid->SizeGet())
     {
-        printf("%s%s, ", c->PrintPosition().c_str(), c->PrintOptions().c_str());
+        std::string message = "Naked subset in {";
+        while(cIt != mCells.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += "} on values {";
+
+        auto vIt = mValues.begin();
+        while(vIt != mValues.end())
+        {
+            message += std::to_string(*vIt) + ",";
+            vIt++;
+        }
+        message.pop_back();
+        message += "}.";
+
+        st->NotifyLogicalDeduction(message);
     }
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
-    ScanNaked(mCells, mValues, (*mCells.begin())->GridGet(), false);
 }
 
 void Progress_HiddenNakedSubset::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Hidden naked subset found:");
-    for (const auto& c : mCells)
+    auto cIt = mCells.begin();
+    SudokuGrid* grid = (*cIt)->GridGet();
+    ScanNaked(mCells, mValues, grid, true);
+
+    PrintMessage();
+}
+
+void Progress_HiddenNakedSubset::PrintMessage() const
+{
+    auto cIt = mCells.begin();
+    SudokuGrid* grid = (*cIt)->GridGet();
+    SudokuSolverThread* st = grid->SolverThreadGet();
+    if(st && mCells.size() < grid->SizeGet())
     {
-        printf("%s%s, ", c->PrintPosition().c_str(), c->PrintOptions().c_str());
+        std::string message = "Hidden subset on values {";
+        auto vIt = mValues.begin();
+        while(vIt != mValues.end())
+        {
+            message += std::to_string(*vIt) + ",";
+            vIt++;
+        }
+        message.pop_back();
+        message += "} in " + mRegion->RegionNameGet();
+        message += ".";
+
+        st->NotifyLogicalDeduction(message);
     }
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
-    ScanNaked(mCells, mValues, (*mCells.begin())->GridGet(), true);
 }
 
 void Progress_OptionRemoved::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES && 0
-    printf("Option removed form cell: %s != %u\n", mCell->PrintPosition().c_str(), mValue);
-#endif // PRINT_LOG_MESSAGES
-    mCell->GridGet()->NotifyCellChanged(mCell);
     const RegionSet& intersectingRegions = mCell->GetRegionsWithCell();
     for (Region* region : intersectingRegions)
     {
         region->UpdateManagerGet()->OnCellOptionRemoved(mCell, mValue);
     }
+
+    PrintMessage();
 }
 
 void Progress_LockedCandidates::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Locked %u found:", mValue);
-    for (const auto& c : mIntersection)
-    {
-        printf("%s, ", c->PrintPosition().c_str());
-    }
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
     for (const Region* region : mIntersectingRegions)
     {
         ScanLocked(mIntersection, region, mValue);
+    }
+
+    PrintMessage();
+}
+
+void Progress_LockedCandidates::PrintMessage() const
+{
+    SudokuSolverThread* st = (*mIntersectingRegions.begin())->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Locked " + std::to_string(mValue) + " in " + mDefiningRegion->RegionNameGet() + ". " +
+                "Cover region(s): ";
+
+        auto it = mIntersectingRegions.begin();
+        while(it != mIntersectingRegions.end())
+        {
+            message += (*it)->RegionNameGet() + ",";
+            it++;
+        }
+        message.pop_back();
+        message += ".";
+
+        st->NotifyLogicalDeduction(message);
     }
 }
 
 void Progress_AlmostLockedCandidates::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Almost Locked %u found:", mValue);
-    for (const auto& c : mCells)
-    {
-        printf("%s, ", c->PrintPosition().c_str());
-    }
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
-
     for (SudokuCell* const & c : mCells)
     {
         c->RemoveOption(mValue);
+    }
+
+    PrintMessage();
+}
+
+void Progress_AlmostLockedCandidates::PrintMessage() const
+{
+    SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Value " + std::to_string(mValue) + " excluded from cells {";
+
+        auto cIt = mCells.begin();
+        while(cIt != mCells.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += "} as there would be no way to place " + std::to_string(mValue) +
+                " in " + mRegion->RegionNameGet();
+
+        st->NotifyLogicalDeduction(message);
     }
 }
 
 void Progress_Fish::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Fish of size %u on %u found:\n", mSecondaryRegions.size(), mValue);
-    for (const auto& r : mDefiningRegions)
-    {
-        printf("%s, ", r->IdGet().c_str());
-    }
-    printf("\n");
-    for (const auto& r : mSecondaryRegions)
-    {
-        printf("%s, ", r->IdGet().c_str());
-    }
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
     // remove mValue from all the cells in the secondary set that are not in the defining set
     for (Region* r : mSecondaryRegions)
     {
         r->UpdateManagerGet()->OnFishFound(mDefiningCells, mValue);
+    }
+
+    PrintMessage();
+}
+
+void Progress_Fish::PrintMessage() const
+{
+    auto rIt = mSecondaryRegions.begin();
+    SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Fish on " + std::to_string(mValue) +
+                              ". Base regions: ";
+
+        auto bIt = mDefiningRegions.begin();
+        while(bIt != mDefiningRegions.end())
+        {
+            message += (*bIt)->RegionNameGet() + ",";
+            bIt++;
+        }
+        message.pop_back();
+        message += "; Cover regions: ";
+        while(rIt != mSecondaryRegions.end())
+        {
+            message += (*rIt)->RegionNameGet() + ",";
+            rIt++;
+        }
+        message.pop_back();
+        message += ".";
+
+        st->NotifyLogicalDeduction(message);
     }
 }
 
@@ -136,32 +260,88 @@ void Progress_CannibalFish::ProcessProgress()
     Progress_Fish::ProcessProgress();
 }
 
+void Progress_CannibalFish::PrintMessage() const
+{
+    auto rIt = mSecondaryRegions.begin();
+    SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Cannibal fish on " + std::to_string(mValue) +
+                              ". Base regions: ";
+
+        auto bIt = mDefiningRegions.begin();
+        while(bIt != mDefiningRegions.end())
+        {
+            message += (*bIt)->RegionNameGet() + ",";
+            bIt++;
+        }
+        message.pop_back();
+        message += "; Cover regions: ";
+        while(rIt != mSecondaryRegions.end())
+        {
+            message += (*rIt)->RegionNameGet() + ",";
+            rIt++;
+        }
+        message.pop_back();
+        message += "; Eaten cells: {";
+        auto cIt = mCannibalCells.begin();
+        while(cIt != mCannibalCells.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += "}.";
+
+        st->NotifyLogicalDeduction(message);
+    }
+}
+
 void Progress_FinnedFish::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Finned fish on %u found: \n", mValue);
-    for (const auto& r : mDefiningRegions)
-    {
-        printf("%s, ", r->IdGet().c_str());
-    }
-    printf("\n");
-    for (const auto& r : mSecondaryRegions)
-    {
-        printf("%s, ", r->IdGet().c_str());
-    }
-    printf("\n");
-    printf("eliminations(");
-    for (const auto& c : mCellsSeingFins)
-    {
-        printf("%s, ", c->PrintPosition().c_str());
-    }
-    printf(")");
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
-
     for (SudokuCell* const& c : mCellsSeingFins)
     {
         c->RemoveOption(mValue);
+    }
+
+    PrintMessage();
+}
+
+void Progress_FinnedFish::PrintMessage() const
+{
+    auto rIt = mSecondaryRegions.begin();
+    SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Finned fish on " + std::to_string(mValue) +
+                              ". Base regions";
+
+        auto bIt = mDefiningRegions.begin();
+        while(bIt != mDefiningRegions.end())
+        {
+            message += (*bIt)->RegionNameGet() + ",";
+            bIt++;
+        }
+        message.pop_back();
+        message += "; Cover regions: ";
+        while(rIt != mSecondaryRegions.end())
+        {
+            message += (*rIt)->RegionNameGet() + ",";
+            rIt++;
+        }
+        message.pop_back();
+        message += "; Fins: ";
+
+        auto cIt = mFins.begin();
+        while(cIt != mFins.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += ".";
+
+        st->NotifyLogicalDeduction(message);
     }
 }
 
@@ -174,40 +354,132 @@ void Progress_CannibalFinnedFish::ProcessProgress()
     Progress_FinnedFish::ProcessProgress();
 }
 
+void Progress_CannibalFinnedFish::PrintMessage() const
+{
+    auto rIt = mSecondaryRegions.begin();
+    SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Cannibal finned fish on " + std::to_string(mValue) +
+                              ". Base regions";
+
+        auto bIt = mDefiningRegions.begin();
+        while(bIt != mDefiningRegions.end())
+        {
+            message += (*bIt)->RegionNameGet() + ",";
+            bIt++;
+        }
+        message.pop_back();
+        message += "; Cover regions: ";
+        while(rIt != mSecondaryRegions.end())
+        {
+            message += (*rIt)->RegionNameGet() + ",";
+            rIt++;
+        }
+        message.pop_back();
+        message += "; Fins: ";
+
+        auto cIt = mFins.begin();
+        while(cIt != mFins.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += "; Eaten cells: {";
+        auto eIt = mCannibalCells.begin();
+        while(eIt != mCannibalCells.end())
+        {
+            message += (*eIt)->CellNameGet() + ",";
+            eIt++;
+        }
+        message.pop_back();
+        message += ".";
+
+        st->NotifyLogicalDeduction(message);
+    }
+}
+
 void Progress_RegionBecameClosed::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("Region became closed\n");
-#endif // PRINT_LOG_MESSAGES
-
     ScanNaked(mRegion->CellsGet(), mRegion->ConfirmedValuesGet(), mRegion->GridGet(), false);
+
+    PrintMessage();
 }
 
 void Progress_ValueNotInKiller::ProcessProgress()
 {
-#if PRINT_LOG_MESSAGES
-    printf("%u not allowed in killer cage.\n", mValue);
-#endif // PRINT_LOG_MESSAGES
-
     for (const auto& c : mRegion->CellsGet())
     {
         c->RemoveOption(mValue);
+    }
+
+    PrintMessage();
+}
+
+void Progress_ValueNotInKiller::PrintMessage() const
+{
+    SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Value " + std::to_string(mValue) + " not allowed in " +
+                mRegion->RegionNameGet() + ".";
+
+        st->NotifyLogicalDeduction(message);
     }
 }
 
 void Progress_ValueForcedInKiller::ProcessProgress()
 {
     mRegion->AddConfirmedValue(mValue);
+
+    PrintMessage();
 }
 
 void Progress_ValueDisallowedByBifurcation::ProcessProgress()
 {
     mCell->RemoveMultipleOptions(mValues);
+
+    PrintMessage();
+}
+
+void Progress_ValueDisallowedByBifurcation::PrintMessage() const
+{
+    SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Values {";
+        auto vIt = mValues.begin();
+        while(vIt != mValues.end())
+        {
+            message += std::to_string(*vIt) + ",";
+            vIt++;
+        }
+        message.pop_back();
+        message += "} excluded from cell " + mCell->CellNameGet() +
+                " after bifurcating cell " + mPivot->CellNameGet() + ".";
+
+        st->NotifyLogicalDeduction(message);
+    }
 }
 
 void Progress_OptionRemovedViaGuessing::ProcessProgress()
 {
     mCell->RemoveOption(mValue);
+
+    PrintMessage();
+}
+
+void Progress_OptionRemovedViaGuessing::PrintMessage() const
+{
+    SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "Value " + std::to_string(mValue) + " removed from " + mCell->CellNameGet() +
+                "as it breaks the puzzle.";
+
+        st->NotifyLogicalDeduction(message);
+    }
 }
 
 
@@ -222,6 +494,18 @@ void Progress_OptionRemovedViaGuessing::ProcessProgress()
 void Progress_ImpossiblePuzzle::ProcessProgress()
 {
     mGrid->ProgressManagerGet()->Abort();
+
+    PrintMessage();
+}
+
+void Progress_ImpossiblePuzzle::PrintMessage() const
+{
+    SudokuSolverThread* st = mGrid->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "The puzzle is broken!";
+        st->NotifyImpossiblePuzzle(message);
+    }
 }
 
 void Impossible_ClashWithGivenCell::ProcessProgress()

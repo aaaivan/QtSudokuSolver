@@ -301,7 +301,7 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
     }
 }
 
-void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options, const std::set<unsigned short> &hints)
+void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options, const std::set<unsigned short> &hints, bool isSolved)
 {
     QString text = "";
     int lineBreak = 0;
@@ -329,7 +329,7 @@ void SudokuCellWidget::UpdateOptions(const std::set<unsigned short> &options, co
         text += "</font>";
     }
     mOptionsLabel->setText(text);
-    mIsSolved = (options.size() == 1 && hints.size() == 0);
+    mIsSolved = (isSolved && hints.size() == 0);
     mOptionsLabel->setFont(QFont(mValueLabel->font().family(),mIsSolved ? 20 : 8, mIsSolved ? 500 : -1));
 }
 

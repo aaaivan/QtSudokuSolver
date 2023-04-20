@@ -19,6 +19,7 @@ SudokuSolverThread::SudokuSolverThread(unsigned short gridSize, QObject *parent)
       mNewInput(false),
       mAbort(false),
       mPaused(false),
+      mStep(false),
       mInputMutex(),
       mSolverMutex(),
       mThreadCondition()
@@ -89,69 +90,16 @@ void SudokuSolverThread::run()
             mBruteForceSolver->NotifyGridChanged();
             mBruteForceSolver->AbortCalculation();
 
+            // Clear grid contents if necessary
             if(reloadGrid)
             {
                 mGrid->Clear();
+                emit SolverHasBeenReset();
             }
-            // Clear given cells if necessary
             else if(reloadCells)
             {
                 mGrid->ResetContents();
-            }
-
-            // define regions
-            for (size_t i = 0; i < puzzleData.mRegions.size(); ++i)
-            {
-                const auto& region = puzzleData.mRegions.at(i);
-                if(region.size() == 0) continue;
-
-                if(reloadGrid || newRegions.count(i))
-                {
-                    std::vector<std::array<unsigned short, 2>> cells;
-                    cells.reserve(region.size());
-                    const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
-                    {
-                        return {static_cast<unsigned short>(id / gridSize),
-                                static_cast<unsigned short>(id % gridSize)};
-                    };
-                    std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
-                    mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region);
-                }
-            }
-
-            // define killers
-            for (const auto& killer : puzzleData.mKillerCages)
-            {
-                if(reloadGrid || newKillers.count(killer.first))
-                {
-                    unsigned int killerSum = killer.second.first;
-                    const auto& killerCells = killer.second.second;
-                    std::vector<std::array<unsigned short, 2>> cells;
-                    cells.reserve(killerCells.size());
-                    const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
-                    {
-                        return {static_cast<unsigned short>(id / gridSize),
-                                static_cast<unsigned short>(id % gridSize)};
-                    };
-                    std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
-                    mGrid->DefineRegion(cells, RegionType::KillerCage, new KillerConstraint(killerSum));
-                }
-            }
-
-            // define negative diagonal
-            if((reloadGrid && puzzleData.mNegativeDiagonal) ||
-               (!reloadGrid && negativeDiagonal))
-            {
-                std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Negative);
-                mGrid->DefineRegion(cells, RegionType::Generic_region);
-            }
-
-            // define positive diagonal
-            if((reloadGrid && puzzleData.mPositiveDiagonal) ||
-               (!reloadGrid && positiveDiagonal))
-            {
-                std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
-                mGrid->DefineRegion(cells, RegionType::Generic_region);
+                emit SolverHasBeenReset();
             }
 
             // define givens
@@ -170,6 +118,63 @@ void SudokuSolverThread::run()
                 {
                     mGrid->SetCellEliminationHints(hints.first / gridSize, hints.first % gridSize, hints.second);
                 }
+            }
+
+            // define regions
+            for (size_t i = 0; i < puzzleData.mRegions.size(); ++i)
+            {
+                const auto& region = puzzleData.mRegions.at(i);
+                if(region.size() == 0) continue;
+
+                if(reloadGrid || newRegions.count(i))
+                {
+                    std::vector<std::array<unsigned short, 2>> cells;
+                    cells.reserve(region.size());
+                    const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                    {
+                        return {static_cast<unsigned short>(id / gridSize),
+                                static_cast<unsigned short>(id % gridSize)};
+                    };
+                    std::transform(region.begin(), region.end(), std::back_inserter(cells), pred);
+                    mGrid->DefineRegion(cells, cells.size() == gridSize ? RegionType::House_Region : RegionType::Generic_region, nullptr, "region " + std::to_string(i+1));
+                }
+            }
+
+            // define killers
+            for (const auto& killer : puzzleData.mKillerCages)
+            {
+                if(reloadGrid || newKillers.count(killer.first))
+                {
+                    unsigned int killerSum = killer.second.first;
+                    const auto& killerCells = killer.second.second;
+                    std::vector<std::array<unsigned short, 2>> cells;
+                    cells.reserve(killerCells.size());
+                    const auto pred = [&](const CellCoord &id) -> std::array<unsigned short, 2>
+                    {
+                        return {static_cast<unsigned short>(id / gridSize),
+                                static_cast<unsigned short>(id % gridSize)};
+                    };
+                    std::transform(killerCells.begin(), killerCells.end(), std::back_inserter(cells), pred);
+                    auto firstCell = pred(killer.first);
+                    mGrid->DefineRegion(cells, RegionType::KillerCage, new KillerConstraint(killerSum),
+                                        "the " + std::to_string(killerSum) + " cage at r" + std::to_string(firstCell[0] + 1) + "c" + std::to_string(firstCell[1] + 1));
+                }
+            }
+
+            // define negative diagonal
+            if((reloadGrid && puzzleData.mNegativeDiagonal) ||
+               (!reloadGrid && negativeDiagonal))
+            {
+                std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Negative);
+                mGrid->DefineRegion(cells, RegionType::House_Region, nullptr, "negative diagonal");
+            }
+
+            // define positive diagonal
+            if((reloadGrid && puzzleData.mPositiveDiagonal) ||
+               (!reloadGrid && positiveDiagonal))
+            {
+                std::vector<std::array<unsigned short, 2>> cells = DiagonalCellsGet(gridSize, PuzzleData::Diagonal_Positive);
+                mGrid->DefineRegion(cells, RegionType::House_Region, nullptr, "positive diagonal");
             }
         }
 
@@ -203,6 +208,11 @@ void SudokuSolverThread::run()
         {
             // pause this thread while there is nothing to do
             mThreadCondition.wait(&mInputMutex);
+        }
+        else if(mStep)
+        {
+            mStep = false;
+            mPaused = true;
         }
         mInputMutex.unlock();
     }
@@ -304,9 +314,32 @@ void SudokuSolverThread::SubmitChangesToSolver()
     }
 }
 
-void SudokuSolverThread::NotifyCellChanged(SudokuCell *cell)
+void SudokuSolverThread::NotifyCellChanged(SudokuCell *cell, bool isSolved)
 {
-    emit CellUpdated(cell->IdGet(), cell->OptionsGet());
+    emit CellUpdated(cell->IdGet(), cell->OptionsGet(), isSolved);
+    QMutexLocker locker(&mInputMutex);
+}
+
+void SudokuSolverThread::NotifyImpossiblePuzzle(std::string message)
+{
+    emit PuzzleHasNoSolution(QString(message.c_str()));
+    QMutexLocker locker(&mInputMutex);
+    if(mStep)
+    {
+        mStep = false;
+        mPaused = true;
+    }
+}
+
+void SudokuSolverThread::NotifyLogicalDeduction(std::string message)
+{
+
+    emit NewLogicalStep(QString(message.c_str()));
+    if(mStep)
+    {
+        mStep = false;
+        mPaused = true;
+    }
 }
 
 BruteForceSolverThread *SudokuSolverThread::BruteSolverGet() const
@@ -326,9 +359,55 @@ void SudokuSolverThread::SetLogicalSolverPaused(bool paused)
     if(mPaused != paused)
     {
         mPaused = paused;
+        mStep = false;
         if(!mPaused)
+        {
+            if (!isRunning())
+            {
+                start(HighestPriority);
+            }
+            else
+            {
+                mThreadCondition.wakeOne();
+            }
+        }
+    }
+}
+
+void SudokuSolverThread::TakeStep()
+{
+    QMutexLocker locker(&mInputMutex);
+    if (mPaused)
+    {
+        mStep = true;
+        mPaused = false;
+        if (!isRunning())
+        {
+            start(HighestPriority);
+        }
+        else
         {
             mThreadCondition.wakeOne();
         }
+    }
+}
+
+void SudokuSolverThread::ResetSolver()
+{
+    QMutexLocker locker(&mInputMutex);
+    ReloadGrid();
+    mNewInput = true;
+    if(mStep)
+    {
+        mStep = false;
+        mPaused = true;
+    }
+    if (!isRunning())
+    {
+        start(HighestPriority);
+    }
+    else
+    {
+        mThreadCondition.wakeOne();
     }
 }

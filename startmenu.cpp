@@ -95,7 +95,7 @@ void StartMenu::LoadPuzzleBtn_clicked()
         {
             close();
             deleteLater();
-            MainWindow* w = new MainWindow(pd->mSize, std::move(pd));
+            MainWindow* w = new MainWindow(pd->mSize, std::move(pd), fileName);
             w->show();
         }
     }

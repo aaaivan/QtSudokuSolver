@@ -5,6 +5,7 @@
 #include "Types.h"
 #include <array>
 #include <vector>
+#include <string>
 
 // Classes
 class RegionsManager;
@@ -41,12 +42,9 @@ public:
     GridProgressManager* ProgressManagerGet() const;
     bool IsSolved() const;
     const SudokuGrid* ParentNodeGet();
+    SudokuSolverThread* SolverThreadGet() const;
 
 // Non-constant methods
-
-#if PRINT_LOG_MESSAGES
-    void Print() const;
-#endif // PRINT_LOG_MESSAGES
 
     /// <summary>
     /// Define a given cell of the puzzle
@@ -67,8 +65,10 @@ public:
     /// Takes a list of number couples, representing coordinates of cells in the same region.
     /// The region type (row, column, box etc.) is also specified as a parameter.
     /// </summary>
-    void DefineRegion(const std::vector<std::array<unsigned short, 2> /* row, col */>& cells, RegionType regionType, VariantConstraint* constraint = nullptr);
-    void DefineRegion(const std::vector<std::array<unsigned short, 2> /* row, col */>& cells, RegionType regionType, std::vector<VariantConstraint*> &constraints);
+    void DefineRegion(const std::vector<std::array<unsigned short, 2> /* row, col */>& cells,
+                      RegionType regionType, VariantConstraint* constraint = nullptr, std::string name="");
+    void DefineRegion(const std::vector<std::array<unsigned short, 2> /* row, col */>& cells,
+                      RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name="");
 
     /// <summary>
     /// Clear the content of the grid (does not delete the regions)

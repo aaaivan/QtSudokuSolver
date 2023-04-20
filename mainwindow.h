@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(unsigned short gridSize, std::unique_ptr<PuzzleData> loadedGrid = nullptr, QWidget *parent = nullptr);
+    MainWindow(unsigned short gridSize, std::unique_ptr<PuzzleData> loadedGrid = nullptr, QString loadPath = "", QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
