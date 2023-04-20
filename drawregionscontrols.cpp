@@ -70,6 +70,36 @@ DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, c
         }
         mGrid->SolverGet()->SubmitChangesToSolver();
     }
+    else
+    {
+        unsigned int size = mGrid->SizeGet();
+        int rf = std::sqrt(size);
+        while(size % rf != 0)
+        {
+            rf--;
+        }
+        int cf = size / rf;
+
+        for(unsigned int row = 0; row < size; ++row)
+        {
+            for(unsigned int col = 0; col < size; ++col)
+            {
+                int i = row / rf;
+                int j = col / cf;
+                int regId = i * rf + j + 1;
+                CellCoord cellId = row * size + col;
+                mGrid->CellGet(cellId)->SetRegionId(regId);
+                mRegions.at(regId-1).insert(cellId);
+            }
+        }
+
+        for(size_t i = 0; i < mRegions.size(); ++i)
+        {
+            mGrid->SolverGet()->SetRegion(i+1, mRegions.at(i));
+            mRegions.at(i).clear();
+        }
+        mGrid->SolverGet()->SubmitChangesToSolver();
+    }
 }
 
 void DrawRegionsControls::hideEvent(QHideEvent *event)
