@@ -314,7 +314,7 @@ void Progress_FinnedFish::PrintMessage() const
     if(st)
     {
         std::string message = "Finned fish on " + std::to_string(mValue) +
-                              ". Base regions";
+                              ". Base regions: ";
 
         auto bIt = mDefiningRegions.begin();
         while(bIt != mDefiningRegions.end())

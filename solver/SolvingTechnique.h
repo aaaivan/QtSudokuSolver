@@ -88,13 +88,15 @@ public:
     bool SearchHiddenNakedSubsetInner(const std::list<ValueMapEntry>& values, std::list<ValueMapEntry>::iterator it, const std::list<ValueMapEntry>::iterator endIt, const std::set<unsigned short>& excludeValues, std::list<unsigned short>& candidates, CellSet& outNakedSubset, const size_t subsetFinalSize, bool& impossible);
 };
 
+typedef std::list<Region*>::iterator RegListIt;
+typedef std::list<RegListIt> DefiningSet;
 class FishTechnique : public SolvingTechnique
 {
     unsigned short mCurrentValue;
-    RegionSet mRegionsToSearch;
-    RegionSet mAvailableRegions;
-    RegionSet mAllowedRegions;
-    Region* mCurrentRegion;
+    RegionList mAvailableRegions;
+    RegionList::iterator mCurrentRegion;
+    size_t mRegionsToSearchCount;
+    size_t mCurrentRegionIndex;
     const unsigned short mMinSize;
     unsigned short mCurrentSize;
 
@@ -111,14 +113,13 @@ public:
     /// Returns true if any progress was maden (either the technique was successful or the puzzle was found to be impossible)
     /// </summary>
     void SearchFish();
-    void GetPossibeDefiningRegions(Region* includeRegion, const RegionSet& allowedRegions, std::list<RegionList>& definingSets, unsigned short size);
-    void GetPossibeDefiningRegionsInner(std::list<RegionList>& definingSets, const unsigned short size, const RegionSet& allowedRegions, RegionSet::const_iterator regIt, RegionList& nextSet);
-    bool SearchSecondaryFishRegion(RegionList& definingSet, unsigned short value, const SudokuGrid* grid, bool& impossible);
+    void GetPossibeDefiningRegions(Region* includeRegion, const RegListIt& startIt, std::list<RegionList>& definingSets, unsigned short size);
+    void GetPossibeDefiningRegionsInner(std::list<RegionList>& definingSets, const unsigned short size, RegListIt regIt, RegionList& nextSet);
+    bool SearchSecondaryFishRegion(RegionList& definingSet, bool& impossible);
     bool SearchSecondaryFishRegionInner(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap,
-        std::map<SudokuCell*, RegionSet>::const_iterator& mapIt, const unsigned short& targetSize, RegionList& currentSet,
-        CellList& fins, RegionSet& finsRegions, CellSet& cellsSeeingFins,
-        const SudokuGrid* grid, const unsigned short& fishValue, bool& impossible);
-    bool IsFishValid(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap, RegionList& currentSet, const SudokuGrid* grid, const unsigned short& fishValue);
+        std::map<SudokuCell*, RegionSet>::const_iterator& mapIt, RegionList& currentSet,
+        CellList& fins, RegionSet& finsRegions, CellSet& cellsSeeingFins, bool& impossible);
+    bool IsFishValid(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap, RegionList& currentSet);
 };
 
 class BifurcationTechnique : public SolvingTechnique

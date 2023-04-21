@@ -26,6 +26,7 @@ SOURCES += \
     savepuzzlethread.cpp \
     solver/BruteForceSolver.cpp \
     solver/FishTechniques.cpp \
+    solver/FishTechniquesV2.cpp \
     solver/GridProgressManager.cpp \
     solver/LockedCandidates.cpp \
     solver/NakedSubsets.cpp \
