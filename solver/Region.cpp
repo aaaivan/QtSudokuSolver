@@ -20,7 +20,8 @@ Region::Region(SudokuGrid* parentGrid, CellSet&& cells, bool startingRegion):
     mUpdateManager(std::make_unique<RegionUpdatesManager>(this)),
     mRightNode(nullptr),
     mLeftNode(nullptr),
-    mParents()
+    mParents(),
+    mSnapshot(nullptr)
 {
     Init();
 }
@@ -37,6 +38,7 @@ void Region::Init()
     mUpdateManager->Reset();
     mRightNode.reset();
     mLeftNode.reset();
+    mSnapshot.reset();
 
     // construct the value to cell map and find the allowed and confirmed values if any
     for (unsigned short v = 1; v <= mParentGrid->SizeGet(); ++v)
@@ -468,6 +470,37 @@ void Region::RegionNameSet(std::string name)
 void Region::Reset()
 {
     Init();
+}
+
+void Region::TakeSnapshot()
+{
+    assert(IsLeafNode());
+
+    for (const auto& v : mAdditionalConstraints)
+    {
+        v->TakeSnaphot();
+    }
+    mUpdateManager->TakeSnapshot();
+    mSnapshot = std::make_unique<Snapshot>(mConfirmedValues, mAllowedValues, mValueToCellMap);
+}
+
+void Region::RestoreSnapshot()
+{
+    if(mSnapshot)
+    {
+        mConfirmedValues = std::move(mSnapshot->mConfirmedValues);
+        mAllowedValues = std::move(mSnapshot->mAllowedValues);
+        mValueToCellMap = std::move(mSnapshot->mValueToCellMap);
+        mSnapshot.reset();
+
+        mUpdateManager->RestoreSnapshot();
+        for (const auto& v : mAdditionalConstraints)
+        {
+            v->RestoreSnaphot();
+        }
+        mLeftNode.reset();
+        mRightNode.reset();
+    }
 }
 
 void Region::RemoveAllowedValue(unsigned short value)

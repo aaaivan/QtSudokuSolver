@@ -126,9 +126,9 @@ class BifurcationTechnique : public SolvingTechnique
     static const unsigned int sMaxDepth;
     const unsigned int mDepth;
     unsigned int mTargetDepth;
+    std::unique_ptr<SudokuGrid> mBifurcationGrid;
     std::vector<SudokuCell*> mCells;
-    std::map<SudokuCell*, size_t> mCellOrder;
-    EliminationMatrix mOptionEliminationMatrix;
+    //EliminationMatrix mOptionEliminationMatrix;
     unsigned int mCurrentIndex;
 
     std::unique_ptr<RandomGuessTreeRoot> mRoot;

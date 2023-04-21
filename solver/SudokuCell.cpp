@@ -14,7 +14,8 @@ SudokuCell::SudokuCell(SudokuGrid* grid, unsigned short row, unsigned short col,
     mEliminationHints(),
     mIsGiven( false ),
     mParentGrid(grid),
-    mName("r" + std::to_string(row + 1) + "c" + std::to_string(col + 1))
+    mName("r" + std::to_string(row + 1) + "c" + std::to_string(col + 1)),
+    mSnapshot(nullptr)
 {
     Reset();
 }
@@ -165,6 +166,7 @@ void SudokuCell::Reset()
     mIsGiven = false;
     mEliminationHints.clear();
     mViableOptions.clear();
+    mSnapshot.reset();
     for (unsigned short i = 1; i <= mParentGrid->SizeGet(); ++i)
     {
         mViableOptions.emplace_hint(mViableOptions.end(), i);
@@ -186,6 +188,21 @@ SudokuCell *SudokuCell::DeepCopy(SudokuGrid* parentGrid) const
     cell->mIsGiven = this->mIsGiven;
 
     return cell;
+}
+
+void SudokuCell::TakeSnapshot()
+{
+    mSnapshot = std::make_unique<Snapshot>(mViableOptions, mValue);
+}
+
+void SudokuCell::RestoreSnapshot()
+{
+    if(mSnapshot)
+    {
+        mViableOptions = std::move(mSnapshot->mViableOptions);
+        mValue = std::move(mSnapshot->mValue);
+        mSnapshot.reset();
+    }
 }
 
 void SudokuCell::ValueSet(unsigned short value)

@@ -11,7 +11,8 @@ RegionsManager::RegionsManager(SudokuGrid* parentGrid):
     mStartingRegions(),
     mLeafRegions(),
     mCellToRegionsMap(),
-    mParentGrid(parentGrid)
+    mParentGrid(parentGrid),
+    mSnapshot(nullptr)
 {
     for (size_t i = 0; i < static_cast<size_t>(RegionType::MAX_TYPES); i++)
     {
@@ -284,6 +285,7 @@ void RegionsManager::RegisterRegion(RegionSPtr regionSPtr, RegionType regionType
 void RegionsManager::Reset()
 {
     mLeafRegions.clear();
+    mSnapshot.reset();
     for (auto& c : mCellToRegionsMap)
     {
         c.clear();
@@ -307,6 +309,7 @@ void RegionsManager::Reset()
 void RegionsManager::Clear()
 {
     mLeafRegions.clear();
+    mSnapshot.reset();
     for (auto& c : mCellToRegionsMap)
     {
         c.clear();
@@ -314,5 +317,28 @@ void RegionsManager::Clear()
     for (size_t i = 0; i < static_cast<size_t>(RegionType::MAX_TYPES); i++)
     {
         mStartingRegions.at(i).clear();
+    }
+}
+
+void RegionsManager::TakeSnapshot()
+{
+    for (const auto& r : mLeafRegions)
+    {
+        r->TakeSnapshot();
+    }
+    mSnapshot = std::make_unique<Snapshot>(mLeafRegions, mCellToRegionsMap);
+}
+
+void RegionsManager::RestoreSnapshot()
+{
+    if(mSnapshot)
+    {
+        mLeafRegions = std::move(mSnapshot->mLeafRegions);
+        mCellToRegionsMap = std::move(mSnapshot->mCellToRegionsMap);
+        mSnapshot.reset();
+        for (const auto& r : mLeafRegions)
+        {
+            r->RestoreSnapshot();
+        }
     }
 }

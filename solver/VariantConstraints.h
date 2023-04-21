@@ -49,6 +49,8 @@ public:
     /// Creates a deep copy of the class
     /// </summary>
     virtual VariantConstraint* DeepCopy() const = 0;
+    virtual void TakeSnaphot() = 0;
+    virtual void RestoreSnaphot() = 0;
 };
 
 /// <summary>
@@ -61,6 +63,23 @@ private:
     std::list<std::set<unsigned short>> mCombinations;	// sets of numbers whose sum equals mCageSum and whose size euqals the size of the region
     std::set<unsigned short> mConfirmedValues;			// values that must be in the sum
     std::set<unsigned short> mAllowedValues;			// values that could be in the sum
+
+    struct Snapshot
+    {
+        std::set<unsigned short> mConfirmedValues;
+        std::set<unsigned short> mAllowedValues;
+        std::list<std::set<unsigned short>> mCombinations;
+
+        Snapshot(const std::set<unsigned short>& confirmed,
+                 const std::set<unsigned short>& allowed,
+                 const std::list<std::set<unsigned short>>& combs):
+            mConfirmedValues(confirmed),
+            mAllowedValues(allowed),
+            mCombinations(combs)
+        {}
+
+    };
+    std::unique_ptr<Snapshot> mSnapshot;
 
 public:
 // Special member function
@@ -82,6 +101,8 @@ public:
     void OnOptionRemovedFromCell(unsigned short value, SudokuCell* cell) override;
     void OnRegionPartitioned(Region* leftNode, Region* rightNode) override;
     VariantConstraint* DeepCopy() const override;
+    void TakeSnaphot() override;
+    void RestoreSnaphot() override;
 
 private:
     /// <summary>

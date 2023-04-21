@@ -24,6 +24,17 @@ class RegionsManager
     CellToRegionMap mCellToRegionsMap;	// maps each cell in the grid to the regions that cell is in
     SudokuGrid* mParentGrid;			// pointer to the grid the cell belongs to
 
+    struct Snapshot
+    {
+        RegionSet mLeafRegions;
+        CellToRegionMap mCellToRegionsMap;
+        Snapshot(const RegionSet& leaves, const CellToRegionMap& map):
+            mLeafRegions(leaves),
+            mCellToRegionsMap(map)
+        {}
+    };
+    std::unique_ptr<Snapshot> mSnapshot;
+
 public:
 // Constructors/Destructors
 
@@ -83,6 +94,10 @@ public:
     /// Clear all the starting regions
     /// </summary>
     void Clear();
+
+    void TakeSnapshot();
+    void RestoreSnapshot();
+
 private:
     /// <summary>
     /// Partition the argument region into two new smaller regions,

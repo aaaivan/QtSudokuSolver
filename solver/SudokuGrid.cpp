@@ -12,6 +12,7 @@ SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
+    mHasSnapshort(false),
     mSolverThread(solverThread)
 {
     // populate the grid
@@ -34,6 +35,7 @@ SudokuGrid::SudokuGrid(const SudokuGrid *grid) :
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
+    mHasSnapshort(false),
     mSolverThread(nullptr)
 {
     // populate the grid with the cells
@@ -198,6 +200,8 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > 
 
 void SudokuGrid::ResetContents()
 {
+    mHasSnapshort = false;
+
     for (size_t i = 0; i < mSize; i++)
     {
         for (size_t j = 0; j < mSize; j++)
@@ -211,6 +215,8 @@ void SudokuGrid::ResetContents()
 
 void SudokuGrid::Clear()
 {
+    mHasSnapshort = false;
+
     for (size_t i = 0; i < mSize; i++)
     {
         for (size_t j = 0; j < mSize; j++)
@@ -234,4 +240,34 @@ void SudokuGrid::NotifyCellChanged(SudokuCell *cell) const
 void SudokuGrid::NotifyCellChanged(unsigned int cellId) const
 {
     NotifyCellChanged(CellGet(cellId));
+}
+
+void SudokuGrid::TakeSnapshot()
+{
+    mHasSnapshort = true;
+    mRegionsManager->TakeSnapshot();
+    for (size_t i = 0; i < mSize; i++)
+    {
+        for (size_t j = 0; j < mSize; j++)
+        {
+            mGrid.at(i).at(j)->TakeSnapshot();
+        }
+    }
+}
+
+void SudokuGrid::RestoreSnapshot()
+{
+    if(mHasSnapshort)
+    {
+        mHasSnapshort = false;
+        for (size_t i = 0; i < mSize; i++)
+        {
+            for (size_t j = 0; j < mSize; j++)
+            {
+                mGrid.at(i).at(j)->RestoreSnapshot();
+            }
+        }
+        mRegionsManager->RestoreSnapshot();
+    }
+
 }

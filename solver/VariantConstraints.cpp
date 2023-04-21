@@ -29,7 +29,8 @@ KillerConstraint::KillerConstraint(unsigned int sum) :
     mCageSum(sum),
     mCombinations(),
     mConfirmedValues(),
-    mAllowedValues()
+    mAllowedValues(),
+    mSnapshot(nullptr)
 {
 }
 
@@ -40,6 +41,7 @@ KillerConstraint::~KillerConstraint()
 void KillerConstraint::Initialise(Region* region)
 {
     VariantConstraint::Initialise(region);
+    mSnapshot.reset();
 
     mAllowedValues.insert(mRegion->AllowedValuesGet().begin(), mRegion->AllowedValuesGet().end());
     FindCombinations();
@@ -94,6 +96,22 @@ void KillerConstraint::OnRegionPartitioned(Region* leftNode, Region* rightNode)
 VariantConstraint *KillerConstraint::DeepCopy() const
 {
     return new KillerConstraint(mCageSum);
+}
+
+void KillerConstraint::TakeSnaphot()
+{
+    mSnapshot = std::make_unique<Snapshot>(mConfirmedValues, mAllowedValues, mCombinations);
+}
+
+void KillerConstraint::RestoreSnaphot()
+{
+    if(mSnapshot)
+    {
+        mConfirmedValues = std::move(mSnapshot->mConfirmedValues);
+        mAllowedValues = std::move(mSnapshot->mAllowedValues);
+        mCombinations = std::move(mSnapshot->mCombinations);
+        mSnapshot.reset();
+    }
 }
 
 RegionType KillerConstraint::TypeGet()

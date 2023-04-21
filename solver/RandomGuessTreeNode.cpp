@@ -4,34 +4,31 @@
 #include "GridProgressManager.h"
 #include <cassert>
 
-RandomGuessTreeRoot::RandomGuessTreeRoot(SudokuGrid *grid, SudokuCell* pivot, BifurcationTechnique* technique):
-    mGrid(grid),
+RandomGuessTreeRoot::RandomGuessTreeRoot(SudokuGrid* parentGrid, SudokuGrid* bifurcationGrid, CellId pivot, BifurcationTechnique* technique):
+    mParentGrid(parentGrid),
+    mBifurcationGrid(bifurcationGrid),
     mPivot(pivot),
     mNextNode(0),
     mChildNodes(),
-    mHotCells(),
+    mEliminatedValues(),
     mFinished(false),
     mTechnique(technique)
 {
-    size_t maxCells = mGrid->SizeGet() * mGrid->SizeGet();
+    size_t maxCells = mParentGrid->SizeGet() * mParentGrid->SizeGet();
     for (size_t i = 0; i < maxCells; ++i)
     {
-        unsigned short row = i / mGrid->SizeGet();
-        unsigned short col = i % mGrid->SizeGet();
-        SudokuCell* cell = mGrid->CellGet(row, col);
-        if(mTechnique->mCellOrder.count(cell) > 0)
-        {
-            mHotCells.insert(i);
-        }
+        SudokuCell* cell = mParentGrid->CellGet(i);
+        mEliminatedValues[i] = (cell->OptionsGet());
     }
 
     size_t i = 0;
-    mChildNodes.reserve(pivot->OptionsGet().size());
-    for(const auto& v : pivot->OptionsGet())
+    mChildNodes.reserve(mParentGrid->CellGet(mPivot)->OptionsGet().size());
+    for(const auto& v : mParentGrid->CellGet(mPivot)->OptionsGet())
     {
-        mChildNodes.push_back(std::make_unique<RandomGuessTreeNode>(mGrid, mPivot, v, this, i, mTechnique));
+        mChildNodes.push_back(std::make_unique<RandomGuessTreeNode>(mBifurcationGrid, mPivot, v, this, i, mTechnique));
         ++i;
     }
+    mChildNodes.begin()->get()->Init();
 }
 
 bool RandomGuessTreeRoot::HasFinished() const
@@ -41,7 +38,7 @@ bool RandomGuessTreeRoot::HasFinished() const
 
 void RandomGuessTreeRoot::NextStep()
 {
-    GridProgressManager* progressManager = mGrid->ProgressManagerGet();
+    GridProgressManager* progressManager = mParentGrid->ProgressManagerGet();
 
     if(mNextNode < mChildNodes.size())
     {
@@ -57,7 +54,7 @@ void RandomGuessTreeRoot::NextStep()
         }
         if(!valid)
         {
-            progressManager->RegisterProgress(std::make_shared<Impossible_NoSolutionByBifurcation>(mPivot, mGrid));
+            progressManager->RegisterProgress(std::make_shared<Impossible_NoSolutionByBifurcation>(mParentGrid->CellGet(mPivot), mParentGrid));
         }
         mFinished = true;
     }
@@ -65,110 +62,84 @@ void RandomGuessTreeRoot::NextStep()
 
 void RandomGuessTreeRoot::NodeHasFinished(unsigned short nodeIndex)
 {
-    GridProgressManager* progressManager = mGrid->ProgressManagerGet();
-    if(!mChildNodes.at(mNextNode)->IsValidGet())
-    {
-        unsigned short option = mChildNodes.at(mNextNode)->PivotValueGet();
-        progressManager->RegisterProgress(std::make_shared<Progress_OptionRemovedViaGuessing>(mPivot, option));
-    }
+    GridProgressManager* progressManager = mParentGrid->ProgressManagerGet();
+    bool isValid = mChildNodes.at(nodeIndex)->IsValidGet();
     mNextNode = nodeIndex + 1;
 
-    std::set<unsigned int> mColdCells;
-    for (const auto& id : mHotCells)
+    if(isValid)
     {
-        unsigned short row = id / mGrid->SizeGet();
-        unsigned short col = id % mGrid->SizeGet();
-        SudokuCell* cell = mGrid->CellGet(row, col);
+        auto it = mEliminatedValues.begin();
+        auto endIt = mEliminatedValues.end();
+        while (it != endIt)
+        {
+            SudokuCell* cell = mBifurcationGrid->CellGet(it->first);
+            for (const auto& v : cell->OptionsGet())
+            {
+                it->second.erase(v);
+            }
 
-        const std::set<unsigned short>& options = cell->OptionsGet();
-        std::set<unsigned short> childrenOptions;
-        for(size_t i = 0; i < mNextNode; ++i)
-        {
-            const auto& child = mChildNodes.at(i);
-            if(child->IsValidGet())
+            if(it->second.size() == 0)
             {
-                const std::set<unsigned short>& opts = child->GridGet()->CellGet(row, col)->OptionsGet();
-                childrenOptions.insert(opts.begin(), opts.end());
+                it = mEliminatedValues.erase(it);
             }
-        }
-        bool isCold = true;
-        for (const auto& v : options)
-        {
-            if(childrenOptions.count(v) == 0)
+            else
             {
-                // for this cell, there is at least one option in the original node
-                // that is not in any of the child nodes
-                isCold = false;
-                break;
+                ++it;
             }
-        }
-        if(isCold)
-        {
-            mColdCells.insert(id);
-        }
-        else if(mNextNode == mChildNodes.size())
-        {
-            std::set<unsigned short> resultOptions = options;
-            for (const auto& v : childrenOptions)
-            {
-                if(auto it = resultOptions.find(v); it != resultOptions.end())
-                {
-                    resultOptions.erase(it);
-                }
-            }
-            progressManager->RegisterProgress(std::make_shared<Progress_ValueDisallowedByBifurcation>(mGrid->CellGet(row, col), std::move(resultOptions), mPivot));
         }
     }
-    for (const auto& id  : mColdCells)
+    else
     {
-        mHotCells.erase(mHotCells.find(id));
+        unsigned short option = mChildNodes.at(nodeIndex)->PivotValueGet();
+        progressManager->RegisterProgress(std::make_shared<Progress_OptionRemovedViaGuessing>(mParentGrid->CellGet(mPivot), option));
     }
-    if(mHotCells.size() == 0)
+
+    mChildNodes[nodeIndex]->Uninit();
+    if(mNextNode == mChildNodes.size())
     {
-        mNextNode = mChildNodes.size();
+        for (auto& eliminations : mEliminatedValues)
+        {
+            SudokuCell* cell = mParentGrid->CellGet(eliminations.first);
+            progressManager->RegisterProgress(std::make_shared<Progress_ValueDisallowedByBifurcation>(cell, std::move(eliminations.second), mParentGrid->CellGet(mPivot)));
+        }
     }
+    else
+    {
+        mChildNodes[mNextNode]->Init();
+    }
+
+
+//    if(mEliminatedValues.size() == 0)
+//    {
+//        mNextNode == mChildNodes.size();
+//    }
 }
 
-RandomGuessTreeNode::RandomGuessTreeNode(const SudokuGrid* grid, SudokuCell* pivotCell, unsigned short pivotValue, RandomGuessTreeRoot* parent, unsigned short index, BifurcationTechnique* technique):
+RandomGuessTreeNode::RandomGuessTreeNode(SudokuGrid* bifurcGrid, CellId pivot, unsigned short pivotValue, RandomGuessTreeRoot* parent, unsigned short index, BifurcationTechnique* technique):
     mIndex(index),
-    mGrid(std::make_unique<SudokuGrid>(grid)),
-    mRootGrid(grid),
+    mGrid(bifurcGrid),
     mParentNode(parent),
-    mPivotCell(pivotCell),
+    mPivot(pivot),
     mPivotValue(pivotValue),
     mIsNodeValid(true),
     mTechnique(technique)
 {
-    unsigned short row = pivotCell->RowGet();
-    unsigned short col = pivotCell->ColGet();
-    SudokuCell* pivotCellCopy = mGrid->CellGet(row, col);
-    pivotCellCopy->RemoveAllOtherOptions(pivotValue);
+}
 
-    size_t cellIndex = mTechnique->mCellOrder[pivotCell];
-    const auto& optionsMap = mTechnique->mOptionEliminationMatrix.at(cellIndex);
+void RandomGuessTreeNode::Init()
+{
+    mGrid->TakeSnapshot();
+    mGrid->CellGet(mPivot)->RemoveAllOtherOptions(mPivotValue);
+}
 
-    if(optionsMap.count(pivotValue) == 0)
-    {
-        return;
-    }
-
-    const auto& eliminationMap = optionsMap.at(pivotValue);
-    for (const auto& elimMapEntry : eliminationMap)
-    {
-        SudokuCell* cell = mTechnique->mCells.at(elimMapEntry.first);
-        const auto& options = elimMapEntry.second;
-        mGrid->CellGet(cell->RowGet(), cell->ColGet())->RemoveMultipleOptions(options);
-    }
+void RandomGuessTreeNode::Uninit()
+{
+    mGrid->RestoreSnapshot();
 }
 
 bool RandomGuessTreeNode::IsValidGet() const
 {
     return mIsNodeValid;
-}
-
-SudokuGrid *RandomGuessTreeNode::GridGet() const
-{
-    return mGrid.get();
 }
 
 unsigned short RandomGuessTreeNode::PivotValueGet() const
@@ -197,38 +168,5 @@ void RandomGuessTreeNode::NextStep()
     else
     {
         progressManager->NextStep();
-    }
-
-}
-
-void RandomGuessTreeNode::UpdateOptionEliminationMatrix() const
-{
-    size_t pivotCellIndex = mTechnique->mCellOrder.at(mPivotCell);
-    unsigned short gridSize = mRootGrid->SizeGet();
-    for (size_t i = 0; i < gridSize; i++)
-    {
-        for (size_t j = 0; j < gridSize; j++)
-        {
-            SudokuCell* rootCell = mRootGrid->CellGet(i, j);
-            SudokuCell* cell = mGrid->CellGet(i, j);
-            for (const auto& v : rootCell->OptionsGet())
-            {
-                if(!cell->HasGuess(v))
-                {
-                    size_t rootCellIndex = mTechnique->mCellOrder.at(rootCell);
-                    auto& optionsMap = mTechnique->mOptionEliminationMatrix.at(rootCellIndex);
-                    if(optionsMap.count(v) == 0)
-                    {
-                        optionsMap[v] = {};
-                    }
-                    auto& eliminationMap = optionsMap.at(v);
-                    if(eliminationMap.count(pivotCellIndex) == 0)
-                    {
-                        eliminationMap[pivotCellIndex] = {};
-                    }
-                    eliminationMap.at(pivotCellIndex).insert(mPivotValue);
-                }
-            }
-        }
     }
 }

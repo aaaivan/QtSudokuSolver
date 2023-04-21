@@ -20,6 +20,7 @@ class SudokuGrid
     std::vector<std::vector<CellUPtr>> mGrid;	// array of cells representing the grid
     RegionsManagerUPtr mRegionsManager;			// manages the subdivision of the grid into regions
     GridProgressManagerUPtr mProgressManager;	// notifies cells when some progress has been made
+    bool mHasSnapshort;
 
     SudokuSolverThread* mSolverThread;
 
@@ -86,6 +87,9 @@ public:
     /// </summary>
     void NotifyCellChanged(SudokuCell* cell) const;
     void NotifyCellChanged(unsigned int cellId) const;
+
+    void TakeSnapshot();
+    void RestoreSnapshot();
 
 };
 #endif // SUDOKU_GRID_H

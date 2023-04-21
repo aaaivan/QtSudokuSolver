@@ -7,21 +7,24 @@ class RandomGuessTreeRoot;
 class RandomGuessTreeNode;
 class BifurcationTechnique;
 
-typedef std::vector<std::map<unsigned short, std::map<size_t, std::set<unsigned short>>>> EliminationMatrix;
+typedef unsigned int CellId;
+typedef std::map<CellId, std::set<unsigned short>> Elimination_t;
+typedef std::map<CellId, std::map<unsigned short, Elimination_t>> EliminationMatrix;
 
 class RandomGuessTreeRoot
 {
-    SudokuGrid* const mGrid;
-    SudokuCell* const mPivot;
+    SudokuGrid* mParentGrid;
+    SudokuGrid* mBifurcationGrid;
+    CellId mPivot;
     unsigned short mNextNode;
     std::vector<std::unique_ptr<RandomGuessTreeNode>> mChildNodes;
-    std::set<unsigned int> mHotCells;
+    std::map<CellId, std::set<unsigned short>> mEliminatedValues;
     bool mFinished;
 
     BifurcationTechnique* mTechnique;
 
 public:
-    RandomGuessTreeRoot(SudokuGrid* grid, SudokuCell* pivot, BifurcationTechnique* technique);
+    RandomGuessTreeRoot(SudokuGrid* parentGrid, SudokuGrid* bifurcationGrid, CellId pivot, BifurcationTechnique* technique);
 
     bool HasFinished() const;
     void NextStep();
@@ -31,24 +34,21 @@ public:
 class RandomGuessTreeNode
 {
     const unsigned short mIndex;
-    std::unique_ptr<SudokuGrid> mGrid;
-    const SudokuGrid* mRootGrid;
+    SudokuGrid* mGrid;
     RandomGuessTreeRoot* const mParentNode;
-    SudokuCell* mPivotCell;
+    CellId mPivot;
     unsigned short mPivotValue;
     bool mIsNodeValid;
 
     BifurcationTechnique* mTechnique;
 public:
-    RandomGuessTreeNode(const SudokuGrid* grid, SudokuCell* pivotCell, unsigned short pivotValue, RandomGuessTreeRoot* parent, unsigned short index, BifurcationTechnique* technique);
+    RandomGuessTreeNode(SudokuGrid* bifurcGrid, CellId pivot, unsigned short pivotValue, RandomGuessTreeRoot* parent, unsigned short index, BifurcationTechnique* technique);
 
+    void Init();
+    void Uninit();
     bool IsValidGet() const;
-    SudokuGrid* GridGet() const;
     unsigned short PivotValueGet() const;
     void NextStep();
-
-private:
-    void UpdateOptionEliminationMatrix() const;
 };
 
 #endif // RANDOMGUESSTREENODE_H

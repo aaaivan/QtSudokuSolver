@@ -317,9 +317,9 @@ BifurcationTechnique::BifurcationTechnique(SudokuGrid *grid, ObservedComponent o
     SolvingTechnique(grid, TechniqueType::Bifurcation, observedComponent),
     mDepth(depth),
     mTargetDepth(maxDepth),
+    mBifurcationGrid(),
     mCells(),
-    mCellOrder(),
-    mOptionEliminationMatrix(),
+    //mOptionEliminationMatrix(),
     mCurrentIndex(0),
     mRoot()
 {
@@ -401,9 +401,9 @@ void BifurcationTechnique::Reset()
     {
         mTargetDepth = 1;
     }
+    mBifurcationGrid.reset();
     mCells.clear();
-    mCellOrder.clear();
-    mOptionEliminationMatrix.clear();
+    //mOptionEliminationMatrix.clear();
     mCurrentIndex = 0;
     mRoot.reset();
 }
@@ -425,25 +425,16 @@ void BifurcationTechnique::Init()
         }
     }
 
-    std::stable_sort(mCells.begin(), mCells.end(), [](SudokuCell* const &a, SudokuCell* const &b){ return a->OptionsGet().size() < b->OptionsGet().size(); });
-    for (unsigned int i = 0; i < mCells.size(); ++i)
+    std::stable_sort(mCells.begin(), mCells.end(), [](SudokuCell* const &a, SudokuCell* const &b)
     {
-        mCellOrder[mCells.at(i)] = i;
-    }
+        return a->OptionsGet().size() < b->OptionsGet().size();
+    });
 
-    mOptionEliminationMatrix.reserve(mCells.size());
-    for (unsigned int i = 0; i < mCells.size(); ++i)
-    {
-        mOptionEliminationMatrix.push_back({});
-        for (unsigned int j = 0; j < mCells.at(i)->OptionsGet().size(); ++j)
-        {
-            mOptionEliminationMatrix.back();
-        }
-    }
+    mBifurcationGrid = std::make_unique<SudokuGrid>(mGrid);
 }
 
 void BifurcationTechnique::CreateRootNode()
 {
     mRoot.reset();
-    mRoot = std::make_unique<RandomGuessTreeRoot>(mGrid, mCells.at(mCurrentIndex), this);
+    mRoot = std::make_unique<RandomGuessTreeRoot>(mGrid, mBifurcationGrid.get(), mCells[mCurrentIndex]->IdGet(), this);
 }

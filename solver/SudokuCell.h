@@ -19,12 +19,22 @@ private:
     std::set<unsigned short> mEliminationHints;	// options that have been ruled out manually by the user
     bool mIsGiven;								// whether th ecell is a given clue
     SudokuGrid* mParentGrid;					// pointer to the grid the cell belongs to
-
     std::string mName;
 
     friend class Progress_GivenCellAdded;
     friend class Progress_SingleOptionLeftInCell;
     friend class Progress_SingleCellForOption;
+
+    struct Snapshot
+    {
+        std::set<unsigned short> mViableOptions;
+        unsigned short mValue;
+        Snapshot(const std::set<unsigned short>& opt, const unsigned short& val):
+            mViableOptions(opt),
+            mValue(val)
+        {}
+    };
+    std::unique_ptr<Snapshot> mSnapshot;
 
 public:
 // Constructors
@@ -95,6 +105,9 @@ public:
     /// Creates a deep copy of the object
     /// </summary>
     SudokuCell* DeepCopy(SudokuGrid* parentGrid) const;
+    void TakeSnapshot();
+    void RestoreSnapshot();
+
 private:
     void ValueSet(unsigned short value);
 };

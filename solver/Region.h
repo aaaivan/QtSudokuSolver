@@ -33,6 +33,22 @@ protected:
 
     friend class RegionsManager;
 
+    struct Snapshot
+    {
+        std::set<unsigned short> mConfirmedValues;
+        std::set<unsigned short> mAllowedValues;
+        std::map<unsigned short, CellSet> mValueToCellMap;
+
+        Snapshot(const std::set<unsigned short>& confirmed,
+                 const std::set<unsigned short>& allowed,
+                 const std::map<unsigned short, CellSet>& map):
+            mConfirmedValues(confirmed),
+            mAllowedValues(allowed),
+            mValueToCellMap(map)
+        {}
+    };
+    std::unique_ptr<Snapshot> mSnapshot;
+
 public:
 // Constructors
 
@@ -93,6 +109,8 @@ public:
     /// clear all the cells in the region
     /// </summary>
     void Reset();
+    void TakeSnapshot();
+    void RestoreSnapshot();
 
 private:
     /// <summary>
