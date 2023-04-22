@@ -31,6 +31,8 @@ SolverContextMenu::SolverContextMenu(MainWindowContent* mainWindowContent, QWidg
     connect(mBruteForceSolver, &BruteForceSolverThread::CalculationStarted, this, &SolverContextMenu::OnCalculationStarted);
     connect(mBruteForceSolver, &BruteForceSolverThread::CalculationFinished, this, &SolverContextMenu::OnCalculationFinished);
     connect(mBruteForceSolver, &BruteForceSolverThread::NumberOfSolutionsComputed, this, &SolverContextMenu::OnSolutionsCounted);
+    connect(mLogicalSolver, &SudokuSolverThread::CalculationStarted, this, &SolverContextMenu::OnCalculationStarted);
+    connect(mLogicalSolver, &SudokuSolverThread::CalculationFinished, this, &SolverContextMenu::OnCalculationFinished);
     connect(mLogicalSolver, &SudokuSolverThread::NewLogicalStep, this, &SolverContextMenu::OnNewSolverMessage);
     connect(mLogicalSolver, &SudokuSolverThread::PuzzleHasNoSolution, this, &SolverContextMenu::OnNewSolverMessage);
     connect(mLogicalSolver, &SudokuSolverThread::SolverHasBeenReset, this, &SolverContextMenu::OnSolverReset);

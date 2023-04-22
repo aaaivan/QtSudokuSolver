@@ -179,6 +179,7 @@ void SudokuSolverThread::run()
         }
 
         // solve
+        emit CalculationStarted();
         while (!progressManager->HasFinished())
         {
             QMutexLocker locker(&mSolverMutex);
@@ -194,6 +195,7 @@ void SudokuSolverThread::run()
             }
             progressManager->NextStep();
         }
+        emit CalculationFinished();
 
         // we exited the solve loop. There can be two reasons:
         // 1- the solver has finished (sudoku solved or run out of techniques)

@@ -24,6 +24,8 @@ signals:
     void PuzzleHasNoSolution(QString message);
     void NewLogicalStep(QString message);
     void SolverHasBeenReset();
+    void CalculationStarted();
+    void CalculationFinished();
 
 protected:
     void run() override;
