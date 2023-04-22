@@ -8,7 +8,7 @@
 #include <iterator>
 #include <map>
 
-bool FishTechnique::IsFishValid(RegionList& definingRegion, const IntersectionMap& intersectionMap, RegionList& currentSet)
+bool FishTechnique::IsFishValid(RegionList& currentSet)
 {
     CellSet secondaryCells;
     CellSet cannibalCells;
@@ -16,7 +16,7 @@ bool FishTechnique::IsFishValid(RegionList& definingRegion, const IntersectionMa
     {
         for (const auto& c : r->CellsWithValueGet(mCurrentValue))
         {
-            if (!secondaryCells.insert(c).second && intersectionMap.count(c) > 0)
+            if (!secondaryCells.insert(c).second && mIntersectionMap.count(c) > 0)
             {
                 // the cells is in the defining set AND in more than one secondary set
                 cannibalCells.insert(c);
@@ -25,13 +25,13 @@ bool FishTechnique::IsFishValid(RegionList& definingRegion, const IntersectionMa
     }
 
     CellSet fins;
-    for (auto& entry : intersectionMap)
+    for (auto& c : mDefiningCells)
     {
-        if (secondaryCells.count(entry.first) == 0)
+        if (secondaryCells.count(c) == 0)
         {
             // this cell is in the defining set but not in the secondary set
             // therefore it is a fin.
-            fins.insert(entry.first);
+            fins.insert(c);
         }
     }
     if (fins.size() > 0)
@@ -56,26 +56,26 @@ bool FishTechnique::IsFishValid(RegionList& definingRegion, const IntersectionMa
         // remove from cellsSeeingFins all cells that are in the defining set
         if (cellsSeeingFins.size() > 0)
         {
-            for (auto& entry : intersectionMap)
+            for (auto& c : mDefiningCells)
             {
-                if (cellsSeeingFins.erase(entry.first) > 0)
+                if (cellsSeeingFins.erase(c) > 0)
                 {
                     // check whether the cell we are removing is a cannibal cell
-                    if (cannibalCells.count(entry.first) > 0)
+                    if (cannibalCells.count(c) > 0)
                     {
-                        cannibalCellsSeeingFins.insert(entry.first);
+                        cannibalCellsSeeingFins.insert(c);
                     }
                 }
             }
         }
         if (cannibalCellsSeeingFins.size() > 0)
         {
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_CannibalFinnedFish>(definingRegion, currentSet, std::move(fins), std::move(cellsSeeingFins), std::move(cannibalCellsSeeingFins), mCurrentValue));
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_CannibalFinnedFish>(mDefiningRegions, currentSet, std::move(fins), std::move(cellsSeeingFins), std::move(cannibalCellsSeeingFins), mCurrentValue));
             return true;
         }
         else if (cellsSeeingFins.size() > 0)
         {
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_FinnedFish>(definingRegion, currentSet, std::move(fins), std::move(cellsSeeingFins), mCurrentValue));
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_FinnedFish>(mDefiningRegions, currentSet, std::move(fins), std::move(cellsSeeingFins), mCurrentValue));
             return true;
         }
     }
@@ -85,33 +85,21 @@ bool FishTechnique::IsFishValid(RegionList& definingRegion, const IntersectionMa
         // and therefore we have a legitimate fish. Cannibal cells can be checked now.
         if (cannibalCells.size() > 0)
         {
-            CellSet definingCells;
-            for (const auto& entry : intersectionMap)
-            {
-                definingCells.insert(entry.first);
-            }
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_CannibalFish>(definingRegion, std::move(definingCells), std::move(currentSet), std::move(cannibalCells), mCurrentValue));
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_CannibalFish>(mDefiningRegions, mDefiningCells, std::move(currentSet), std::move(cannibalCells), mCurrentValue));
             return true;
         }
-        else if (secondaryCells.size() > intersectionMap.size())
+        else if (secondaryCells.size() > mDefiningCells.size())
         {
             // is there at least one cell in the secondary set that is not in the defining set?
             // if not, this fish is pointless as it would not lead to any elimination
-            CellSet definingCells;
-            for (const auto& entry : intersectionMap)
-            {
-                definingCells.insert(entry.first);
-            }
-
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_Fish>(definingRegion, std::move(definingCells), std::move(currentSet), mCurrentValue));
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_Fish>(mDefiningRegions, mDefiningCells, std::move(currentSet), mCurrentValue));
             return true;
         }
     }
     return false;
 }
 
-bool FishTechnique::SearchSecondaryFishRegionInner(RegionList& definingRegion, const IntersectionMap& intersectionMap,
-    IntersectionMap::const_iterator& mapIt, RegionList& currentSet,
+bool FishTechnique::SearchSecondaryFishRegionInner(CellList::const_iterator& cellIt, RegionList& currentSet,
     CellList& fins, RegionSet& finsRegions, CellSet& cellsSeeingFins, bool& impossible)
 {
     if (impossible) // stop searching and notify the progress manager
@@ -120,16 +108,16 @@ bool FishTechnique::SearchSecondaryFishRegionInner(RegionList& definingRegion, c
     }
     else if (currentSet.size() == mCurrentSize)
     {
-        return IsFishValid(definingRegion, intersectionMap, currentSet);
+        return IsFishValid(currentSet);
     }
-    else if (mapIt != intersectionMap.end())
+    else if (cellIt != mDefiningCells.end())
     {
         // check whether the current cell pointed at by mapIt is included in one of the regions
         // that have already been added to the secondary set. If so, move to the next cell.
         bool prune = false;
         for (Region* const& r : currentSet)
         {
-            if (mapIt->second.count(r) > 0)
+            if (mIntersectionMap.at(*cellIt).count(r) > 0)
             {
                 prune = true;
                 break;
@@ -137,14 +125,14 @@ bool FishTechnique::SearchSecondaryFishRegionInner(RegionList& definingRegion, c
         }
         if (prune)
         {
-            bool result = SearchSecondaryFishRegionInner(definingRegion, intersectionMap, ++mapIt, currentSet, fins, finsRegions, cellsSeeingFins, impossible);
-            --mapIt;
+            bool result = SearchSecondaryFishRegionInner(++cellIt, currentSet, fins, finsRegions, cellsSeeingFins, impossible);
+            --cellIt;
             return result;
         }
         else
         {
             // try and add each region intersecting the current cell to the secondary set
-            for (Region* r : mapIt->second)
+            for (Region* r : mIntersectionMap.at(*cellIt))
             {
                 if (fins.size() > 0)
                 {
@@ -165,8 +153,8 @@ bool FishTechnique::SearchSecondaryFishRegionInner(RegionList& definingRegion, c
                 }
 
                 currentSet.push_back(r);
-                bool result = SearchSecondaryFishRegionInner(definingRegion, intersectionMap, ++mapIt, currentSet, fins, finsRegions, cellsSeeingFins, impossible);
-                --mapIt;
+                bool result = SearchSecondaryFishRegionInner(++cellIt, currentSet, fins, finsRegions, cellsSeeingFins, impossible);
+                --cellIt;
 
                 if (result)
                 {
@@ -179,34 +167,36 @@ bool FishTechnique::SearchSecondaryFishRegionInner(RegionList& definingRegion, c
 
             // we could not find a fish containing the cell pointed at by mapIt->first
             // keep going to find out whether it can be a fin
-            fins.push_back(mapIt->first);
+            fins.push_back(*cellIt);
 
             CellSet tempCellsSeeingFins = cellsSeeingFins;
             mGrid->RegionsManagerGet()->FindConnectedCellsWithValue(fins, cellsSeeingFins, mCurrentValue);
             if (cellsSeeingFins.empty()) return false;
 
             RegionSet tempFinsRegions = finsRegions;
-            finsRegions.insert(mapIt->second.begin(), mapIt->second.end());
+            finsRegions.insert(mIntersectionMap.at(*cellIt).begin(), mIntersectionMap.at(*cellIt).end());
 
-            bool result = SearchSecondaryFishRegionInner(definingRegion, intersectionMap, ++mapIt, currentSet, fins, finsRegions, cellsSeeingFins, impossible);
+            bool result = SearchSecondaryFishRegionInner(++cellIt, currentSet, fins, finsRegions, cellsSeeingFins, impossible);
 
             // backtrack
-            --mapIt;
+            --cellIt;
             finsRegions = tempFinsRegions;
             cellsSeeingFins = tempCellsSeeingFins;
             fins.pop_back();
             return result;
         }
     }
+
     return false;
 }
 
 bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
 {
-    RegionList definingSet;
+    mDefiningRegions.clear();
+    mDefiningCells.clear();
+    mIntersectionMap.clear();
 
-    // The following map is used to map each fishable cell to the secondary regions containg it
-    IntersectionMap intersectionMapCells;
+
     // The following map is used to map each region in the defining set to the secondary regions who share at least a fish cell
     std::map<Region*, RegionSet> intersectionMapRegions;
 
@@ -214,26 +204,27 @@ bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
     // None of these cell can be shared between two or more regions of the defining set
     for (const auto& rIt : *mCurrentSet)
     {
-        definingSet.push_back(*rIt);
+        mDefiningRegions.push_back(*rIt);
         for (SudokuCell* const& c : (*rIt)->CellsWithValueGet(mCurrentValue))
         {
             // the intersection between any two regions in the defining set
             // cannot include any cell that can accomodate value.
-            if (intersectionMapCells.count(c) > 0)
+            if (mIntersectionMap.count(c) > 0)
             {
                 return false;
             }
             else
             {
-                intersectionMapCells[c] = mGrid->RegionsManagerGet()->RegionsWithCellGet(c);
+                mDefiningCells.push_back(c);
+                mIntersectionMap[c] = mGrid->RegionsManagerGet()->RegionsWithCellGet(c);
                 // regions in the defining set can't be in the secondary set
                 for (auto& r : *mCurrentSet)
                 {
-                    intersectionMapCells.at(c).erase(*r);
+                    mIntersectionMap.at(c).erase(*r);
                 }
 
                 // update the map
-                for (Region* const& secReg : intersectionMapCells.at(c))
+                for (Region* const& secReg : mIntersectionMap.at(c))
                 {
                     if (intersectionMapRegions.count(secReg) == 0)
                     {
@@ -244,6 +235,12 @@ bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
             }
         }
     }
+
+    mDefiningCells.sort([&](const auto& a, const auto &b)
+    {
+        return mIntersectionMap.at(a).size() < mIntersectionMap.at(b).size();
+    });
+
     RegionSet regionsToRemove;
     // we want to keep only the secondary regions that intersect two or more defining regions
     for (const auto& secReg : intersectionMapRegions)
@@ -255,7 +252,7 @@ bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
     }
     if (regionsToRemove.size() > 0)
     {
-        for (auto& defCell : intersectionMapCells)
+        for (auto& defCell : mIntersectionMap)
         {
             for (Region* const& r : regionsToRemove)
             {
@@ -265,7 +262,7 @@ bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
     }
 
     // Value can go in too many cells to make it possible to find a fish
-    if (intersectionMapCells.size() >= mGrid->SizeGet() * mCurrentSize)
+    if (mDefiningCells.size() >= mGrid->SizeGet() * mCurrentSize)
     {
         return false;
     }
@@ -274,9 +271,9 @@ bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
     CellList fins;
     RegionSet finsRegions;
     CellSet cellsSeeingFins;
-    auto mapIt = intersectionMapCells.cbegin();
+    auto mapIt = mDefiningCells.cbegin();
     // searh for a secondary set that incorporates all the fish cells
-    return SearchSecondaryFishRegionInner(definingSet, intersectionMapCells, mapIt, outSecondarySet, fins, finsRegions, cellsSeeingFins, impossible);
+    return SearchSecondaryFishRegionInner(mapIt, outSecondarySet, fins, finsRegions, cellsSeeingFins, impossible);
 }
 
 void FishTechnique::GetPossibeDefiningRegionsInner(std::list<DefininfSet>& definingSets, RegListIt regIt, DefininfSet& nextSet)

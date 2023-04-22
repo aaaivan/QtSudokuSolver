@@ -169,10 +169,10 @@ protected:
     RegionList mSecondaryRegions;
     unsigned short mValue;
 public:
-    Progress_Fish(RegionList& definingRegions, CellSet&& definingCells, RegionList&& secondaryRegions, unsigned short value) :
+    Progress_Fish(RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, unsigned short value) :
         Progress(ProgressType::FishFound),
         mDefiningRegions(definingRegions),
-        mDefiningCells(definingCells),
+        mDefiningCells(definingCells.begin(), definingCells.end()),
         mSecondaryRegions(secondaryRegions),
         mValue(value)
     {}
@@ -184,7 +184,7 @@ class Progress_CannibalFish : public Progress_Fish
 {
     CellSet mCannibalCells;
 public:
-    Progress_CannibalFish(RegionList& definingRegions, CellSet&& definingCells, RegionList&& secondaryRegions, CellSet&& cannibalCells, unsigned short value) :
+    Progress_CannibalFish(RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, CellSet&& cannibalCells, unsigned short value) :
         Progress_Fish(definingRegions, std::move(definingCells), std::move(secondaryRegions), value),
         mCannibalCells(cannibalCells)
     {

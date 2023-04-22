@@ -102,6 +102,10 @@ class FishTechnique : public SolvingTechnique
     std::list<DefininfSet> mDefiningSets;
     std::list<DefininfSet>::iterator mCurrentSet;
 
+    RegionList mDefiningRegions;
+    CellList mDefiningCells;
+    IntersectionMap mIntersectionMap; // The following map is used to map each fishable cell to the secondary regions containg it
+
 public:
     FishTechnique(SudokuGrid* grid, ObservedComponent observedComponent);
 
@@ -118,10 +122,9 @@ public:
     void GetPossibeDefiningRegions();
     void GetPossibeDefiningRegionsInner(std::list<DefininfSet>& definingSets, RegListIt regIt, DefininfSet& nextSet);
     bool SearchSecondaryFishRegion(bool& impossible);
-    bool SearchSecondaryFishRegionInner(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap,
-        std::map<SudokuCell*, RegionSet>::const_iterator& mapIt, RegionList& currentSet,
+    bool SearchSecondaryFishRegionInner(CellList::const_iterator& cellIt, RegionList& currentSet,
         CellList& fins, RegionSet& finsRegions, CellSet& cellsSeeingFins, bool& impossible);
-    bool IsFishValid(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap, RegionList& currentSet);
+    bool IsFishValid(RegionList& currentSet);
 };
 
 class BifurcationTechnique : public SolvingTechnique
