@@ -40,6 +40,7 @@ SudokuSolverThread::~SudokuSolverThread()
 void SudokuSolverThread::Init()
 {
     mGrid = std::make_unique<SudokuGrid>(mPuzzleData.mSize, this);
+    mGrid->ProgressManagerGet()->TechniqueActiveSet(TechniqueType::Fish, false);
     mBruteForceSolver->Init(mGrid.get(), &mSolverMutex);
 }
 
@@ -195,6 +196,7 @@ void SudokuSolverThread::run()
             }
             progressManager->NextStep();
         }
+        mGrid->ProgressManagerGet()->TechniqueActiveSet(TechniqueType::Fish, false);
         emit CalculationFinished();
 
         // we exited the solve loop. There can be two reasons:
@@ -335,8 +337,8 @@ void SudokuSolverThread::NotifyImpossiblePuzzle(std::string message)
 
 void SudokuSolverThread::NotifyLogicalDeduction(std::string message)
 {
-
     emit NewLogicalStep(QString(message.c_str()));
+    QMutexLocker locker(&mInputMutex);
     if(mStep)
     {
         mStep = false;
@@ -383,6 +385,7 @@ void SudokuSolverThread::TakeStep()
     {
         mStep = true;
         mPaused = false;
+        mGrid->ProgressManagerGet()->TechniqueActiveSet(TechniqueType::Fish, true);
         if (!isRunning())
         {
             start(HighestPriority);

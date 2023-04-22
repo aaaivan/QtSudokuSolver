@@ -9,6 +9,7 @@ GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mSudokuGrid(sudoku),
     mProgressQueue(),
     mTechniques(static_cast<size_t>(TechniqueType::MAX_TECHNIQUES)),
+    mTechniqueActive(static_cast<size_t>(TechniqueType::MAX_TECHNIQUES), true),
     mCurrentTechnique(static_cast<TechniqueType>(0)),
     mFinished(false),
     mAbort(false)
@@ -164,11 +165,21 @@ void GridProgressManager::Abort()
     mFinished = true;
 }
 
+void GridProgressManager::TechniqueActiveSet(TechniqueType t, bool enable)
+{
+    mTechniqueActive[static_cast<size_t>(t)] = enable;
+}
+
 void GridProgressManager::NextTechnique()
 {
     size_t index = static_cast<size_t>(mCurrentTechnique);
-    mTechniques.at(index)->NextStep();
-    if (mTechniques.at(index)->HasFinished())
+    if(mTechniqueActive[index])
+    {
+        mTechniques.at(index)->NextStep();
+    }
+
+    if (mTechniques.at(index)->HasFinished() ||
+        !mTechniqueActive[index])
     {
         ++index;
         mCurrentTechnique = static_cast<TechniqueType>(index);

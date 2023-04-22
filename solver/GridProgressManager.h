@@ -18,6 +18,7 @@ class GridProgressManager
     std::queue<std::shared_ptr<Progress>> mHighPriorityProgressQueue;
 
     std::vector<std::unique_ptr<SolvingTechnique>> mTechniques;
+    std::vector<bool> mTechniqueActive;
     TechniqueType mCurrentTechnique;
     bool mFinished;
     bool mAbort;
@@ -54,6 +55,11 @@ public:
     /// puzzle is impossible.
     /// </summary>
     void Abort();
+
+    /// <summary>
+    /// Enable/disable a technique
+    /// </summary>
+    void TechniqueActiveSet(TechniqueType t, bool enable);
 private:
     void NextTechnique();
 };
