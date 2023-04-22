@@ -8,8 +8,6 @@
 #include <iterator>
 #include <map>
 
-typedef std::map<SudokuCell*, RegionSet> IntersectionMap;
-
 bool FishTechnique::IsFishValid(RegionList& definingRegion, const IntersectionMap& intersectionMap, RegionList& currentSet)
 {
     CellSet secondaryCells;
@@ -203,9 +201,9 @@ bool FishTechnique::SearchSecondaryFishRegionInner(RegionList& definingRegion, c
     return false;
 }
 
-bool FishTechnique::SearchSecondaryFishRegion(RegionList& definingSet, bool& impossible)
+bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
 {
-    RegionList outSecondarySet;
+    RegionList definingSet;
 
     // The following map is used to map each fishable cell to the secondary regions containg it
     IntersectionMap intersectionMapCells;
@@ -213,25 +211,25 @@ bool FishTechnique::SearchSecondaryFishRegion(RegionList& definingSet, bool& imp
     std::map<Region*, RegionSet> intersectionMapRegions;
 
     // Find all the cells in the defining set that can accomodate value.
-    // None of these cell can be shared between two or more regions of the definig set
-    for (Region* const &r : definingSet)
+    // None of these cell can be shared between two or more regions of the defining set
+    for (const auto& rIt : *mCurrentSet)
     {
-        for (SudokuCell* const& c : r->CellsWithValueGet(mCurrentValue))
+        definingSet.push_back(*rIt);
+        for (SudokuCell* const& c : (*rIt)->CellsWithValueGet(mCurrentValue))
         {
             // the intersection between any two regions in the defining set
             // cannot include any cell that can accomodate value.
             if (intersectionMapCells.count(c) > 0)
             {
                 return false;
-                // TODO check for endo fins
             }
             else
             {
                 intersectionMapCells[c] = mGrid->RegionsManagerGet()->RegionsWithCellGet(c);
                 // regions in the defining set can't be in the secondary set
-                for (Region* r : definingSet)
+                for (auto& r : *mCurrentSet)
                 {
-                    intersectionMapCells.at(c).erase(r);
+                    intersectionMapCells.at(c).erase(*r);
                 }
 
                 // update the map
@@ -241,7 +239,7 @@ bool FishTechnique::SearchSecondaryFishRegion(RegionList& definingSet, bool& imp
                     {
                         intersectionMapRegions[secReg] = RegionSet();
                     }
-                    intersectionMapRegions.at(secReg).insert(r);
+                    intersectionMapRegions.at(secReg).insert(*rIt);
                 }
             }
         }
@@ -267,81 +265,83 @@ bool FishTechnique::SearchSecondaryFishRegion(RegionList& definingSet, bool& imp
     }
 
     // Value can go in too many cells to make it possible to find a fish
-    if (intersectionMapCells.size() >= mGrid->SizeGet() * definingSet.size())
+    if (intersectionMapCells.size() >= mGrid->SizeGet() * mCurrentSize)
     {
         return false;
     }
 
+    RegionList outSecondarySet;
     CellList fins;
     RegionSet finsRegions;
-    CellSet cellsSeeinfFins;
+    CellSet cellsSeeingFins;
     auto mapIt = intersectionMapCells.cbegin();
     // searh for a secondary set that incorporates all the fish cells
-    return SearchSecondaryFishRegionInner(definingSet, intersectionMapCells, mapIt, outSecondarySet, fins, finsRegions, cellsSeeinfFins, impossible);
+    return SearchSecondaryFishRegionInner(definingSet, intersectionMapCells, mapIt, outSecondarySet, fins, finsRegions, cellsSeeingFins, impossible);
 }
 
-void FishTechnique::GetPossibeDefiningRegionsInner(std::list<RegionList>& definingSets, const unsigned short size, RegListIt regIt, RegionList& nextSet)
+void FishTechnique::GetPossibeDefiningRegionsInner(std::list<DefininfSet>& definingSets, RegListIt regIt, DefininfSet& nextSet)
 {
-    if (nextSet.size() == size) // the defining set has the desired size. We are done
+    if (nextSet.size() == mCurrentSize) // the defining set has the desired size. We are done
     {
         definingSets.emplace_back(nextSet.begin(), nextSet.end());
     }
     else
     {
+        std::set<SudokuCell*> cells;
+        for (const auto& r : nextSet)
+        {
+            const auto& c = (*r)->CellsWithValueGet(mCurrentValue);
+            cells.insert(c.begin(), c.end());
+        }
         // make sure the number of regions that have yet to be processed is at least as big
         // as the number of regions missing to reach the desired set size
-        while (std::distance(regIt, mAvailableRegions.end()) >= (int)size - (int)nextSet.size())
+        while (std::distance(regIt, mAvailableRegions.end()) >= (int)mCurrentSize - (int)nextSet.size())
         {
-            nextSet.push_back(*regIt);
+            bool prune = false;
+            for (const auto& c : (*regIt)->CellsWithValueGet(mCurrentValue))
+            {
+                if(cells.count(c) > 0)
+                {
+                    prune = true;
+                    break;
+                }
+            }
+            if(prune)
+            {
+                ++regIt;
+                continue;
+            }
+            nextSet.push_back(regIt);
             ++regIt;
-            GetPossibeDefiningRegionsInner(definingSets, size, regIt, nextSet);
+            GetPossibeDefiningRegionsInner(definingSets, regIt, nextSet);
             nextSet.pop_back();
         }
     }
 }
 
-void FishTechnique::GetPossibeDefiningRegions(Region* includeRegion, const RegListIt& startIt, std::list<RegionList>& definingSets, unsigned short size)
+void FishTechnique::GetPossibeDefiningRegions()
 {
-    // At this point, allowedRegions contains a list of all Regions that could potentially be part
-    // of the defining set of a fish on "value". Next step is to get all the combinations of size "size".
-
-    RegionList newSet;
-    newSet.emplace_back(includeRegion);
-    // Recursively get all possible defining sets
-    GetPossibeDefiningRegionsInner(definingSets, size, startIt, newSet);
+    std::list<DefininfSet> newDefiningSets;
+    for (auto& oldSet : mDefiningSets)
+    {
+        RegListIt startIt = oldSet.back();
+        // Recursively get all possible defining sets
+        GetPossibeDefiningRegionsInner(newDefiningSets, ++startIt, oldSet);
+    }
+    mDefiningSets.clear();
+    mDefiningSets = std::move(newDefiningSets);
 }
 
 void FishTechnique::SearchFish()
 {
-    Region* currentRegion = *mCurrentRegion;
-    mCurrentRegion++;
-
-    // "value" need to be a confirmed value in each region of the defining set.
-    // This is to ensure that a defining set of size N contains exactly N copies of value.
-    if (currentRegion->HasConfirmedValue(mCurrentValue))
+    bool impossible = false;
+    if (SearchSecondaryFishRegion(impossible))
     {
-        std::list<RegionList> definingSets;
-
-        // Get all possible defining regions of size "size" and containing the region r
-        GetPossibeDefiningRegions(currentRegion, mCurrentRegion, definingSets, mCurrentSize);
-
-        // iterate over the possible defining sets and check whether a secodary set forming a fish exists
-        for (auto& definingSet : definingSets)
-        {
-            bool impossible = false;
-            if (SearchSecondaryFishRegion(definingSet, impossible))
-            {
-                return;
-            }
-            else if (impossible)
-            {
-                return;
-            }
-        }
+        return;
     }
-    else
+    else if (impossible)
     {
-        mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::Fish, currentRegion, nullptr, mCurrentValue);
+        return;
     }
 }
 

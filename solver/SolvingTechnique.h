@@ -89,16 +89,18 @@ public:
 };
 
 typedef std::list<Region*>::iterator RegListIt;
-typedef std::list<RegListIt> DefiningSet;
+typedef std::list<RegListIt> DefininfSet;
+typedef std::map<SudokuCell*, RegionSet> IntersectionMap;
 class FishTechnique : public SolvingTechnique
 {
     unsigned short mCurrentValue;
     RegionList mAvailableRegions;
-    RegionList::iterator mCurrentRegion;
     size_t mRegionsToSearchCount;
-    size_t mCurrentRegionIndex;
     const unsigned short mMinSize;
     unsigned short mCurrentSize;
+
+    std::list<DefininfSet> mDefiningSets;
+    std::list<DefininfSet>::iterator mCurrentSet;
 
 public:
     FishTechnique(SudokuGrid* grid, ObservedComponent observedComponent);
@@ -113,9 +115,9 @@ public:
     /// Returns true if any progress was maden (either the technique was successful or the puzzle was found to be impossible)
     /// </summary>
     void SearchFish();
-    void GetPossibeDefiningRegions(Region* includeRegion, const RegListIt& startIt, std::list<RegionList>& definingSets, unsigned short size);
-    void GetPossibeDefiningRegionsInner(std::list<RegionList>& definingSets, const unsigned short size, RegListIt regIt, RegionList& nextSet);
-    bool SearchSecondaryFishRegion(RegionList& definingSet, bool& impossible);
+    void GetPossibeDefiningRegions();
+    void GetPossibeDefiningRegionsInner(std::list<DefininfSet>& definingSets, RegListIt regIt, DefininfSet& nextSet);
+    bool SearchSecondaryFishRegion(bool& impossible);
     bool SearchSecondaryFishRegionInner(RegionList& definingRegion, const std::map<SudokuCell*, RegionSet>& intersectionMap,
         std::map<SudokuCell*, RegionSet>::const_iterator& mapIt, RegionList& currentSet,
         CellList& fins, RegionSet& finsRegions, CellSet& cellsSeeingFins, bool& impossible);

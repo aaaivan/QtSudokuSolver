@@ -199,11 +199,11 @@ FishTechnique::FishTechnique(SudokuGrid* regionsManager, ObservedComponent obser
     SolvingTechnique(regionsManager, TechniqueType::Fish, observedComponent),
     mCurrentValue(0),
     mAvailableRegions(),
-    mCurrentRegion(),
     mRegionsToSearchCount(0),
-    mCurrentRegionIndex(0),
     mMinSize(2),
-    mCurrentSize(mMinSize)
+    mCurrentSize(mMinSize),
+    mDefiningSets(),
+    mCurrentSet()
 {
     mFinished = (mGrid->ParentNodeGet() != nullptr);
 }
@@ -225,28 +225,29 @@ void FishTechnique::NextStep()
     if(mCurrentSize == 0)
     {
         mCurrentSize = mMinSize;
-        mCurrentRegionIndex = mRegionsToSearchCount;
+        GetPossibeDefiningRegions();
+        mCurrentSet = mDefiningSets.end();
     }
 
-    if(mCurrentRegionIndex == mRegionsToSearchCount)
+    if(mCurrentSet == mDefiningSets.end())
     {
         if(mRegionsToSearchCount > 0)
         {
-            mCurrentRegionIndex = 0;
-            mCurrentRegion = mAvailableRegions.begin();
+            mCurrentSet = mDefiningSets.begin();
         }
     }
 
     if(mCurrentValue <= mGrid->SizeGet())
     {
-        if(mCurrentRegionIndex < mRegionsToSearchCount && mCurrentSize <= mGrid->SizeGet() / 2)
+        if(mCurrentSet != mDefiningSets.end() && mCurrentSize <= mGrid->SizeGet() / 2)
         {
             SearchFish();
-            ++mCurrentRegionIndex;
+            ++mCurrentSet;
 
-            if(mCurrentRegionIndex == mRegionsToSearchCount)
+            if(mCurrentSet == mDefiningSets.end())
             {
                 ++mCurrentSize;
+                GetPossibeDefiningRegions();
             }
         }
         else
@@ -257,6 +258,10 @@ void FishTechnique::NextStep()
             if(mCurrentValue <= mGrid->SizeGet())
             {
                 UpdateRegions();
+            }
+            else
+            {
+                mFinished = true;
             }
         }
     }
@@ -272,13 +277,15 @@ void FishTechnique::Reset()
     mCurrentSize = 0;
     mFinished = (mGrid->ParentNodeGet() != nullptr);
     mRegionsToSearchCount = 0;
-    mRegionsToSearchCount = 0;
+    mAvailableRegions.clear();
+    mDefiningSets.clear();
 }
 
 void FishTechnique::UpdateRegions()
 {
     const RegionSet& regions = mGrid->RegionsManagerGet()->RegionsGet();
     mAvailableRegions.clear();
+    mDefiningSets.clear();
     mRegionsToSearchCount = 0;
 
     for (Region* r : regions)
@@ -286,9 +293,11 @@ void FishTechnique::UpdateRegions()
         bool willBeSearched = false;
         if (r->UpdateManagerGet()->IsRegionReadyForTechnique(mType, mCurrentValue))
         {
-            if(r->CellsWithValueGet(mCurrentValue).size() < mGrid->SizeGet())
+            if(r->HasConfirmedValue(mCurrentValue) &&
+               r->CellsWithValueGet(mCurrentValue).size() < mGrid->SizeGet())
             {
                 mAvailableRegions.push_front(r);
+                mDefiningSets.push_front({mAvailableRegions.begin()});
                 willBeSearched = true;
                 mRegionsToSearchCount++;
             }
