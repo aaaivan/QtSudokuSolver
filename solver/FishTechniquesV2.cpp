@@ -8,7 +8,7 @@
 #include <iterator>
 #include <map>
 
-bool FishTechnique::IsFishValid(RegionList& currentSet)
+bool FishTechnique::IsFishValid(RegionList& currentSet, CellList& fins, const CellSet& _cellsSeeingFins)
 {
     CellSet secondaryCells;
     CellSet cannibalCells;
@@ -24,58 +24,27 @@ bool FishTechnique::IsFishValid(RegionList& currentSet)
         }
     }
 
-    CellSet fins;
-    for (auto& c : mDefiningCells)
-    {
-        if (secondaryCells.count(c) == 0)
-        {
-            // this cell is in the defining set but not in the secondary set
-            // therefore it is a fin.
-            fins.insert(c);
-        }
-    }
     if (fins.size() > 0)
     {
         // not all cells in the defining set are included in the secondary set
-        CellSet cellsSeeingFins;
-        CellSet cannibalCellsSeeingFins;
+        CellSet secondaryCellsSeeingFins = _cellsSeeingFins;
 
-        mGrid->RegionsManagerGet()->FindConnectedCellsWithValue(fins, cellsSeeingFins, mCurrentValue);
         // remove from cellsSeeingFins all cells that are NOT in the secondary set
-        for (auto it = cellsSeeingFins.begin(), end = cellsSeeingFins.end(); it != end;)
+        for (auto it = secondaryCellsSeeingFins.begin(), end = secondaryCellsSeeingFins.end(); it != end;)
         {
             if (secondaryCells.count(*it) == 0)
             {
-                it = cellsSeeingFins.erase(it);
+                it = secondaryCellsSeeingFins.erase(it);
             }
             else
             {
                 ++it;
             }
         }
-        // remove from cellsSeeingFins all cells that are in the defining set
-        if (cellsSeeingFins.size() > 0)
+
+        if (secondaryCellsSeeingFins.size() > 0)
         {
-            for (auto& c : mDefiningCells)
-            {
-                if (cellsSeeingFins.erase(c) > 0)
-                {
-                    // check whether the cell we are removing is a cannibal cell
-                    if (cannibalCells.count(c) > 0)
-                    {
-                        cannibalCellsSeeingFins.insert(c);
-                    }
-                }
-            }
-        }
-        if (cannibalCellsSeeingFins.size() > 0)
-        {
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_CannibalFinnedFish>(mDefiningRegions, currentSet, std::move(fins), std::move(cellsSeeingFins), std::move(cannibalCellsSeeingFins), mCurrentValue));
-            return true;
-        }
-        else if (cellsSeeingFins.size() > 0)
-        {
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_FinnedFish>(mDefiningRegions, currentSet, std::move(fins), std::move(cellsSeeingFins), mCurrentValue));
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_FinnedFish>(mDefiningRegions, std::move(currentSet), std::move(fins), std::move(secondaryCellsSeeingFins), mCurrentValue));
             return true;
         }
     }
@@ -106,9 +75,9 @@ bool FishTechnique::SearchSecondaryFishRegionInner(CellList::const_iterator& cel
     {
         return false;
     }
-    else if (currentSet.size() == mCurrentSize)
+    else if (currentSet.size() > mCurrentSize)
     {
-        return IsFishValid(currentSet);
+        return false;
     }
     else if (cellIt != mDefiningCells.end())
     {
@@ -172,6 +141,13 @@ bool FishTechnique::SearchSecondaryFishRegionInner(CellList::const_iterator& cel
             CellSet tempCellsSeeingFins = cellsSeeingFins;
             mGrid->RegionsManagerGet()->FindConnectedCellsWithValue(fins, cellsSeeingFins, mCurrentValue);
             if (cellsSeeingFins.empty()) return false;
+            for (const auto& dc : mDefiningCells)
+            {
+                // remove the defining cells from the cells seeing the fins
+                cellsSeeingFins.erase(dc);
+            }
+            if (cellsSeeingFins.empty()) return false;
+
 
             RegionSet tempFinsRegions = finsRegions;
             finsRegions.insert(mIntersectionMap.at(*cellIt).begin(), mIntersectionMap.at(*cellIt).end());
@@ -186,11 +162,21 @@ bool FishTechnique::SearchSecondaryFishRegionInner(CellList::const_iterator& cel
             return result;
         }
     }
+    else if (currentSet.size() == mCurrentSize)
+    {
+        return IsFishValid(currentSet, fins, cellsSeeingFins);
+    }
+    else if(fins.size() == 0)
+    {
+        impossible = true;
+        mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_Fish>(mDefiningRegions, std::move(currentSet), mCurrentValue, mGrid));
+        return false;
+    }
 
     return false;
 }
 
-bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
+bool FishTechnique::SearchSecondaryFishRegion()
 {
     mDefiningRegions.clear();
     mDefiningCells.clear();
@@ -272,6 +258,7 @@ bool FishTechnique::SearchSecondaryFishRegion(bool& impossible)
     RegionSet finsRegions;
     CellSet cellsSeeingFins;
     auto mapIt = mDefiningCells.cbegin();
+    bool impossible = false;
     // searh for a secondary set that incorporates all the fish cells
     return SearchSecondaryFishRegionInner(mapIt, outSecondarySet, fins, finsRegions, cellsSeeingFins, impossible);
 }
@@ -331,15 +318,7 @@ void FishTechnique::GetPossibeDefiningRegions()
 
 void FishTechnique::SearchFish()
 {
-    bool impossible = false;
-    if (SearchSecondaryFishRegion(impossible))
-    {
-        return;
-    }
-    else if (impossible)
-    {
-        return;
-    }
+    SearchSecondaryFishRegion();
 }
 
 void FishTechnique::NotifyFailure()

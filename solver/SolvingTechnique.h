@@ -121,10 +121,10 @@ public:
     void SearchFish();
     void GetPossibeDefiningRegions();
     void GetPossibeDefiningRegionsInner(std::list<DefininfSet>& definingSets, RegListIt regIt, DefininfSet& nextSet);
-    bool SearchSecondaryFishRegion(bool& impossible);
+    bool SearchSecondaryFishRegion();
     bool SearchSecondaryFishRegionInner(CellList::const_iterator& cellIt, RegionList& currentSet,
         CellList& fins, RegionSet& finsRegions, CellSet& cellsSeeingFins, bool& impossible);
-    bool IsFishValid(RegionList& currentSet);
+    bool IsFishValid(RegionList& currentSet, CellList& fins, const CellSet& cellsSeeingFins);
 };
 
 class BifurcationTechnique : public SolvingTechnique

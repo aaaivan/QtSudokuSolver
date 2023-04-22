@@ -169,7 +169,7 @@ protected:
     RegionList mSecondaryRegions;
     unsigned short mValue;
 public:
-    Progress_Fish(RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, unsigned short value) :
+    Progress_Fish(const RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, unsigned short value) :
         Progress(ProgressType::FishFound),
         mDefiningRegions(definingRegions),
         mDefiningCells(definingCells.begin(), definingCells.end()),
@@ -184,7 +184,7 @@ class Progress_CannibalFish : public Progress_Fish
 {
     CellSet mCannibalCells;
 public:
-    Progress_CannibalFish(RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, CellSet&& cannibalCells, unsigned short value) :
+    Progress_CannibalFish(const RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, CellSet&& cannibalCells, unsigned short value) :
         Progress_Fish(definingRegions, std::move(definingCells), std::move(secondaryRegions), value),
         mCannibalCells(cannibalCells)
     {
@@ -199,11 +199,11 @@ class Progress_FinnedFish : public Progress
 protected:
     RegionList mDefiningRegions;
     RegionList mSecondaryRegions;
-    CellSet mFins;
+    CellList mFins;
     CellSet mCellsSeingFins;
     unsigned short mValue;
 public:
-    Progress_FinnedFish(RegionList definingRegions, RegionList secondaryRegions, CellSet&& fins, CellSet&& cellsSeingFins, unsigned short value) :
+    Progress_FinnedFish(const RegionList& definingRegions, RegionList&& secondaryRegions, CellList&& fins, CellSet&& cellsSeingFins, unsigned short value) :
         Progress(ProgressType::FinnedFishFound),
         mDefiningRegions(definingRegions),
         mSecondaryRegions(secondaryRegions),
@@ -219,8 +219,8 @@ class Progress_CannibalFinnedFish : public Progress_FinnedFish
 {
     CellSet mCannibalCells;
 public:
-    Progress_CannibalFinnedFish(RegionList definingRegions, RegionList secondaryRegions, CellSet&& fins, CellSet&& cellsSeingFins, CellSet&& cannibalCells, unsigned short value) :
-        Progress_FinnedFish(definingRegions, secondaryRegions, std::move(fins), std::move(cellsSeingFins), value),
+    Progress_CannibalFinnedFish(const RegionList& definingRegions, RegionList&& secondaryRegions, CellList&& fins, CellSet&& cellsSeingFins, CellSet&& cannibalCells, unsigned short value) :
+        Progress_FinnedFish(definingRegions, std::move(secondaryRegions), std::move(fins), std::move(cellsSeingFins), value),
         mCannibalCells(cannibalCells)
     {
         mType = ProgressType::CannibalFinnedFishFound;
@@ -412,7 +412,7 @@ class Impossible_Fish : public Progress_ImpossiblePuzzle
     RegionList mSecondaryRegion;
     unsigned short mValue;
 public:
-    Impossible_Fish( RegionList&& definingRegion, RegionList&& secondaryRegions, unsigned short value, SudokuGrid* grid) :
+    Impossible_Fish( const RegionList& definingRegion, RegionList&& secondaryRegions, unsigned short value, SudokuGrid* grid) :
         Progress_ImpossiblePuzzle(ProgressType::Impossible_Fish, grid),
         mDefiningRegion(definingRegion),
         mSecondaryRegion(secondaryRegions),
