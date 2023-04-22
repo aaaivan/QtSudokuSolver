@@ -85,11 +85,6 @@ void GridProgressManager::RegisterFailure(TechniqueType type, Region* region, Su
     {
         region->UpdateManagerGet()->OnTechniqueFailed(type);
     }
-#if PRINT_LOG_MESSAGES
-    printf("Technique %u failed on region:", static_cast<size_t>(type));
-    printf("%s, ", region->IdGet().c_str());
-    printf("\n");
-#endif // PRINT_LOG_MESSAGES
 }
 
 void  GridProgressManager::NextStep()
