@@ -12,11 +12,14 @@
 #include <QTabWidget>
 #include <QStackedLayout>
 
+constexpr char kNoSolutionMessage[] = "NO SOLUTION!";
+
 MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent, std::unique_ptr<PuzzleData> loadedGrid)
     : QWidget{parent},
       mMainWindow(parent),
       mControlsMenu(new QTabWidget()),
       mContextMenu(new QStackedLayout()),
+      mImpossiblePuzzleLabel(new QLabel()),
       mGrid(new SudokuGridWidget(size, this)),
       mCurrentView(ContextMenuType::EnterDigits_Context)
 {
@@ -24,8 +27,15 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent, st
     QHBoxLayout* horizontalLayout = new QHBoxLayout();
     this->setLayout(horizontalLayout);
     QFrame* contextMenuFrame = new QFrame();
+    QFrame* gridContainer = new QFrame();
+    QVBoxLayout* gridContainerLayout = new QVBoxLayout();
+    gridContainer->setLayout(gridContainerLayout);
+    gridContainerLayout->addStretch();
+    gridContainerLayout->addWidget(mImpossiblePuzzleLabel);
+    gridContainerLayout->addWidget(mGrid);
+    gridContainerLayout->addStretch();
     horizontalLayout->addWidget(mControlsMenu);
-    horizontalLayout->addWidget(mGrid);
+    horizontalLayout->addWidget(gridContainer);
     horizontalLayout->addWidget(contextMenuFrame);
 
     // build left-hand side tabs
@@ -53,12 +63,17 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent, st
     contextMenuFrame->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
     contextMenuFrame->setObjectName("context_menu_frame");
     contextMenuFrame->setStyleSheet("#context_menu_frame{background-color: white;}");
+    mImpossiblePuzzleLabel->setFont(QFont("Segoe UI", 20, 500));
+    mImpossiblePuzzleLabel->setAlignment(Qt::AlignCenter);
+    mImpossiblePuzzleLabel->setStyleSheet("QLabel{color: red;}");
 
     // focus policy
     this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
     // events
     connect(mControlsMenu, SIGNAL(currentChanged(int)), this, SLOT(OnTabChanged_ControlsMenu(int)));
+    connect(mGrid->SolverGet(), SIGNAL(SolverHasBeenReset()), this, SLOT(OnLogicalSolverReset()));
+    connect(mGrid->SolverGet(), SIGNAL(PuzzleHasNoSolution(QString)), this, SLOT(OnPuzzleBroken()));
 }
 
 void MainWindowContent::OnTabChanged_ControlsMenu(int tab)
@@ -72,6 +87,16 @@ void MainWindowContent::OnTabChanged_ControlsMenu(int tab)
     {
         ChangeView(ContextMenuType::Solver_Context);
     }
+}
+
+void MainWindowContent::OnPuzzleBroken()
+{
+    mImpossiblePuzzleLabel->setText(QString(kNoSolutionMessage));
+}
+
+void MainWindowContent::OnLogicalSolverReset()
+{
+    mImpossiblePuzzleLabel->setText(QString());
 }
 
 MainWindow *MainWindowContent::MainWindowGet() const

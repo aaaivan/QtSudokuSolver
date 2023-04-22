@@ -42,7 +42,7 @@ StartMenu::StartMenu(QWidget *parent)
         verticalLayout->addWidget(mNewPuzzleButton);
         verticalLayout->addWidget(mLoadPuzzleButton);
 
-        // start menu tyling
+        // start menu styling
         verticalLayout->setContentsMargins(50, 80, 50, 80);
         title->setFont(QFont("Segoe UI", 32, 600));
         subTitle->setFont(QFont("Segoe UI", 12));

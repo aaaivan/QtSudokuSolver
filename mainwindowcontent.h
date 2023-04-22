@@ -10,6 +10,7 @@ class ContextMenuWindow;
 class MainWindow;
 class QStackedLayout;
 class QTabWidget;
+class QLabel;
 class PuzzleData;
 
 class MainWindowContent : public QWidget
@@ -36,11 +37,14 @@ private:
     MainWindow* mMainWindow;
     QTabWidget* mControlsMenu;
     QStackedLayout* mContextMenu;
+    QLabel* mImpossiblePuzzleLabel;
     SudokuGridWidget* mGrid;
     ContextMenuType mCurrentView;
 
 private slots:
     void OnTabChanged_ControlsMenu(int tab);
+    void OnPuzzleBroken();
+    void OnLogicalSolverReset();
 
 public:
     MainWindow* MainWindowGet() const;
