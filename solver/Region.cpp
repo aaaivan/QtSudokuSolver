@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cassert>
+#include <numeric>
 #include <sstream>
 
 Region::Region(SudokuGrid* parentGrid, CellSet&& cells, bool startingRegion):
@@ -268,6 +269,44 @@ bool Region::IsStartingRegion() const
 bool Region::IsClosed() const
 {
     return mCells.size() == mConfirmedValues.size() && mCells.size() == mAllowedValues.size();
+}
+
+unsigned int Region::SumGet() const
+{
+    if(const auto& constr = GetConstraintByType(RegionType::KillerCage); constr != nullptr)
+    {
+        const KillerConstraint* k = static_cast<const KillerConstraint*>(constr);
+        return k->SumGet();
+    }
+    else if(IsClosed())
+    {
+        return std::accumulate(mConfirmedValues.begin(), mConfirmedValues.end(), 0);
+    }
+    return 0;
+}
+
+bool Region::ContainsCells(const CellSet &cells) const
+{
+    for (const auto& c : cells)
+    {
+        if(mCells.count(c) == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Region::IsContainedInCells(const CellSet &cells) const
+{
+    for (const auto& c : mCells)
+    {
+        if(cells.count(c) == 0)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool Region::PartitionRegion(const RegionSPtr& leftNode, Region*& outRightNode)

@@ -19,6 +19,7 @@ class RegionsManager;
 class GridProgressManager;
 
 //Typedefs
+typedef unsigned int CellId;
 typedef std::unique_ptr<SudokuCell> CellUPtr;
 typedef std::unique_ptr<RegionsManager> RegionsManagerUPtr;
 typedef std::unique_ptr<GridProgressManager> GridProgressManagerUPtr;

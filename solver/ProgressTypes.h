@@ -8,6 +8,7 @@ enum class TechniqueType
     NakedSubset,
     HiddenNakedSubset,
     Fish,
+    InniesOuties,
     Bifurcation,
 
     MAX_TECHNIQUES
@@ -32,6 +33,8 @@ enum class ProgressType : int
     ValueForcedInKillerSum,
     ValueDisallowedByBifurcation,
     ValueRemovedViaGuessing,
+    InnieAddedToGrid,
+    OutieAddedToGrid,
 
     Impossible_ClashWithGivenCell,
     Impossible_ClashWithSolvedCell,
@@ -42,6 +45,8 @@ enum class ProgressType : int
     Impossible_Fish,
     Impossible_NoSumForKillerCage,
     Impossible_NoSolutionByBifurcation,
+    Impossible_BrokenInnie,
+    Impossible_BrokenOutie,
 
     MAX_PROGRESS_TYPES
 };

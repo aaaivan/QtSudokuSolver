@@ -7,7 +7,6 @@ class RandomGuessTreeRoot;
 class RandomGuessTreeNode;
 class BifurcationTechnique;
 
-typedef unsigned int CellId;
 typedef std::map<CellId, std::set<unsigned short>> Elimination_t;
 typedef std::map<CellId, std::map<unsigned short, Elimination_t>> EliminationMatrix;
 

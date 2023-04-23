@@ -94,6 +94,9 @@ public:
 
     bool IsStartingRegion() const;
     bool IsClosed() const;
+    unsigned int SumGet() const;
+    bool ContainsCells(const CellSet& cells) const;
+    bool IsContainedInCells(const CellSet& cells) const;
 
 // Non-constant methods
 

@@ -26,6 +26,9 @@ GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mTechniques[static_cast<size_t>(TechniqueType::Fish)] =
         std::make_unique<FishTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
 
+    mTechniques[static_cast<size_t>(TechniqueType::InniesOuties)] =
+        std::make_unique<InniesAndOuties>(mSudokuGrid, SolvingTechnique::ObserveNothing);
+
     unsigned int depth = 0;
     unsigned int targetDepth = 1;
     const SudokuGrid* parent = mSudokuGrid->ParentNodeGet();

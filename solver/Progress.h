@@ -297,6 +297,22 @@ public:
     void PrintMessage() const override;
 };
 
+class Progress_Innie : public Progress
+{
+    std::pair<unsigned int, CellSet> mCage;
+    bool mRedundant;
+    SudokuGrid* mGrid;
+public:
+    Progress_Innie(std::pair<unsigned int, CellSet>&& cage, bool redundant, SudokuGrid* grid):
+        Progress(ProgressType::InnieAddedToGrid),
+        mCage(cage),
+        mRedundant(redundant),
+        mGrid(grid)
+    {}
+    void ProcessProgress() override;
+    void PrintMessage() const override;
+};
+
 
 
 
@@ -439,6 +455,28 @@ public:
     Impossible_NoSolutionByBifurcation(SudokuCell* pivotCell, SudokuGrid* grid) :
         Progress_ImpossiblePuzzle(ProgressType::Impossible_NoSolutionByBifurcation, grid),
         mPivotCell(pivotCell)
+    {}
+    void ProcessProgress() override;
+};
+
+class Impossible_BrokenInnie : public Progress_ImpossiblePuzzle
+{
+    CellSet mCage;
+public:
+    Impossible_BrokenInnie(CellSet&& cage, SudokuGrid* grid):
+        Progress_ImpossiblePuzzle(ProgressType::Impossible_BrokenInnie, grid),
+        mCage(cage)
+    {}
+    void ProcessProgress() override;
+};
+
+class Impossible_BrokenOutie : public Progress_ImpossiblePuzzle
+{
+    CellSet mCage;
+public:
+    Impossible_BrokenOutie(CellSet&& cage, SudokuGrid* grid):
+        Progress_ImpossiblePuzzle(ProgressType::Impossible_BrokenOutie, grid),
+        mCage(cage)
     {}
     void ProcessProgress() override;
 };

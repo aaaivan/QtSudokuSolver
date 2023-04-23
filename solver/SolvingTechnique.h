@@ -35,6 +35,7 @@ public:
 class LockedCandidatesTechnique : public SolvingTechnique
 {
     Region* mCurrentRegion;
+    bool mProcessingGhostRegions;
 
 public:
     LockedCandidatesTechnique(SudokuGrid* grid, ObservedComponent observedComponent);
@@ -153,6 +154,40 @@ public:
 private:
     void Init();
     void CreateRootNode();
+};
+
+class KillerConstraint;
+typedef std::set<const KillerConstraint*>::iterator KillerSetIt;
+typedef std::list<KillerSetIt> KillerCombination;
+typedef std::pair<unsigned int, CellSet> KillerCage_t;
+typedef bool RedundantFlag;
+
+class InniesAndOuties : public SolvingTechnique
+{
+    RegionSet mRegions;
+    RegionSet::iterator mCurrentRegion;
+    Region* mCurrentRegionPtr = nullptr;
+    unsigned int mCurrentRegionTotal;
+    std::map<Region*, std::set<const KillerConstraint*>> mContainedKillers;
+    std::map<Region*, std::set<const KillerConstraint*>> mIntersectingKillers;
+
+    std::list<KillerCombination> mKillerCombinations;
+    std::list<KillerCage_t> mKillerUnions;
+
+    std::list<std::pair<RedundantFlag, KillerCage_t>> mGhostCages;
+public:
+    InniesAndOuties(SudokuGrid *grid, ObservedComponent observedComponent);
+
+    void NextStep() override;
+    void Reset() override;
+
+private:
+    void BuildMaps();
+    void FillMapEntry(Region* r);
+    void SearchInnies();
+    void SearchInniesInner(KillerCage_t& unionCage, bool redundantCage);
+    void CalculateContainedCageCombinations(unsigned int size);
+    void CalculateContainedCageCombinationsInner(std::list<KillerCombination>& outCombinations, KillerSetIt kIt, const KillerSetIt& end, KillerCombination& nextComb, unsigned int size);
 };
 
 #endif // !SOLVING_TECHNIQUE_H

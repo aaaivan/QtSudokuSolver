@@ -11,6 +11,7 @@ SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
     mParentNode(nullptr), // needs to be initialized before the progress manager
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
+    mGhostRegionsManager(std::make_unique<RegionsManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
     mHasSnapshort(false),
     mSolverThread(solverThread)
@@ -34,6 +35,7 @@ SudokuGrid::SudokuGrid(const SudokuGrid *grid) :
     mParentNode(grid),
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
+    mGhostRegionsManager(std::make_unique<RegionsManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
     mHasSnapshort(false),
     mSolverThread(nullptr)
@@ -112,6 +114,11 @@ RegionsManager* SudokuGrid::RegionsManagerGet() const
     return mRegionsManager.get();
 }
 
+RegionsManager *SudokuGrid::GhostRegionsManagerGet() const
+{
+    return mGhostRegionsManager.get();
+}
+
 GridProgressManager* SudokuGrid::ProgressManagerGet() const
 {
     return mProgressManager.get();
@@ -149,6 +156,8 @@ void SudokuGrid::AddGivenCell(unsigned short row, unsigned short col, unsigned s
                 value <= mSize &&
                 "Index out of bound for a Given Cell");
         mGrid.at(row).at(col)->MakeGiven(value);
+
+        mProgressManager->Reset();
 }
 
 void SudokuGrid::SetCellOptions(unsigned short row, unsigned short col, std::set<unsigned short> options)
@@ -179,6 +188,10 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > 
                               RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name)
 {
     assert(cells.size() <= mSize && "Index out of bound for a Given Cell");
+
+    // needs to be reset as adding a new region might invalidate the ghost regions
+    mGhostRegionsManager->Clear();
+    mProgressManager->Reset();
 
     CellSet cellList;
     for (const auto& rowCol : cells)
@@ -211,6 +224,7 @@ void SudokuGrid::ResetContents()
     }
     mProgressManager->Clear();
     mRegionsManager->Reset();
+    mGhostRegionsManager->Clear();
 }
 
 void SudokuGrid::Clear()
@@ -226,6 +240,7 @@ void SudokuGrid::Clear()
     }
     mProgressManager->Clear();
     mRegionsManager->Clear();
+    mGhostRegionsManager->Clear();
     DefineRowsAndCols();
 }
 
@@ -246,6 +261,7 @@ void SudokuGrid::TakeSnapshot()
 {
     mHasSnapshort = true;
     mRegionsManager->TakeSnapshot();
+    mGhostRegionsManager->TakeSnapshot();
     for (size_t i = 0; i < mSize; i++)
     {
         for (size_t j = 0; j < mSize; j++)
@@ -268,6 +284,6 @@ void SudokuGrid::RestoreSnapshot()
             }
         }
         mRegionsManager->RestoreSnapshot();
+        mGhostRegionsManager->RestoreSnapshot();
     }
-
 }

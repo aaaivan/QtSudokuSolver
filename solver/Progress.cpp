@@ -5,6 +5,7 @@
 #include "RegionUpdatesManager.h"
 #include "SudokuGrid.h"
 #include "GridProgressManager.h"
+#include "RegionsManager.h"
 #include "../sudokusolverthread.h"
 
 void Progress_GivenCellAdded::ProcessProgress()
@@ -20,7 +21,7 @@ void Progress_GivenCellAdded::PrintMessage() const
     SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Scan given " + std::to_string(mValue) + " in " + mCell->CellNameGet() + ".";
+        std::string message = "->Scan given " + std::to_string(mValue) + " in " + mCell->CellNameGet() + ".";
         st->NotifyLogicalDeduction(message);
     }
 }
@@ -40,7 +41,7 @@ void Progress_SingleOptionLeftInCell::PrintMessage() const
     SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Naked single in " + mCell->CellNameGet() + ". " +
+        std::string message = "->Naked single in " + mCell->CellNameGet() + ". " +
                               std::to_string(mValue) + " is the only candidate.";
         st->NotifyLogicalDeduction(message);
     }
@@ -61,7 +62,7 @@ void Progress_SingleCellForOption::PrintMessage() const
     SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Hidden single on " + std::to_string(mValue) + ". " +
+        std::string message = "->Hidden single on " + std::to_string(mValue) + ". " +
                               "It can only go in " + mCell->CellNameGet() + " in " +
                               mRegion->RegionNameGet() + ".";
         st->NotifyLogicalDeduction(message);
@@ -85,7 +86,7 @@ void Progress_NakedSubset::PrintMessage() const
     SudokuSolverThread* st = grid->SolverThreadGet();
     if(st && mCells.size() < grid->SizeGet())
     {
-        std::string message = "Naked subset in {";
+        std::string message = "->Naked subset in {";
         while(cIt != mCells.end())
         {
             message += (*cIt)->CellNameGet() + ",";
@@ -123,7 +124,7 @@ void Progress_HiddenNakedSubset::PrintMessage() const
     SudokuSolverThread* st = grid->SolverThreadGet();
     if(st && mCells.size() < grid->SizeGet())
     {
-        std::string message = "Hidden subset on values {";
+        std::string message = "->Hidden subset on values {";
         auto vIt = mValues.begin();
         while(vIt != mValues.end())
         {
@@ -146,6 +147,12 @@ void Progress_OptionRemoved::ProcessProgress()
         region->UpdateManagerGet()->OnCellOptionRemoved(mCell, mValue);
     }
 
+    const RegionSet& intersectingGhostRegions = mCell->GridGet()->GhostRegionsManagerGet()->RegionsWithCellGet(mCell);
+    for (Region* region : intersectingGhostRegions)
+    {
+        region->UpdateManagerGet()->OnCellOptionRemoved(mCell, mValue);
+    }
+
     PrintMessage();
 }
 
@@ -164,7 +171,7 @@ void Progress_LockedCandidates::PrintMessage() const
     SudokuSolverThread* st = (*mIntersectingRegions.begin())->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Locked " + std::to_string(mValue) + " in " + mDefiningRegion->RegionNameGet() + ". " +
+        std::string message = "->Locked " + std::to_string(mValue) + " in " + mDefiningRegion->RegionNameGet() + ". " +
                 "Cover region(s): ";
 
         auto it = mIntersectingRegions.begin();
@@ -195,7 +202,7 @@ void Progress_AlmostLockedCandidates::PrintMessage() const
     SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Value " + std::to_string(mValue) + " excluded from cells {";
+        std::string message = "->Value " + std::to_string(mValue) + " excluded from cells {";
 
         auto cIt = mCells.begin();
         while(cIt != mCells.end())
@@ -228,7 +235,7 @@ void Progress_Fish::PrintMessage() const
     SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Fish on " + std::to_string(mValue) +
+        std::string message = "->Fish on " + std::to_string(mValue) +
                               ". Base regions: ";
 
         auto bIt = mDefiningRegions.begin();
@@ -266,7 +273,7 @@ void Progress_CannibalFish::PrintMessage() const
     SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Cannibal fish on " + std::to_string(mValue) +
+        std::string message = "->Cannibal fish on " + std::to_string(mValue) +
                               ". Base regions: ";
 
         auto bIt = mDefiningRegions.begin();
@@ -313,7 +320,7 @@ void Progress_FinnedFish::PrintMessage() const
     SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Finned fish on " + std::to_string(mValue) +
+        std::string message = "->Finned fish on " + std::to_string(mValue) +
                               ". Base regions: ";
 
         auto bIt = mDefiningRegions.begin();
@@ -360,7 +367,7 @@ void Progress_CannibalFinnedFish::PrintMessage() const
     SudokuSolverThread* st = (*rIt)->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Cannibal finned fish on " + std::to_string(mValue) +
+        std::string message = "->Cannibal finned fish on " + std::to_string(mValue) +
                               ". Base regions";
 
         auto bIt = mDefiningRegions.begin();
@@ -422,7 +429,7 @@ void Progress_ValueNotInKiller::PrintMessage() const
     SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Value " + std::to_string(mValue) + " not allowed in " +
+        std::string message = "->Value " + std::to_string(mValue) + " not allowed in " +
                 mRegion->RegionNameGet() + ".";
 
         st->NotifyLogicalDeduction(message);
@@ -448,7 +455,7 @@ void Progress_ValueDisallowedByBifurcation::PrintMessage() const
     SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Values {";
+        std::string message = "->Values {";
         auto vIt = mValues.begin();
         while(vIt != mValues.end())
         {
@@ -475,8 +482,52 @@ void Progress_OptionRemovedViaGuessing::PrintMessage() const
     SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "Value " + std::to_string(mValue) + " removed from " + mCell->CellNameGet() +
+        std::string message = "->Value " + std::to_string(mValue) + " removed from " + mCell->CellNameGet() +
                 "as it breaks the puzzle.";
+
+        st->NotifyLogicalDeduction(message);
+    }
+}
+
+void Progress_Innie::ProcessProgress()
+{
+    CellSet cells = mCage.second;
+    RegionSPtr regionSPtr = std::make_shared<Region>(mGrid, std::move(cells), true);
+    regionSPtr->AddVariantConstraint(std::make_unique<KillerConstraint>(mCage.first));
+
+    std::string name = "the " + std::to_string(mCage.first) + " innie at {";
+    auto cIt = mCage.second.begin();
+    while(cIt != mCage.second.end())
+    {
+        name += (*cIt)->CellNameGet() + ",";
+        cIt++;
+    }
+    name.pop_back();
+    name += "}";
+
+    regionSPtr->RegionNameSet(name);
+    mGrid->GhostRegionsManagerGet()->RegisterRegion(regionSPtr, RegionType::KillerCage);
+
+    if(!mRedundant)
+    {
+        PrintMessage();
+    }
+}
+
+void Progress_Innie::PrintMessage() const
+{
+    SudokuSolverThread* st = mGrid->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "->Innie cage added to the grid. Total: " + std::to_string(mCage.first) + "; Cells: {";
+        auto cIt = mCage.second.begin();
+        while(cIt != mCage.second.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += "}.";
 
         st->NotifyLogicalDeduction(message);
     }
@@ -549,6 +600,16 @@ void Impossible_NoKillerSum::ProcessProgress()
 }
 
 void Impossible_NoSolutionByBifurcation::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_BrokenInnie::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_BrokenOutie::ProcessProgress()
 {
     Progress_ImpossiblePuzzle::ProcessProgress();
 }

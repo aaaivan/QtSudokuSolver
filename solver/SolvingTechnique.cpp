@@ -35,7 +35,8 @@ SolvingTechnique::ObservedComponent SolvingTechnique::ObservedComponentGet() con
 
 LockedCandidatesTechnique::LockedCandidatesTechnique(SudokuGrid* regionsManager, ObservedComponent observedComponent):
     SolvingTechnique(regionsManager, TechniqueType::LockedCandidates, observedComponent),
-    mCurrentRegion(nullptr)
+    mCurrentRegion(nullptr),
+    mProcessingGhostRegions(false)
 {
 }
 
@@ -46,7 +47,8 @@ void LockedCandidatesTechnique::NextStep()
         return;
     }
 
-    const RegionSet& regions = mGrid->RegionsManagerGet()->RegionsGet();
+    const RegionSet& regions = mProcessingGhostRegions ? mGrid->GhostRegionsManagerGet()->RegionsGet()
+                                                       : mGrid->RegionsManagerGet()->RegionsGet();
     RegionSet::iterator it;
 
     if (!mCurrentRegion)
@@ -59,19 +61,28 @@ void LockedCandidatesTechnique::NextStep()
         it = regions.find(mCurrentRegion);
     }
 
-    std::set<unsigned short> hotValues;
-    if (mCurrentRegion->UpdateManagerGet()->IsRegionReadyForTechnique(mType, hotValues))
+    if(it != regions.end())
     {
-        for (const auto v : hotValues)
+        std::set<unsigned short> hotValues;
+        if (mCurrentRegion->UpdateManagerGet()->IsRegionReadyForTechnique(mType, hotValues))
         {
-            SearchLockedCandidates(v);
+            for (const auto v : hotValues)
+            {
+                SearchLockedCandidates(v);
+            }
         }
+        ++it;
     }
 
-    ++it;
+
     if (it != regions.end())
     {
         mCurrentRegion = *it;
+    }
+    else if(!mProcessingGhostRegions)
+    {
+        mProcessingGhostRegions = true;
+        mCurrentRegion = nullptr;
     }
     else
     {
@@ -84,6 +95,7 @@ void LockedCandidatesTechnique::Reset()
 {
     mCurrentRegion = nullptr;
     mFinished = false;
+    mProcessingGhostRegions = false;
 }
 
 
@@ -447,3 +459,138 @@ void BifurcationTechnique::CreateRootNode()
     mRoot.reset();
     mRoot = std::make_unique<RandomGuessTreeRoot>(mGrid, mBifurcationGrid.get(), mCells[mCurrentIndex]->IdGet(), this);
 }
+
+
+
+
+
+InniesAndOuties::InniesAndOuties(SudokuGrid *grid, ObservedComponent observedComponent):
+    SolvingTechnique(grid, TechniqueType::InniesOuties, observedComponent),
+    mRegions(),
+    mCurrentRegion(),
+    mCurrentRegionTotal(0),
+    mContainedKillers(),
+    mIntersectingKillers(),
+    mKillerCombinations(),
+    mKillerUnions(),
+    mGhostCages()
+{
+    // do not use this technique if there are no killer cages
+    mFinished = mGrid->RegionsManagerGet()->StartingRegionsGet()[static_cast<size_t>(RegionType::KillerCage)].size() == 0;
+}
+
+void InniesAndOuties::NextStep()
+{
+    if(HasFinished())
+    {
+        return;
+    }
+
+    if(mRegions.empty())
+    {
+        BuildMaps();
+        if(mRegions.size() == 0)
+        {
+            mFinished = true;
+            return;
+        }
+        mCurrentRegion = mRegions.begin();
+        mCurrentRegionTotal = (*mCurrentRegion)->SumGet();
+    }
+
+    if(mContainedKillers.count(*mCurrentRegion) > 0)
+    {
+        SearchInnies();
+    }
+
+    mCurrentRegion++;
+    if(mCurrentRegion == mRegions.end())
+    {
+        for(auto& k : mGhostCages)
+        {
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_Innie>(std::move(k.second), k.first, mGrid));
+        }
+        mFinished = true;
+    }
+    else
+    {
+        mCurrentRegionTotal = (*mCurrentRegion)->SumGet();
+    }
+}
+
+void InniesAndOuties::Reset()
+{
+    // do not use this technique if there are no killer cages
+    mFinished = mGrid->RegionsManagerGet()->StartingRegionsGet()[static_cast<size_t>(RegionType::KillerCage)].size() == 0;
+    mRegions.clear();
+    mIntersectingKillers.clear();
+    mContainedKillers.clear();
+    mKillerCombinations.clear();
+    mKillerUnions.clear();
+    mGhostCages.clear();
+}
+
+void InniesAndOuties::BuildMaps()
+{
+    mRegions.clear();
+    mContainedKillers.clear();
+    mIntersectingKillers.clear();
+    mKillerCombinations.clear();
+    mKillerUnions.clear();
+
+    const auto& regionManager = mGrid->RegionsManagerGet();
+    const auto& ghostRegionManager = mGrid->GhostRegionsManagerGet();
+    const auto& leafReg = regionManager->RegionsGet();
+    const auto& ghostLeafReg = ghostRegionManager->RegionsGet();
+
+    for (const auto r : leafReg)
+    {
+        FillMapEntry(r);
+    }
+
+    for (const auto r : ghostLeafReg)
+    {
+        FillMapEntry(r);
+    }
+}
+
+void InniesAndOuties::FillMapEntry(Region *r)
+{
+    const auto& regionManager = mGrid->RegionsManagerGet();
+    const KillerConstraint* k = static_cast<const KillerConstraint*>(r->GetConstraintByType(RegionType::KillerCage));
+    if(k)
+    {
+        RegionSet containingRegions;
+        regionManager->RegionsWithCellsGet(containingRegions, r->CellsGet());
+        for (const auto& cr : containingRegions)
+        {
+            if(cr->SumGet() == 0) continue;
+            if(cr == k->RegionGet()) continue;
+
+            if(mContainedKillers.count(cr) == 0)
+            {
+                mContainedKillers[cr] = {};
+            }
+            mContainedKillers[cr].insert(k);
+        }
+
+        for (const auto& c : r->CellsGet())
+        {
+            const auto& intersectingRegions = regionManager->RegionsWithCellGet(c);
+            for (const auto& ir : intersectingRegions)
+            {
+                if(ir->SumGet() == 0) continue;
+                if(ir == k->RegionGet()) continue;
+
+                mRegions.insert(ir);
+                if(mIntersectingKillers.count(ir) == 0)
+                {
+                    mIntersectingKillers[ir] = {};
+                }
+                mIntersectingKillers[ir].insert(k);
+            }
+        }
+    }
+}
+
+

@@ -124,6 +124,16 @@ const std::list<std::set<unsigned short> > &KillerConstraint::CombinationsGet() 
     return mCombinations;
 }
 
+const std::set<unsigned short> &KillerConstraint::ConfirmedValuesGet() const
+{
+    return mConfirmedValues;
+}
+
+const std::set<unsigned short> &KillerConstraint::AllowedValuesGet() const
+{
+    return mAllowedValues;
+}
+
 void KillerConstraint::FindCombinations()
 {
     mCombinations.clear();
@@ -261,13 +271,14 @@ void KillerConstraint::UpdateAllowedAndConfirmedValues()
                     isAllowed = true;
                 }
             }
-            if (isConfirmed)
-            {
-                AddConfirmedValue(v);
-            }
-            else if (!isAllowed)
+
+            if (!isAllowed)
             {
                 disallowedValues.insert(v);
+            }
+            else if (isConfirmed)
+            {
+                AddConfirmedValue(v);
             }
         }
     }

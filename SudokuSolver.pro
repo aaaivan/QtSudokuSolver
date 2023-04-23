@@ -28,6 +28,7 @@ SOURCES += \
     solver/FishTechniques.cpp \
     solver/FishTechniquesV2.cpp \
     solver/GridProgressManager.cpp \
+    solver/InniesAndOuties.cpp \
     solver/LockedCandidates.cpp \
     solver/NakedSubsets.cpp \
     solver/Progress.cpp \
