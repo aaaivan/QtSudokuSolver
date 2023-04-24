@@ -301,14 +301,14 @@ public:
 
 class Progress_Innie : public Progress
 {
-    std::pair<unsigned int, CellSet> mCage;
-    bool mRedundant;
+    CellSet mCells;
+    unsigned int mTotal;
     SudokuGrid* mGrid;
 public:
-    Progress_Innie(std::pair<unsigned int, CellSet>&& cage, bool redundant, SudokuGrid* grid):
+    Progress_Innie(CellSet&& cells, unsigned int total, SudokuGrid* grid):
         Progress(ProgressType::InnieAddedToGrid),
-        mCage(cage),
-        mRedundant(redundant),
+        mCells(cells),
+        mTotal(total),
         mGrid(grid)
     {}
     void ProcessProgress() override;
@@ -468,6 +468,22 @@ public:
     Impossible_BrokenInnie(CellSet&& cage, SudokuGrid* grid):
         Progress_ImpossiblePuzzle(ProgressType::Impossible_BrokenInnie, grid),
         mCage(cage)
+    {}
+    void ProcessProgress() override;
+};
+
+class Impossible_ClashingInnies : public Progress_ImpossiblePuzzle
+{
+    CellSet mCage;
+    unsigned int mSum1;
+    unsigned int mSum2;
+
+public:
+    Impossible_ClashingInnies(CellSet&& cage, unsigned int sum1, unsigned int sum2, SudokuGrid* grid):
+        Progress_ImpossiblePuzzle(ProgressType::Impossible_ClashingInnies, grid),
+        mCage(cage),
+        mSum1(sum1),
+        mSum2(sum2)
     {}
     void ProcessProgress() override;
 };

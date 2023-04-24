@@ -7,9 +7,6 @@
 
 void InniesAndOuties::SearchInnies()
 {
-    mCurrentRegionPtr = *mCurrentRegion;
-
-
     mKillerCombinations.clear();
     size_t maxCombinationSize = mContainedKillers.at(*mCurrentRegion).size();
 
@@ -19,12 +16,12 @@ void InniesAndOuties::SearchInnies()
 
         for (auto& comb : mKillerUnions)
         {
-            SearchInniesInner(comb, i == 1);
+            SearchInniesInner(comb);
         }
     }
 }
 
-void InniesAndOuties::SearchInniesInner(KillerCage_t& unionCage, bool redundantCage)
+void InniesAndOuties::SearchInniesInner(KillerCage_t& unionCage)
 {
     CellSet cells = (*mCurrentRegion)->CellsGet();
     for (const auto& c : unionCage.second)
@@ -32,21 +29,28 @@ void InniesAndOuties::SearchInniesInner(KillerCage_t& unionCage, bool redundantC
         cells.erase(c);
     }
 
+    int ghostCageTotal = static_cast<int>(mCurrentRegionTotal) - static_cast<int>(unionCage.first);
+    if(ghostCageTotal < 0 || (ghostCageTotal == 0 && cells.size() > 0))
+    {
+        mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_BrokenInnie>(std::move(cells), mGrid));
+        return;
+    }
+
     for (const auto& k : mContainedKillers.at(*mCurrentRegion))
     {
         if(k->RegionGet()->IsContainedInCells(cells))
         {
+            if(k->SumGet() > ghostCageTotal)
+            {
+                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashingInnies>(std::move(cells), ghostCageTotal, k->SumGet() > ghostCageTotal, mGrid));
+            }
             return;
         }
     }
 
-    if(unionCage.first < mCurrentRegionTotal && cells.size() > 0)
+    if(ghostCageTotal > 0 && cells.size() > 0)
     {
-        mGhostCages.emplace_back(redundantCage, std::pair(mCurrentRegionTotal - unionCage.first, std::move(cells)));
-    }
-    else if(unionCage.first > mCurrentRegionTotal)
-    {
-        mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_BrokenInnie>(std::move(cells), mGrid));
+        mGhostCages.insert(std::pair(ghostCageTotal, std::move(cells)));
     }
 }
 

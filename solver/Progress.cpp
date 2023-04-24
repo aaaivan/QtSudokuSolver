@@ -497,13 +497,13 @@ void Progress_OptionRemovedViaGuessing::PrintMessage() const
 
 void Progress_Innie::ProcessProgress()
 {
-    CellSet cells = mCage.second;
+    CellSet cells = mCells;
     RegionSPtr regionSPtr = std::make_shared<Region>(mGrid, std::move(cells), true);
-    regionSPtr->AddVariantConstraint(std::make_unique<KillerConstraint>(mCage.first));
+    regionSPtr->AddVariantConstraint(std::make_unique<KillerConstraint>(mTotal));
 
-    std::string name = "the " + std::to_string(mCage.first) + " innie at {";
-    auto cIt = mCage.second.begin();
-    while(cIt != mCage.second.end())
+    std::string name = "the " + std::to_string(mTotal) + " innie at {";
+    auto cIt = mCells.begin();
+    while(cIt != mCells.end())
     {
         name += (*cIt)->CellNameGet() + ",";
         cIt++;
@@ -514,10 +514,7 @@ void Progress_Innie::ProcessProgress()
     regionSPtr->RegionNameSet(name);
     mGrid->GhostRegionsManagerGet()->RegisterRegion(regionSPtr);
 
-    if(!mRedundant)
-    {
-        PrintMessage();
-    }
+    PrintMessage();
 }
 
 void Progress_Innie::PrintMessage() const
@@ -525,9 +522,9 @@ void Progress_Innie::PrintMessage() const
     SudokuSolverThread* st = mGrid->SolverThreadGet();
     if(st)
     {
-        std::string message = "->Innie cage added to the grid. Total: " + std::to_string(mCage.first) + "; Cells: {";
-        auto cIt = mCage.second.begin();
-        while(cIt != mCage.second.end())
+        std::string message = "->Innie cage added to the grid. Total: " + std::to_string(mTotal) + "; Cells: {";
+        auto cIt = mCells.begin();
+        while(cIt != mCells.end())
         {
             message += (*cIt)->CellNameGet() + ",";
             cIt++;
@@ -611,6 +608,11 @@ void Impossible_NoSolutionByBifurcation::ProcessProgress()
 }
 
 void Impossible_BrokenInnie::ProcessProgress()
+{
+    Progress_ImpossiblePuzzle::ProcessProgress();
+}
+
+void Impossible_ClashingInnies::ProcessProgress()
 {
     Progress_ImpossiblePuzzle::ProcessProgress();
 }

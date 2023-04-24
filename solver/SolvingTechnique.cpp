@@ -507,7 +507,7 @@ void InniesAndOuties::NextStep()
     mCurrentRegion++;
     if(mCurrentRegion == mRegions.end())
     {
-        for(auto& k : mGhostCages)
+        for(KillerCage_t k : mGhostCages)
         {
             mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_Innie>(std::move(k.second), k.first, mGrid));
         }

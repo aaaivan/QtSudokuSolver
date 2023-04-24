@@ -46,6 +46,7 @@ enum class ProgressType : int
     Impossible_NoSumForKillerCage,
     Impossible_NoSolutionByBifurcation,
     Impossible_BrokenInnie,
+    Impossible_ClashingInnies,
     Impossible_BrokenOutie,
 
     MAX_PROGRESS_TYPES
