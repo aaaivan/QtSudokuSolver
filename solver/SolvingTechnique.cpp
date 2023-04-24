@@ -5,6 +5,7 @@
 #include "SudokuGrid.h"
 #include "SudokuCell.h"
 #include "GridProgressManager.h"
+#include "GhostCagesManager.h"
 #include <algorithm>
 
 SolvingTechnique::SolvingTechnique(SudokuGrid* grid, TechniqueType type, ObservedComponent observedComponent):

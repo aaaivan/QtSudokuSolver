@@ -32,6 +32,7 @@ protected:
     RegionList mParents;			// parent Regions that this Region has been partitioned from
 
     friend class RegionsManager;
+    friend class GhostCagesManager;
 
     struct Snapshot
     {

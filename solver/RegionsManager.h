@@ -5,9 +5,6 @@
 #include "Types.h"
 #include "Region.h"
 
-// Classes
-class Region;
-
 // Typedefs
 typedef std::vector<RegionSet> CellToRegionMap;
 typedef std::vector<std::list<RegionSPtr>> RegionsList;
@@ -45,7 +42,6 @@ public:
 
     const RegionsList& StartingRegionsGet() const;
     const RegionSet& RegionsGet() const;
-    RegionSPtr RegionSharedPtrGet(const Region* r) const;
 
 // Constant methods
 
@@ -63,12 +59,15 @@ public:
     /// Find the list of cells that can "see" all the defining cells
     /// </summary>
     template<class T>
-    void FindConnectedCells(const T& definingCells, CellSet& outConnectedCells);
+    void FindConnectedCells(const T& definingCells, CellSet& outConnectedCells) const;
     /// <summary>
     /// Find the list of cells that can "see" all the defining cells AND have "value" as a viable option
     /// </summary>
     template<class T>
-    void FindConnectedCellsWithValue(const T& definingCells, CellSet& outConnectedCells, unsigned short value);
+    void FindConnectedCellsWithValue(const T& definingCells, CellSet& outConnectedCells, unsigned short value) const;
+
+
+// Non-constant methods
 
     /// <summary>
     /// Find all regions containing all the cells passed as an argument,
@@ -77,8 +76,6 @@ public:
     /// the remaining cells.
     /// </summary>
     void PartitionRegionsWithCells(CellSet cells);
-
-// Non-constant methods
 
     /// <summary>
     /// Define a staring region of the puzzle
@@ -99,6 +96,8 @@ public:
     void RestoreSnapshot();
 
 private:
+    RegionSPtr RegionSharedPtrGet(const Region* r) const;
+
     /// <summary>
     /// Partition the argument region into two new smaller regions,
     /// one made up by the cells in the argument regionSPtr and the other
@@ -108,7 +107,7 @@ private:
 };
 
 template<class T>
-void RegionsManager::FindConnectedCells(const T& definingCells, CellSet& outConnectedCells)
+void RegionsManager::FindConnectedCells(const T& definingCells, CellSet& outConnectedCells) const
 {
     // iterate over the cells in definingCells
     for (auto it = definingCells.begin(), end = definingCells.end(); it != end; ++it)
@@ -148,7 +147,7 @@ void RegionsManager::FindConnectedCells(const T& definingCells, CellSet& outConn
 }
 
 template<class T>
-void RegionsManager::FindConnectedCellsWithValue(const T& definingCells, CellSet& outConnectedCells, unsigned short value)
+void RegionsManager::FindConnectedCellsWithValue(const T& definingCells, CellSet& outConnectedCells, unsigned short value) const
 {
     // iterate over the cells in definingCells
     for (auto it = definingCells.begin(), end = definingCells.end(); it != end; ++it)

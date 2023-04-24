@@ -3,6 +3,7 @@
 #include "SudokuGrid.h"
 #include "RegionUpdatesManager.h"
 #include "RegionsManager.h"
+#include "GhostCagesManager.h"
 
 void ScanNaked(const CellSet& nakedSubset, const std::set<unsigned short> & cellValues, const SudokuGrid* grid, bool isHidden)
 {

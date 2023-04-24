@@ -7,6 +7,7 @@
 #include "GridProgressManager.h"
 #include "RegionsManager.h"
 #include "../sudokusolverthread.h"
+#include "GhostCagesManager.h"
 
 void Progress_GivenCellAdded::ProcessProgress()
 {
@@ -511,7 +512,7 @@ void Progress_Innie::ProcessProgress()
     name += "}";
 
     regionSPtr->RegionNameSet(name);
-    mGrid->GhostRegionsManagerGet()->RegisterRegion(regionSPtr, RegionType::KillerCage);
+    mGrid->GhostRegionsManagerGet()->RegisterRegion(regionSPtr);
 
     if(!mRedundant)
     {

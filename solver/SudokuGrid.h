@@ -12,6 +12,7 @@ class RegionsManager;
 class GridProgressManager;
 class VariantConstraint;
 class SudokuSolverThread;
+class GhostCagesManager;
 
 class SudokuGrid
 {
@@ -19,7 +20,7 @@ class SudokuGrid
     const SudokuGrid* mParentNode;
     std::vector<std::vector<CellUPtr>> mGrid;	// array of cells representing the grid
     RegionsManagerUPtr mRegionsManager;			// manages the subdivision of the grid into regions
-    RegionsManagerUPtr mGhostRegionsManager;    // manages ghost regions added by the solver to aid the solution
+    std::unique_ptr<GhostCagesManager> mGhostRegionsManager;    // manages ghost regions added by the solver to aid the solution
     GridProgressManagerUPtr mProgressManager;	// notifies cells when some progress has been made
     bool mHasSnapshort;
 
@@ -41,7 +42,7 @@ public:
     SudokuCell* CellGet(unsigned short row, unsigned short col) const;
     SudokuCell* CellGet(unsigned int id) const;
     RegionsManager* RegionsManagerGet() const;
-    RegionsManager* GhostRegionsManagerGet() const;
+    GhostCagesManager* GhostRegionsManagerGet() const;
     GridProgressManager* ProgressManagerGet() const;
     bool IsSolved() const;
     const SudokuGrid* ParentNodeGet();

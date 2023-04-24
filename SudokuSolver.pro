@@ -27,6 +27,7 @@ SOURCES += \
     solver/BruteForceSolver.cpp \
     solver/FishTechniques.cpp \
     solver/FishTechniquesV2.cpp \
+    solver/GhostCagesManager.cpp \
     solver/GridProgressManager.cpp \
     solver/InniesAndOuties.cpp \
     solver/LockedCandidates.cpp \
@@ -68,6 +69,7 @@ HEADERS += \
     puzzledata.h \
     savepuzzlethread.h \
     solver/BruteForceSolver.h \
+    solver/GhostCagesManager.h \
     solver/GridProgressManager.h \
     solver/Progress.h \
     solver/ProgressTypes.h \

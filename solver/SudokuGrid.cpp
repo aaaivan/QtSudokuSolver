@@ -4,6 +4,7 @@
 #include "GridProgressManager.h"
 #include "SudokuCell.h"
 #include "../sudokusolverthread.h"
+#include "GhostCagesManager.h"
 #include <cassert>
 
 SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
@@ -11,7 +12,7 @@ SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
     mParentNode(nullptr), // needs to be initialized before the progress manager
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
-    mGhostRegionsManager(std::make_unique<RegionsManager>(this)),
+    mGhostRegionsManager(std::make_unique<GhostCagesManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
     mHasSnapshort(false),
     mSolverThread(solverThread)
@@ -35,7 +36,7 @@ SudokuGrid::SudokuGrid(const SudokuGrid *grid) :
     mParentNode(grid),
     mGrid(),
     mRegionsManager(std::make_unique<RegionsManager>(this)),
-    mGhostRegionsManager(std::make_unique<RegionsManager>(this)),
+    mGhostRegionsManager(std::make_unique<GhostCagesManager>(this)),
     mProgressManager(std::make_unique<GridProgressManager>(this)),
     mHasSnapshort(false),
     mSolverThread(nullptr)
@@ -114,7 +115,7 @@ RegionsManager* SudokuGrid::RegionsManagerGet() const
     return mRegionsManager.get();
 }
 
-RegionsManager *SudokuGrid::GhostRegionsManagerGet() const
+GhostCagesManager *SudokuGrid::GhostRegionsManagerGet() const
 {
     return mGhostRegionsManager.get();
 }
@@ -155,9 +156,9 @@ void SudokuGrid::AddGivenCell(unsigned short row, unsigned short col, unsigned s
                 col < mSize &&
                 value <= mSize &&
                 "Index out of bound for a Given Cell");
-        mGrid.at(row).at(col)->MakeGiven(value);
 
         mProgressManager->Reset();
+        mGrid.at(row).at(col)->MakeGiven(value);
 }
 
 void SudokuGrid::SetCellOptions(unsigned short row, unsigned short col, std::set<unsigned short> options)
@@ -189,10 +190,6 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > 
 {
     assert(cells.size() <= mSize && "Index out of bound for a Given Cell");
 
-    // needs to be reset as adding a new region might invalidate the ghost regions
-    mGhostRegionsManager->Clear();
-    mProgressManager->Reset();
-
     CellSet cellList;
     for (const auto& rowCol : cells)
     {
@@ -202,6 +199,7 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > 
         cellList.emplace(mGrid.at(rowCol.at(0)).at(rowCol.at(1)).get());
     }
 
+    mProgressManager->Reset();
     RegionSPtr regionSPtr = std::make_shared<Region>(this, std::move(cellList), true);
     for (auto& constraint: constraints)
     {
