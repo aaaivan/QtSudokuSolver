@@ -10,6 +10,7 @@
 
 unsigned short kMinPuzzleSize = 4;
 unsigned short kMaxPuzzleSize = 9;
+unsigned short kDefaultPuzzleSize = 9;
 
 StartMenu::StartMenu(QWidget *parent)
     : QWidget{parent}
@@ -66,6 +67,7 @@ StartMenu::StartMenu(QWidget *parent)
         // spinbox form field
         formLayout->addRow("Select puzzle size:", mPuzzleSizeSpinbox);
         mPuzzleSizeSpinbox->setRange(kMinPuzzleSize, kMaxPuzzleSize);
+        mPuzzleSizeSpinbox->setValue(kDefaultPuzzleSize);
 
         // styling
         verticalLayout->setContentsMargins(50, 80, 50, 80);
