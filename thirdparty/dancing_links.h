@@ -63,6 +63,7 @@ typedef std::stack<RC_Stack> H_Stack;
  * step.
  */
 void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount, const bool* abort);
+void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions);
 
 /**
  * @brief Recursively solves the exact cover problem using the *dancing links* algorithm of Donald Knuth.
@@ -90,6 +91,7 @@ void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions, const si
          Repeat this algorithm recursively on the reduced matrix A
  */
 void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& foundSolutions, const size_t maxSolutionsCount, const bool* abort);
+void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& foundSolutions);
 
 
 /**

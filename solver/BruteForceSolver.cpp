@@ -68,7 +68,7 @@ void BruteForceSolver::GenerateIncidenceMatrix(bool useHints)
     for(const auto& reg: regions[(int)RegionType::KillerCage])
     {
         const KillerConstraint* kc = static_cast<const KillerConstraint*>(reg.get()->GetConstraintByType(RegionType::KillerCage));
-        im_cols += kc->AllowedValuesGet().size();
+        im_cols += size;;
         im_rows += kc->CombinationsGet().size();
     }
 
@@ -229,35 +229,28 @@ void BruteForceSolver::FillIncidenceMatrix(bool** M, const size_t rows)
         while(it != regions.end())
         {
             int start_c = c;
-            const KillerConstraint* kc = static_cast<const KillerConstraint*>((*it)->GetConstraintByType(RegionType::KillerCage));
             for(size_t i = 1; i <= size; ++i)
             {
-                if(kc->AllowedValuesGet().count(i))
+                for(size_t r = 0; r < rows; ++r)
                 {
-                    for(size_t r = 0; r < rows; ++r)
+                    if(r >= primaryRows)
                     {
-                        if(r >= primaryRows)
-                        {
-                            M[r][c] = 0;
-                            continue;
-                        }
-                        const Possibility p = PossibilityFromRowIndex(r);
-                        SudokuCell* cell = mGrid->CellGet(p.first);
-                        unsigned short value = p.second;
-                        M[r][c] = ((*it)->CellsGet().count(cell) && value == i);
+                        M[r][c] = 0;
+                        continue;
                     }
-                    ++c;
+                    const Possibility p = PossibilityFromRowIndex(r);
+                    SudokuCell* cell = mGrid->CellGet(p.first);
+                    unsigned short value = p.second;
+                    M[r][c] = ((*it)->CellsGet().count(cell) && value == i);
                 }
+                ++c;
             }
+            const KillerConstraint* kc = static_cast<const KillerConstraint*>((*it)->GetConstraintByType(RegionType::KillerCage));
             for(const auto& combination: kc->CombinationsGet())
             {
-                for(size_t i = 1, j = 0; i <= size; ++i)
+                for(size_t i = 1; i <= size; ++i)
                 {
-                    if(kc->AllowedValuesGet().count(i))
-                    {
-                        M[sec_r][start_c + j] = (combination.count(i) == 0);
-                        ++j;
-                    }
+                    M[sec_r][start_c + i - 1] = (combination.count(i) == 0);
                 }
                 ++sec_r;
             }

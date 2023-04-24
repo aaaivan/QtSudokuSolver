@@ -61,23 +61,48 @@ class KillerConstraint : public VariantConstraint
 private:
     unsigned int mCageSum;								// sum of the digits in the cage
     std::list<std::set<unsigned short>> mCombinations;	// sets of numbers whose sum equals mCageSum and whose size euqals the size of the region
-    std::set<unsigned short> mConfirmedValues;			// values that must be in the sum
-    std::set<unsigned short> mAllowedValues;			// values that could be in the sum
+    std::set<unsigned short> mConfirmedValues;
+
+    std::map<CellId, unsigned short> mCellToOrder;
+    std::map<unsigned short, CellId> mOrderToCell;
+    bool** mIncidenceMatrix;
+    size_t mRowsCount;
+    size_t mColsCount;
+    size_t mMainRowsCount;
 
     struct Snapshot
     {
+        bool** mIncidenceMatrix;
+        size_t mRowsCount;
+        size_t mColsCount;
         std::set<unsigned short> mConfirmedValues;
-        std::set<unsigned short> mAllowedValues;
-        std::list<std::set<unsigned short>> mCombinations;
 
-        Snapshot(const std::set<unsigned short>& confirmed,
-                 const std::set<unsigned short>& allowed,
-                 const std::list<std::set<unsigned short>>& combs):
-            mConfirmedValues(confirmed),
-            mAllowedValues(allowed),
-            mCombinations(combs)
-        {}
-
+        Snapshot(bool** incidenceMatrix, size_t rows, size_t cols, std::set<unsigned short> confirmedValues):
+            mRowsCount(rows),
+            mColsCount(cols),
+            mConfirmedValues(confirmedValues)
+        {
+            mIncidenceMatrix = new bool*[mRowsCount];
+            for (size_t i = 0; i < mRowsCount; ++i)
+            {
+                mIncidenceMatrix[i] = new bool[mColsCount];
+            }
+            for (size_t r = 0; r < mRowsCount; ++r)
+            {
+                for (size_t c = 0; c < mColsCount; ++c)
+                {
+                    mIncidenceMatrix[r][c] = incidenceMatrix[r][c];
+                }
+            }
+        }
+        ~Snapshot()
+        {
+            for (size_t i = 0; i < mRowsCount; ++i)
+            {
+                delete[] mIncidenceMatrix[i];
+            }
+            delete[] mIncidenceMatrix;
+        }
     };
     std::unique_ptr<Snapshot> mSnapshot;
 
@@ -93,7 +118,6 @@ public:
     RegionType TypeGet() override;
     const std::list<std::set<unsigned short>>& CombinationsGet() const;
     const std::set<unsigned short>& ConfirmedValuesGet() const;
-    const std::set<unsigned short>& AllowedValuesGet() const;
 
 // Non-constant methods
 
@@ -111,7 +135,7 @@ private:
     /// Recursive function to find the sets of digits with size equal to the size of the region
     /// and whose memebers sum to mCageSum
     /// </summary>
-    void FindCombinations();
+    void FindCombinations(std::list<unsigned short> allowedValues);
     void FindCombinationsInner(std::list<unsigned short>::const_iterator it, const std::list<unsigned short> &allowedValues, unsigned int runningTotal, std::list<unsigned short>& combination);
     /// <summary>
     /// Remove all combinations where one of the digits is value
@@ -126,13 +150,14 @@ private:
     /// </summary>
     void AddConfirmedValue(unsigned value);
     /// <summary>
-    /// Specify a value that may not be in the sum (e.g., 3 cells summing to 19 cannot contain a 1)
-    /// </summary>
-    void RemoveAllowedValue(unsigned short value);
-    /// <summary>
     /// Check whether we can add a confirmed value/remove an allowed value in the sum
     /// </summary>
     void UpdateAllowedAndConfirmedValues();
+
+    size_t RowFromPossibility(CellId cell, unsigned short value) const;
+    std::pair<CellId, unsigned short> PossibilityFromRow(size_t row) const;
+    void FillIncidenceMatrix();
+    bool ClearIncidenceMatrixRow(size_t row);
 };
 
 #endif // !VARIANT_CONSTRAINTS_H

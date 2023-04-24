@@ -37,6 +37,14 @@ void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions, const si
     DLX(M, solution, history, foundSolutions, maxSolutionsCount, abort);
     solution.shrink_to_fit();
 }
+void Exact_Cover_Solver(LMatrix& M, std::list<S_Stack>& foundSolutions)
+{
+    H_Stack history;
+    std::vector<size_t> solution;
+    solution.reserve(M.number_of_rows());
+    DLX(M, solution, history, foundSolutions);
+    solution.shrink_to_fit();
+}
 
 
 
@@ -58,6 +66,23 @@ void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& fo
         }
     }
 }
+void DLX(LMatrix& M, S_Stack& solution, H_Stack& history, std::list<S_Stack>& foundSolutions)
+{
+    Column *c = choose_column(M);
+    // 'M' is empty => solution successfully found
+    if( c == NULL ) {
+        foundSolutions.push_back(solution);
+        return;
+    }
+    for( MNode *r = c->down(); r != static_cast<MNode*>(c); r = r->down() ) {
+        update(M, solution, history, r);
+        DLX(M, solution, history, foundSolutions);
+        downdate(M, solution, history);
+    }
+}
+
+
+
 
 /* Given a matrix of linked nodes M, return a pointer to the column with the fewest nodes
  * If there are no columns, return NULL

@@ -416,21 +416,26 @@ void Progress_RegionBecameClosed::ProcessProgress()
 
 void Progress_ValueNotInKiller::ProcessProgress()
 {
-    for (const auto& c : mRegion->CellsGet())
-    {
-        c->RemoveOption(mValue);
-    }
+    mCell->RemoveMultipleOptions(mValues);
 
     PrintMessage();
 }
 
 void Progress_ValueNotInKiller::PrintMessage() const
 {
-    SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
+    SudokuSolverThread* st = mCell->GridGet()->SolverThreadGet();
     if(st)
     {
-        std::string message = "->Value " + std::to_string(mValue) + " not allowed in " +
-                mRegion->RegionNameGet() + ".";
+        std::string message = "->Values {";
+        auto vIt = mValues.begin();
+        while(vIt != mValues.end())
+        {
+            message += std::to_string(*vIt) + ",";
+            vIt++;
+        }
+        message.pop_back();
+        message += "} removed from " + mCell->CellNameGet() +
+                " as they break the sum in " + mRegion->RegionNameGet() + ".";
 
         st->NotifyLogicalDeduction(message);
     }

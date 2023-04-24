@@ -3,6 +3,8 @@
 #include "SudokuGrid.h"
 #include "GridProgressManager.h"
 #include "qglobal.h"
+#include "SudokuCell.h"
+#include "thirdparty/dancing_links.h"
 #include <cassert>
 
 VariantConstraint::VariantConstraint() :
@@ -29,13 +31,23 @@ KillerConstraint::KillerConstraint(unsigned int sum) :
     mCageSum(sum),
     mCombinations(),
     mConfirmedValues(),
-    mAllowedValues(),
+    mCellToOrder(),
+    mOrderToCell(),
+    mIncidenceMatrix(nullptr),
+    mRowsCount(0),
+    mColsCount(0),
+    mMainRowsCount(0),
     mSnapshot(nullptr)
 {
 }
 
 KillerConstraint::~KillerConstraint()
 {
+    for (size_t i = 0; i < mRowsCount; ++i)
+    {
+        delete[] mIncidenceMatrix[i];
+    }
+    delete[] mIncidenceMatrix;
 }
 
 void KillerConstraint::Initialise(Region* region)
@@ -43,8 +55,34 @@ void KillerConstraint::Initialise(Region* region)
     VariantConstraint::Initialise(region);
     mSnapshot.reset();
 
-    mAllowedValues.insert(mRegion->AllowedValuesGet().begin(), mRegion->AllowedValuesGet().end());
-    FindCombinations();
+    unsigned short x = 0;
+    for (const auto& c : region->CellsGet())
+    {
+        mCellToOrder[c->IdGet()] = x;
+        mOrderToCell[x] = c->IdGet();
+        ++x;
+    }
+
+    FindCombinations(std::list<unsigned short>(mRegion->AllowedValuesGet().begin(),
+                     mRegion->AllowedValuesGet().end()));
+
+    for (size_t i = 0; i < mRowsCount; ++i)
+    {
+        delete[] mIncidenceMatrix[i];
+    }
+    delete[] mIncidenceMatrix;
+
+    size_t gridSize = region->GridGet()->SizeGet();
+    mColsCount = region->SizeGet() + gridSize;
+    mMainRowsCount = region->SizeGet() * gridSize;
+    mRowsCount = mMainRowsCount + mCombinations.size();
+    mIncidenceMatrix = new bool*[mRowsCount];
+    for (size_t i = 0; i < mRowsCount; ++i)
+    {
+        mIncidenceMatrix[i] = new bool[mColsCount];
+    }
+    FillIncidenceMatrix();
+
     UpdateAllowedAndConfirmedValues();
 }
 
@@ -55,19 +93,24 @@ unsigned short KillerConstraint::SumGet() const
 
 void KillerConstraint::OnAllowedValueRemoved(unsigned short value)
 {
-    RemoveCombinationsWithValue(value);
+    Q_UNUSED(value);
 }
 
 void KillerConstraint::OnConfimedValueAdded(unsigned short value)
 {
-    RemoveCombinationsWithoutValue(value);
+    if(mConfirmedValues.count(value) == 0)
+    {
+        RemoveCombinationsWithoutValue(value);
+    }
 }
 
 void KillerConstraint::OnOptionRemovedFromCell(unsigned short value, SudokuCell* cell)
 {
-    Q_UNUSED(cell);
-    Q_UNUSED(value);
-    return;
+    size_t row = RowFromPossibility(cell->IdGet(), value);
+    if(ClearIncidenceMatrixRow(row))
+    {
+        UpdateAllowedAndConfirmedValues();
+    }
 }
 
 void KillerConstraint::OnRegionPartitioned(Region* leftNode, Region* rightNode)
@@ -100,16 +143,17 @@ VariantConstraint *KillerConstraint::DeepCopy() const
 
 void KillerConstraint::TakeSnaphot()
 {
-    mSnapshot = std::make_unique<Snapshot>(mConfirmedValues, mAllowedValues, mCombinations);
+    mSnapshot = std::make_unique<Snapshot>(mIncidenceMatrix, mRowsCount, mColsCount, mConfirmedValues);
 }
 
 void KillerConstraint::RestoreSnaphot()
 {
     if(mSnapshot)
     {
+        bool** temp = mIncidenceMatrix;
+        mIncidenceMatrix = mSnapshot->mIncidenceMatrix;
+        mSnapshot->mIncidenceMatrix = temp;
         mConfirmedValues = std::move(mSnapshot->mConfirmedValues);
-        mAllowedValues = std::move(mSnapshot->mAllowedValues);
-        mCombinations = std::move(mSnapshot->mCombinations);
         mSnapshot.reset();
     }
 }
@@ -124,21 +168,10 @@ const std::list<std::set<unsigned short> > &KillerConstraint::CombinationsGet() 
     return mCombinations;
 }
 
-const std::set<unsigned short> &KillerConstraint::ConfirmedValuesGet() const
-{
-    return mConfirmedValues;
-}
-
-const std::set<unsigned short> &KillerConstraint::AllowedValuesGet() const
-{
-    return mAllowedValues;
-}
-
-void KillerConstraint::FindCombinations()
+void KillerConstraint::FindCombinations(std::list<unsigned short> allowedValues)
 {
     mCombinations.clear();
     std::list<unsigned short> combination;
-    std::list<unsigned short> allowedValues(mAllowedValues.begin(), mAllowedValues.end());
     unsigned int total = 0;
     for(const auto& v : mRegion->ConfirmedValuesGet())
     {
@@ -179,25 +212,16 @@ void KillerConstraint::FindCombinationsInner(std::list<unsigned short>::const_it
 
 void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
 {
-    if (mConfirmedValues.count(value) > 0)
-    {
-        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoKillerSum>(this, mRegion->GridGet()));
-        return;
-    }
-
-    auto it = mCombinations.begin();
     bool removed = false;
-    while (it != mCombinations.end())
+    size_t i = 0;
+    for(const auto& combination: mCombinations)
     {
-        if (it->count(value) > 0)
+        if (combination.count(value) > 0)
         {
-            it = mCombinations.erase(it);
-            removed = true;
+            size_t row = mMainRowsCount + i;
+            removed |= ClearIncidenceMatrixRow(row);
         }
-        else
-        {
-            ++it;
-        }
+        ++i;
     }
 
     if (removed)
@@ -208,25 +232,16 @@ void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
 
 void KillerConstraint::RemoveCombinationsWithoutValue(unsigned short value)
 {
-    if (mAllowedValues.count(value) == 0)
-    {
-        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_NoKillerSum>(this, mRegion->GridGet()));
-        return;
-    }
-
-    auto it = mCombinations.begin();
     bool removed = false;
-    while (it != mCombinations.end())
+    size_t i = 0;
+    for(const auto& combination: mCombinations)
     {
-        if (it->count(value) == 0)
+        if (combination.count(value) == 0)
         {
-            it = mCombinations.erase(it);
-            removed = true;
+            size_t row = mMainRowsCount + i;
+            removed |= ClearIncidenceMatrixRow(row);
         }
-        else
-        {
-            ++it;
-        }
+        ++i;
     }
 
     if (removed)
@@ -243,47 +258,153 @@ void KillerConstraint::AddConfirmedValue(unsigned value)
     }
 }
 
-void KillerConstraint::RemoveAllowedValue(unsigned short value)
-{
-    if (mAllowedValues.erase(value) > 0 && mRegion->IsValueAllowed(value))
-    {
-        mRegion->GridGet()->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_ValueNotInKiller>(mRegion, value));
-    }
-}
-
 void KillerConstraint::UpdateAllowedAndConfirmedValues()
 {
-    std::set<unsigned short> disallowedValues;
-    for (const auto& v : mAllowedValues)
-    {
-        if (mConfirmedValues.count(v) == 0)
-        {
-            bool isConfirmed = true;
-            bool isAllowed = false;
-            for (const auto& c : mCombinations)
-            {
-                if (c.count(v) == 0)
-                {
-                    isConfirmed = false;
-                }
-                else
-                {
-                    isAllowed = true;
-                }
-            }
+    auto DLXMatrix = std::make_unique<linked_matrix_GJK::LMatrix>(mIncidenceMatrix, mRowsCount, mColsCount);
 
-            if (!isAllowed)
+    std::list<std::vector<size_t>> solutions;
+    dancing_links_GJK::Exact_Cover_Solver(*DLXMatrix, solutions);
+
+    SudokuGrid* grid = mRegion->GridGet();
+    std::vector<std::set<unsigned short>> optionsInCell(mCellToOrder.size(), std::set<unsigned short>());
+    std::vector<size_t> valuesCount(grid->SizeGet(), 0);
+
+    for (const auto& s : solutions)
+    {
+        for (const auto& r : s)
+        {
+            if(r >= mMainRowsCount) continue;
+
+            std::pair<CellId, unsigned short> p = PossibilityFromRow(r);
+            optionsInCell.at(mCellToOrder[p.first]).insert(p.second);
+            valuesCount[p.second - 1] += 1;
+        }
+    }
+
+    for (size_t i = 0; i < optionsInCell.size(); ++i)
+    {
+        SudokuCell* cell = grid->CellGet(mOrderToCell[i]);
+        if(optionsInCell.at(i).size() < cell->OptionsGet().size())
+        {
+            std::set<unsigned short> optionsToRemove;
+            for (const auto& v : cell->OptionsGet())
             {
-                disallowedValues.insert(v);
+                if(optionsInCell.at(i).count(v) == 0 &&
+                   ClearIncidenceMatrixRow(RowFromPossibility(cell->IdGet(), v)))
+                {
+                    optionsToRemove.insert(v);
+                }
             }
-            else if (isConfirmed)
+            if(optionsToRemove.size() > 0)
             {
-                AddConfirmedValue(v);
+                grid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_ValueNotInKiller>(cell, mRegion, std::move(optionsToRemove)));
             }
         }
     }
-    for(const auto& v : disallowedValues)
+
+    for (size_t i = 0; i < valuesCount.size(); ++i)
     {
-        RemoveAllowedValue(v);
+        if(valuesCount.at(i) == solutions.size())
+        {
+            AddConfirmedValue(i + 1);
+        }
     }
+}
+
+size_t KillerConstraint::RowFromPossibility(CellId cell, unsigned short value) const
+{
+    assert(value > 0 && mCellToOrder.count(cell) > 0);
+
+    size_t size = mRegion->GridGet()->SizeGet();
+    return mCellToOrder.at(cell) * size + value - 1;
+}
+
+std::pair<CellId, unsigned short> KillerConstraint::PossibilityFromRow(size_t row) const
+{
+    size_t size = mRegion->GridGet()->SizeGet();
+    assert(row < mMainRowsCount);
+
+    size_t pos = static_cast<CellId>(row/size);
+    CellId id = mOrderToCell.at(pos);
+    unsigned short value = static_cast<unsigned short>(row % size + 1);
+
+    return {id, value};
+}
+
+void KillerConstraint::FillIncidenceMatrix()
+{
+    unsigned short size = mRegion->GridGet()->SizeGet();
+    size_t c = 0;
+    size_t sec_r = mMainRowsCount;
+
+    // single value per cell constraint
+    for(size_t i = 0; i < mRegion->SizeGet(); ++i)
+    {
+        for(size_t r = 0; r < mRowsCount; ++r)
+        {
+            if(r >= mMainRowsCount)
+            {
+                mIncidenceMatrix[r][c] = 0;
+                continue;
+            }
+            const std::pair<CellId, unsigned short> p = PossibilityFromRow(r);
+            unsigned short pos = mCellToOrder.at(p.first);
+            mIncidenceMatrix[r][c] = (pos == i);
+        }
+        ++c;
+    }
+
+
+    // killer cages
+    // |Ka1 Ka2 Ka3 ... |
+    {
+        size_t start_c = c;
+        for(size_t i = 1; i <= size; ++i)
+        {
+            for(size_t r = 0; r < mRowsCount; ++r)
+            {
+                if(r >= mMainRowsCount)
+                {
+                    mIncidenceMatrix[r][c] = 0;
+                    continue;
+                }
+                const std::pair<CellId, unsigned short> p = PossibilityFromRow(r);
+                unsigned short value = p.second;
+                mIncidenceMatrix[r][c] = (value == i);
+            }
+            ++c;
+        }
+        for(const auto& combination: mCombinations)
+        {
+            for(size_t i = 1; i <= size; ++i)
+            {
+                mIncidenceMatrix[sec_r][start_c + i - 1] = (combination.count(i) == 0);
+            }
+            ++sec_r;
+        }
+    }
+
+    for (const auto& c : mRegion->CellsGet())
+    {
+        for(size_t i = 1; i <= size; ++i)
+        {
+            if(!c->HasGuess(i))
+            {
+                size_t r = RowFromPossibility(c->IdGet(), i);
+                ClearIncidenceMatrixRow(r);
+            }
+        }
+    }
+}
+
+bool KillerConstraint::ClearIncidenceMatrixRow(size_t row)
+{
+    bool result = false;
+    for(size_t col = 0; col < mColsCount; ++col)
+    {
+        result = mIncidenceMatrix[row][col] || result;
+        mIncidenceMatrix[row][col] = 0;
+    }
+
+    return result;
 }

@@ -242,13 +242,15 @@ public:
 
 class Progress_ValueNotInKiller : public Progress
 {
+    SudokuCell* mCell;
     Region* mRegion;
-    unsigned short mValue;
+    std::set<unsigned short> mValues;
 public:
-    Progress_ValueNotInKiller(Region* region, unsigned short value) :
+    Progress_ValueNotInKiller(SudokuCell* cell, Region* region, std::set<unsigned short>&& values) :
         Progress(ProgressType::ValueNotAllowedInKillerSum),
+        mCell(cell),
         mRegion(region),
-        mValue(value)
+        mValues(values)
     {}
     void ProcessProgress() override;
     void PrintMessage() const override;
