@@ -299,22 +299,45 @@ public:
     void PrintMessage() const override;
 };
 
-class Progress_Innie : public Progress
+class Progress_GhostCage : public Progress
 {
     CellSet mCells;
     unsigned int mTotal;
+    bool mInnie;
     SudokuGrid* mGrid;
+
 public:
-    Progress_Innie(CellSet&& cells, unsigned int total, SudokuGrid* grid):
-        Progress(ProgressType::InnieAddedToGrid),
+    Progress_GhostCage(CellSet&& cells, unsigned int total, bool innie, SudokuGrid* grid):
+        Progress(ProgressType::GhostCageAddedToGrid),
         mCells(cells),
         mTotal(total),
+        mInnie(innie),
         mGrid(grid)
     {}
     void ProcessProgress() override;
     void PrintMessage() const override;
 };
 
+class Progress_SplitOutie : public Progress
+{
+    CellSet mCells;
+    unsigned int mTotal;
+    unsigned short mMinAllowedValue;
+    unsigned short mMaxAllowedValue;
+    SudokuGrid* mGrid;
+
+public:
+    Progress_SplitOutie(CellSet&& cells, unsigned int total, unsigned short minValue, unsigned short maxValue, SudokuGrid* grid):
+        Progress(ProgressType::SumConstraintOnSplitOutie),
+        mCells(cells),
+        mTotal(total),
+        mMinAllowedValue(minValue),
+        mMaxAllowedValue(maxValue),
+        mGrid(grid)
+    {}
+    void ProcessProgress() override;
+    void PrintMessage() const override;
+};
 
 
 
@@ -472,14 +495,14 @@ public:
     void ProcessProgress() override;
 };
 
-class Impossible_ClashingInnies : public Progress_ImpossiblePuzzle
+class Impossible_ClashingGhostCages : public Progress_ImpossiblePuzzle
 {
     CellSet mCage;
     unsigned int mSum1;
     unsigned int mSum2;
 
 public:
-    Impossible_ClashingInnies(CellSet&& cage, unsigned int sum1, unsigned int sum2, SudokuGrid* grid):
+    Impossible_ClashingGhostCages(CellSet&& cage, unsigned int sum1, unsigned int sum2, SudokuGrid* grid):
         Progress_ImpossiblePuzzle(ProgressType::Impossible_ClashingInnies, grid),
         mCage(cage),
         mSum1(sum1),

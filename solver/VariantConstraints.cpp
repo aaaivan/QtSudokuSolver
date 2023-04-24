@@ -86,7 +86,7 @@ void KillerConstraint::Initialise(Region* region)
     UpdateAllowedAndConfirmedValues();
 }
 
-unsigned short KillerConstraint::SumGet() const
+unsigned int KillerConstraint::SumGet() const
 {
     return mCageSum;
 }

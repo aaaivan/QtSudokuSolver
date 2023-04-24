@@ -172,7 +172,8 @@ class InniesAndOuties : public SolvingTechnique
     std::list<KillerCombination> mKillerCombinations;
     std::list<KillerCage_t> mKillerUnions;
 
-    std::set<KillerCage_t> mGhostCages;
+    std::set<KillerCage_t> mInnieCages;
+    std::set<KillerCage_t> mOutieCages;
 public:
     InniesAndOuties(SudokuGrid *grid, ObservedComponent observedComponent);
 
@@ -182,10 +183,13 @@ public:
 private:
     void BuildMaps();
     void FillMapEntry(Region* r);
+
     void SearchInnies();
     void SearchInniesInner(KillerCage_t& unionCage);
-    void CalculateContainedCageCombinations(unsigned int size);
-    void CalculateContainedCageCombinationsInner(std::list<KillerCombination>& outCombinations, KillerSetIt kIt, const KillerSetIt& end, KillerCombination& nextComb, unsigned int size);
+    void SearchOuties();
+    void SearchOutiesInner(KillerCage_t& unionCage);
+    void CalculateCageCombinations(unsigned int size, const std::set<const KillerConstraint*>& availableKillers);
+    void CalculateCageCombinationsInner(std::list<KillerCombination>& outCombinations, KillerSetIt kIt, const KillerSetIt& end, KillerCombination& nextComb, unsigned int size);
 };
 
 #endif // !SOLVING_TECHNIQUE_H

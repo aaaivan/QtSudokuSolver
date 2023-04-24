@@ -495,13 +495,14 @@ void Progress_OptionRemovedViaGuessing::PrintMessage() const
     }
 }
 
-void Progress_Innie::ProcessProgress()
+void Progress_GhostCage::ProcessProgress()
 {
     CellSet cells = mCells;
     RegionSPtr regionSPtr = std::make_shared<Region>(mGrid, std::move(cells), true);
     regionSPtr->AddVariantConstraint(std::make_unique<KillerConstraint>(mTotal));
 
-    std::string name = "the " + std::to_string(mTotal) + " innie at {";
+    std::string type = mInnie ? "innie" : "outie";
+    std::string name = "the " + std::to_string(mTotal) + " " + type + " at {";
     auto cIt = mCells.begin();
     while(cIt != mCells.end())
     {
@@ -517,12 +518,13 @@ void Progress_Innie::ProcessProgress()
     PrintMessage();
 }
 
-void Progress_Innie::PrintMessage() const
+void Progress_GhostCage::PrintMessage() const
 {
     SudokuSolverThread* st = mGrid->SolverThreadGet();
     if(st)
     {
-        std::string message = "->Innie cage added to the grid. Total: " + std::to_string(mTotal) + "; Cells: {";
+        std::string type = mInnie ? "Innie" : "Outie";
+        std::string message = "->" + type + " cage added to the grid. Total: " + std::to_string(mTotal) + "; Cells: {";
         auto cIt = mCells.begin();
         while(cIt != mCells.end())
         {
@@ -535,6 +537,45 @@ void Progress_Innie::PrintMessage() const
         st->NotifyLogicalDeduction(message);
     }
 }
+
+void Progress_SplitOutie::ProcessProgress()
+{
+    for (const auto& c : mCells)
+    {
+        for (unsigned short i = mMinAllowedValue - 1; i > 0; --i)
+        {
+            c->RemoveOption(i);
+        }
+        for (unsigned short i = mMaxAllowedValue + 1; i <= mGrid->SizeGet(); ++i)
+        {
+            c->RemoveOption(i);
+        }
+    }
+
+    PrintMessage();
+}
+
+void Progress_SplitOutie::PrintMessage() const
+{
+    SudokuSolverThread* st = mGrid->SolverThreadGet();
+    if(st)
+    {
+        std::string message = "->Broken outie in cells {";
+        auto cIt = mCells.begin();
+        while(cIt != mCells.end())
+        {
+            message += (*cIt)->CellNameGet() + ",";
+            cIt++;
+        }
+        message.pop_back();
+        message += "} has total " + std::to_string(mTotal) + ". Only values between " +
+                std::to_string(mMinAllowedValue) + " and " + std::to_string(mMaxAllowedValue) + " are allowed.";
+
+        st->NotifyLogicalDeduction(message);
+    }
+}
+
+
 
 
 
@@ -612,7 +653,7 @@ void Impossible_BrokenInnie::ProcessProgress()
     Progress_ImpossiblePuzzle::ProcessProgress();
 }
 
-void Impossible_ClashingInnies::ProcessProgress()
+void Impossible_ClashingGhostCages::ProcessProgress()
 {
     Progress_ImpossiblePuzzle::ProcessProgress();
 }

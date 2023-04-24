@@ -114,7 +114,7 @@ public:
 
 // Public getters
 
-    unsigned short SumGet() const;
+    unsigned int SumGet() const;
     RegionType TypeGet() override;
     const std::list<std::set<unsigned short>>& CombinationsGet() const;
     const std::set<unsigned short>& ConfirmedValuesGet() const;

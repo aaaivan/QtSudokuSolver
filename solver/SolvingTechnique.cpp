@@ -474,7 +474,8 @@ InniesAndOuties::InniesAndOuties(SudokuGrid *grid, ObservedComponent observedCom
     mIntersectingKillers(),
     mKillerCombinations(),
     mKillerUnions(),
-    mGhostCages()
+    mInnieCages(),
+    mOutieCages()
 {
     // do not use this technique if there are no killer cages
     mFinished = mGrid->RegionsManagerGet()->StartingRegionsGet()[static_cast<size_t>(RegionType::KillerCage)].size() == 0;
@@ -503,13 +504,21 @@ void InniesAndOuties::NextStep()
     {
         SearchInnies();
     }
+    if(mIntersectingKillers.count(*mCurrentRegion) > 0)
+    {
+        SearchOuties();
+    }
 
     mCurrentRegion++;
     if(mCurrentRegion == mRegions.end())
     {
-        for(KillerCage_t k : mGhostCages)
+        for(KillerCage_t k : mInnieCages)
         {
-            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_Innie>(std::move(k.second), k.first, mGrid));
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GhostCage>(std::move(k.second), k.first, true, mGrid));
+        }
+        for(KillerCage_t k : mOutieCages)
+        {
+            mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_GhostCage>(std::move(k.second), k.first, false, mGrid));
         }
         mFinished = true;
     }
@@ -528,7 +537,8 @@ void InniesAndOuties::Reset()
     mContainedKillers.clear();
     mKillerCombinations.clear();
     mKillerUnions.clear();
-    mGhostCages.clear();
+    mInnieCages.clear();
+    mOutieCages.clear();
 }
 
 void InniesAndOuties::BuildMaps()

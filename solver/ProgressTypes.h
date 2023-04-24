@@ -33,8 +33,8 @@ enum class ProgressType : int
     ValueForcedInKillerSum,
     ValueDisallowedByBifurcation,
     ValueRemovedViaGuessing,
-    InnieAddedToGrid,
-    OutieAddedToGrid,
+    GhostCageAddedToGrid,
+    SumConstraintOnSplitOutie,
 
     Impossible_ClashWithGivenCell,
     Impossible_ClashWithSolvedCell,
