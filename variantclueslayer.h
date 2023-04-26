@@ -14,18 +14,18 @@ public:
 private :
     SudokuGridWidget* mGrid;
     const int mCellLength;
-    QSet<QWidget*> mOverlayComponents;
-    QWidget* mActiveComponent;
+    QSet<QWidget*> mVariantClues;
+    QWidget* mActiveClue;
 
-    void ClearActiveComponent(bool willBeDeleted);
+    void ClearActiveClue(bool willBeDeleted);
 public:
-    QSet<QWidget*> OverlayComponentsGet() const;
-    QWidget* ActiveComponentGet() const;
+    QSet<QWidget*> VariantCluesGet() const;
+    QWidget* ActiveClueGet() const;
 
-    bool AddOverlayComponent(QWidget* component, bool setSelected);
-    bool RemoveOverlayComponent(QWidget* component);
-    bool ActiveComponentSet(QWidget *component);
-    void ClearActiveComponent();
+    bool AddVariantClue(QWidget* widget, bool setSelected);
+    bool RemoveVariantClue(QWidget* widget);
+    bool ActiveClueSet(QWidget *widget);
+    void ClearActiveClue();
 };
 
 #endif // VARIANTCLUESLAYER_H

@@ -367,7 +367,7 @@ void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
         }
         else
         {
-            mGrid->VariantCluesLayerGet()->RemoveOverlayComponent(this);
+            mGrid->VariantCluesLayerGet()->RemoveVariantClue(this);
         }
 
     }

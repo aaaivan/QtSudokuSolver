@@ -7,95 +7,95 @@ VariantCluesLayer::VariantCluesLayer(SudokuGridWidget* grid, int cellLength, QWi
     : QFrame{parent},
       mGrid(grid),
       mCellLength(cellLength),
-      mOverlayComponents(),
-      mActiveComponent(nullptr)
+      mVariantClues(),
+      mActiveClue(nullptr)
 {
     this->setAttribute(Qt::WA_TransparentForMouseEvents);
     this->setFrameStyle(QFrame::NoFrame);
     this->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Fixed,QSizePolicy::Policy::Fixed));
 }
 
-QSet<QWidget *> VariantCluesLayer::OverlayComponentsGet() const
+QSet<QWidget *> VariantCluesLayer::VariantCluesGet() const
 {
-    return mOverlayComponents;
+    return mVariantClues;
 }
 
-QWidget *VariantCluesLayer::ActiveComponentGet() const
+QWidget *VariantCluesLayer::ActiveClueGet() const
 {
-    return mActiveComponent;
+    return mActiveClue;
 }
 
-bool VariantCluesLayer::AddOverlayComponent(QWidget *component, bool setSelected)
+bool VariantCluesLayer::AddVariantClue(QWidget *widget, bool setSelected)
 {
-    if(component && !mOverlayComponents.contains(component))
+    if(widget && !mVariantClues.contains(widget))
     {
-        component->setParent(this);
-        component->show();
-        mOverlayComponents.insert(component);
+        widget->setParent(this);
+        widget->show();
+        mVariantClues.insert(widget);
 
-        if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(component); clue)
+        if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(widget); clue)
         {
-            clue->ContextMenuGet()->ClueAdded(component);
+            clue->ContextMenuGet()->ClueAdded(widget);
         }
         if(setSelected)
         {
-            ActiveComponentSet(component);
+            ActiveClueSet(widget);
         }
         return true;
     }
     return false;
 }
 
-bool VariantCluesLayer::RemoveOverlayComponent(QWidget *component)
+bool VariantCluesLayer::RemoveVariantClue(QWidget *widget)
 {
-    if(component && mOverlayComponents.remove(component))
+    if(widget && mVariantClues.remove(widget))
     {
-        if(mActiveComponent == component)
+        if(mActiveClue == widget)
         {
-            ClearActiveComponent(true);
+            ClearActiveClue(true);
         }
-        if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(component); clue)
+        if(VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(widget); clue)
         {
-            clue->ContextMenuGet()->ClueRemoved(component);
+            clue->ContextMenuGet()->ClueRemoved(widget);
         }
-        component->deleteLater();
+        widget->deleteLater();
         return true;
     }
     return false;
 }
 
-bool VariantCluesLayer::ActiveComponentSet(QWidget *component)
+bool VariantCluesLayer::ActiveClueSet(QWidget *widget)
 {
-    if(mOverlayComponents.contains(component) && mActiveComponent != component)
+    if(mVariantClues.contains(widget) && mActiveClue != widget)
     {
-        QWidget* prevActive = mActiveComponent;
-        mActiveComponent = component;
+        QWidget* prevActive = mActiveClue;
+        mActiveClue = widget;
         VariantClueWidget* prevClue = dynamic_cast<VariantClueWidget*>(prevActive);
         if(prevClue)
         {
             prevClue->ClueDidGetInactive();
             prevClue->ContextMenuGet()->ClueDidGetInactive(prevActive, false);
         }
-        VariantClueWidget* newClue = dynamic_cast<VariantClueWidget*>(mActiveComponent);
+        VariantClueWidget* newClue = dynamic_cast<VariantClueWidget*>(mActiveClue);
         if(newClue)
         {
             newClue->ClueDidGetActive();
-            newClue->ContextMenuGet()->ClueDidGetActive(mActiveComponent);
+            newClue->ContextMenuGet()->ClueDidGetActive(mActiveClue);
         }
         return true;
     }
     return false;
 }
 
-void VariantCluesLayer::ClearActiveComponent()
+void VariantCluesLayer::ClearActiveClue()
 {
-    ClearActiveComponent(false);
+    ClearActiveClue(false);
 }
 
-void VariantCluesLayer::ClearActiveComponent(bool willBeDeleted)
+void VariantCluesLayer::ClearActiveClue(bool willBeDeleted)
 {
-    QWidget* prevActive = mActiveComponent;
-    mActiveComponent = nullptr;
+    QWidget* prevActive = mActiveClue;
+    mActiveClue = nullptr;
     VariantClueWidget* clue = dynamic_cast<VariantClueWidget*>(prevActive);
     if(clue)
     {
