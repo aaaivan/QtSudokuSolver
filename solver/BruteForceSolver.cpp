@@ -279,7 +279,7 @@ void BruteForceSolver::CountSolutions(size_t maxSolutionsCount)
     mBruteForceThread->NotifySolutionsCountReady(mSolutions.size(), stopped);
 }
 
-void BruteForceSolver::FindSolution(size_t maxSolutionsCount)
+void BruteForceSolver::FindSolutions(size_t maxSolutionsCount)
 {
     CountSolutions(maxSolutionsCount);
     std::vector<unsigned short> solution;

@@ -43,7 +43,7 @@ void BruteForceSolverThread::run()
     emit CalculationStarted();
     if(displaySolution)
     {
-        mBruteForceSolver->FindSolution(maxSolutionCount);
+        mBruteForceSolver->FindSolutions(maxSolutionCount);
     }
     else
     {

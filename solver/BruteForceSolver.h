@@ -39,7 +39,7 @@ public:
     void DirtySolutions();
     void GenerateIncidenceMatrix(bool useHints);
     void CountSolutions(size_t maxSolutionsCount);
-    void FindSolution(size_t maxSolutionsCount);
+    void FindSolutions(size_t maxSolutionsCount);
 };
 
 #endif // BRUTEFORCESOLVER_H
