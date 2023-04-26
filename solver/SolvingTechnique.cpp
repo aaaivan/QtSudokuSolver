@@ -155,13 +155,13 @@ void NakedSubsetTechnique::Reset()
 
 
 
-HiddenNakedSubsetTechnique::HiddenNakedSubsetTechnique(SudokuGrid* regionsManager, ObservedComponent observedComponent) :
-    SolvingTechnique(regionsManager, TechniqueType::HiddenNakedSubset, observedComponent),
+HiddenSubsetTechnique::HiddenSubsetTechnique(SudokuGrid* regionsManager, ObservedComponent observedComponent) :
+    SolvingTechnique(regionsManager, TechniqueType::HiddenSubset, observedComponent),
     mCurrentRegion(nullptr)
 {
 }
 
-void HiddenNakedSubsetTechnique::NextStep()
+void HiddenSubsetTechnique::NextStep()
 {
     if (HasFinished())
     {
@@ -184,7 +184,7 @@ void HiddenNakedSubsetTechnique::NextStep()
     std::set<unsigned short> hotValues;
     if (mCurrentRegion->UpdateManagerGet()->IsRegionReadyForTechnique(mType, hotValues))
     {
-        SearchHiddenNakedSubsets(hotValues);
+        SearchHiddenSubsets(hotValues);
     }
 
     ++it;
@@ -199,7 +199,7 @@ void HiddenNakedSubsetTechnique::NextStep()
     }
 }
 
-void HiddenNakedSubsetTechnique::Reset()
+void HiddenSubsetTechnique::Reset()
 {
     mCurrentRegion = nullptr;
     mFinished = false;

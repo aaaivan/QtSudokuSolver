@@ -1,4 +1,4 @@
-#include "adddigitscontrols.h"
+#include "adddigitscontextmenu.h"
 #include "sudokucellwidget.h"
 #include "sudokugridwidget.h"
 #include "mainwindowcontent.h"
@@ -13,7 +13,7 @@
 #include <QPushButton>
 #include <set>
 
-AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
+AddDigitsContextMenu::AddDigitsContextMenu(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       ContextMenuWindow(mainWindowContent),
       mGrid(mainWindowContent->GridGet()),
@@ -100,7 +100,7 @@ AddDigitsControls::AddDigitsControls(MainWindowContent* mainWindowContent, const
     }
 }
 
-void AddDigitsControls::CellGainedFocus(SudokuCellWidget *cell)
+void AddDigitsContextMenu::CellGainedFocus(SudokuCellWidget *cell)
 {
     if(cell != mFocusedCell)
     {
@@ -115,7 +115,7 @@ void AddDigitsControls::CellGainedFocus(SudokuCellWidget *cell)
     }
 }
 
-void AddDigitsControls::CellLostFocus(SudokuCellWidget *cell)
+void AddDigitsContextMenu::CellLostFocus(SudokuCellWidget *cell)
 {
     if(cell == mFocusedCell)
     {
@@ -138,12 +138,12 @@ void AddDigitsControls::CellLostFocus(SudokuCellWidget *cell)
     }
 }
 
-void AddDigitsControls::CellClicked(SudokuCellWidget *cell)
+void AddDigitsContextMenu::CellClicked(SudokuCellWidget *cell)
 {
     Q_UNUSED(cell)
 }
 
-void AddDigitsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
+void AddDigitsContextMenu::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
 {
     bool ok;
     int num = event->text().toInt(&ok);
@@ -158,7 +158,7 @@ void AddDigitsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
     }
 }
 
-void AddDigitsControls::DeleteAllBtn_Clicked()
+void AddDigitsContextMenu::DeleteAllBtn_Clicked()
 {
     auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "Delete All Digits", "All the given digits in the grid will be deleted.\nContinue?",
                                                         QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Ok, QMessageBox::StandardButton::Cancel));
@@ -176,7 +176,7 @@ void AddDigitsControls::DeleteAllBtn_Clicked()
     }
 }
 
-void AddDigitsControls::HintCheckbox_Toggled(int id, bool checked)
+void AddDigitsContextMenu::HintCheckbox_Toggled(int id, bool checked)
 {
     if(!mFocusedCell || mMainWindowContent->ActiveContextMenuGet() != this)
     {
@@ -195,7 +195,7 @@ void AddDigitsControls::HintCheckbox_Toggled(int id, bool checked)
     mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
-void AddDigitsControls::DoneBtn_Clicked()
+void AddDigitsContextMenu::DoneBtn_Clicked()
 {
     FocusedCellSet(nullptr);
     for (const auto& btn : mCheckBoxes)
@@ -205,7 +205,7 @@ void AddDigitsControls::DoneBtn_Clicked()
     SwitchView(MenuView::MainView);
 }
 
-void AddDigitsControls::DeleteBtn_Clicked()
+void AddDigitsContextMenu::DeleteBtn_Clicked()
 {
     for (const auto& btn : mCheckBoxes)
     {
@@ -213,7 +213,7 @@ void AddDigitsControls::DeleteBtn_Clicked()
     }
 }
 
-void AddDigitsControls::App_FocusChanged(QWidget *old, QWidget *now)
+void AddDigitsContextMenu::App_FocusChanged(QWidget *old, QWidget *now)
 {
     if(mMainWindowContent->ActiveContextMenuGet() != this)
     {
@@ -242,19 +242,19 @@ void AddDigitsControls::App_FocusChanged(QWidget *old, QWidget *now)
     }
 }
 
-void AddDigitsControls::hideEvent(QHideEvent *event)
+void AddDigitsContextMenu::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
     FocusedCellSet(nullptr);
 }
 
-void AddDigitsControls::showEvent(QShowEvent *event)
+void AddDigitsContextMenu::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     SwitchView(MenuView::MainView);
 }
 
-void AddDigitsControls::SwitchView(MenuView newView)
+void AddDigitsContextMenu::SwitchView(MenuView newView)
 {
     if(mCurrentView != newView)
     {
@@ -263,7 +263,7 @@ void AddDigitsControls::SwitchView(MenuView newView)
     }
 }
 
-void AddDigitsControls::FocusedCellSet(SudokuCellWidget *cell)
+void AddDigitsContextMenu::FocusedCellSet(SudokuCellWidget *cell)
 {
     if(mFocusedCell != cell)
     {

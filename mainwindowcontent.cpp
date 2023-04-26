@@ -1,10 +1,10 @@
 #include "mainwindowcontent.h"
 #include "mainwindow.h"
-#include "adddigitscontrols.h"
-#include "drawkillerscontrols.h"
+#include "adddigitscontextmenu.h"
+#include "drawkillerscontextmenu.h"
 #include "sudokugridwidget.h"
 #include "editgridcontrols.h"
-#include "drawregionscontrols.h"
+#include "drawregionscontextmenu.h"
 #include "solvercontrols.h"
 #include "solvercontextmenu.h"
 #include <QFrame>
@@ -47,9 +47,9 @@ MainWindowContent::MainWindowContent(unsigned short size, MainWindow *parent, st
     // build context menu stacked layout
     mContextMenu->setStackingMode(QStackedLayout::StackingMode::StackOne);
     contextMenuFrame->setLayout(mContextMenu);
-    AddDigitsControls* enterDigitsControls = new AddDigitsControls(this, loadedGrid.get());
-    DrawKillersControls* drawKillerControls = new DrawKillersControls(this, loadedGrid.get());
-    DrawRegionsControls* regionsEditControls = new DrawRegionsControls(this, loadedGrid.get());
+    AddDigitsContextMenu* enterDigitsControls = new AddDigitsContextMenu(this, loadedGrid.get());
+    DrawKillersContextMenu* drawKillerControls = new DrawKillersContextMenu(this, loadedGrid.get());
+    DrawRegionsContextMenu* regionsEditControls = new DrawRegionsContextMenu(this, loadedGrid.get());
     SolverContextMenu* solverContextMenu = new SolverContextMenu(this);
 
     mContextMenu->insertWidget(ContextMenuType::EnterDigits_Context, enterDigitsControls);

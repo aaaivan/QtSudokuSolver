@@ -6,7 +6,7 @@
 #include <QLabel>
 
 class SudokuCellWidget;
-class DrawKillersControls;
+class DrawKillersContextMenu;
 class QPainter;
 
 class KillerCageWidget : public QLabel, public VariantClueWidget
@@ -14,7 +14,7 @@ class KillerCageWidget : public QLabel, public VariantClueWidget
     Q_OBJECT
 public:
     explicit KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, unsigned int total,
-                              SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent = nullptr);
+                              SudokuGridWidget* grid, DrawKillersContextMenu* killerContextMenu, QWidget *parent = nullptr);
     virtual ~KillerCageWidget();
 
 private:

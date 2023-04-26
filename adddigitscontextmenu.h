@@ -1,5 +1,5 @@
-#ifndef ADDDIGITSCONTROLS_H
-#define ADDDIGITSCONTROLS_H
+#ifndef ADDDIGITSCONTEXTMENU_H
+#define ADDDIGITSCONTEXTMENU_H
 
 #include "contextmenuwindow.h"
 #include <QWidget>
@@ -9,11 +9,11 @@ class QStackedLayout;
 class QCheckBox;
 class PuzzleData;
 
-class AddDigitsControls : public QWidget, public ContextMenuWindow
+class AddDigitsContextMenu : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit AddDigitsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
+    explicit AddDigitsContextMenu(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private slots:
     void DeleteAllBtn_Clicked();
@@ -48,4 +48,4 @@ public:
     void KeyboardInput(SudokuCellWidget* cell, QKeyEvent* event) override;
 };
 
-#endif // ADDDIGITSCONTROLS_H
+#endif // ADDDIGITSCONTEXTMENU_H

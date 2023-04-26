@@ -1,5 +1,5 @@
-#ifndef DRAWREGIONSCONTROLS_H
-#define DRAWREGIONSCONTROLS_H
+#ifndef DRAWREGIONSCONTEXTMENU_H
+#define DRAWREGIONSCONTEXTMENU_H
 
 #include "contextmenuwindow.h"
 #include "puzzledata.h"
@@ -13,11 +13,11 @@ class QComboBox;
 class QPushButton;
 class QLabel;
 
-class DrawRegionsControls : public QWidget, public ContextMenuWindow
+class DrawRegionsContextMenu : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit DrawRegionsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
+    explicit DrawRegionsContextMenu(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private:
     SudokuGridWidget* mGrid;
@@ -45,4 +45,4 @@ public:
     unsigned short SelectedRegionIdGet() const;
 };
 
-#endif // DRAWREGIONSCONTROLS_H
+#endif // DRAWREGIONSCONTEXTMENU_H

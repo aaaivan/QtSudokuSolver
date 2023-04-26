@@ -12,7 +12,7 @@ class BruteForceSolverThread;
 
 class BruteForceSolver
 {
-    SudokuGrid* mGrid;           // reference to the grid
+    const SudokuGrid* mGrid;           // reference to the grid
     BruteForceSolverThread* mBruteForceThread;
 
     bool mUseHintsAsConstraints; // whether the hints should be used as constraints

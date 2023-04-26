@@ -43,6 +43,7 @@ public:
     void NextStep() override;
     void Reset() override;
 
+private:
     /// <summary>
     /// Search for a locked candidates in the specified region.
     /// A candidate is locked when the cells that can host it are at the intersection of two or more Regions.
@@ -61,6 +62,7 @@ public :
     void NextStep() override;
     void Reset() override;
 
+private:
     /// <summary>
     /// Find the smallest precedently undiscovered naked subsets in the specified region.
     /// A naked subset is a set of N cells whose candidates are picked from a set of exactly N values.
@@ -70,23 +72,24 @@ public :
     bool SearchNakedSubsetInner(const CellList& cells, CellList::iterator it, const CellList::iterator endIt, const CellSet& excludeCells, std::set<unsigned short>& candidates, CellList& outNakedSubset, const size_t targetSize, bool& impossible);
 };
 
-class HiddenNakedSubsetTechnique : public SolvingTechnique
+class HiddenSubsetTechnique : public SolvingTechnique
 {
     Region* mCurrentRegion;
 
 public:
-    HiddenNakedSubsetTechnique(SudokuGrid* grid, ObservedComponent observedComponent);
+    HiddenSubsetTechnique(SudokuGrid* grid, ObservedComponent observedComponent);
 
     void NextStep() override;
     void Reset() override;
 
+private:
     /// <summary>
     /// Find the smallest precedently undiscovered hidden naked subsets in the specified region.
     /// A hidden naked subset is a set of N candidates whose viable hosting cells are picked from a set of exactly N cells.
     /// Returns true if any progress was maden (either the technique was successful or the puzzle was found to be impossible)
     /// </summary>
-    void SearchHiddenNakedSubsets(const std::set<unsigned short>& valuesToSearch);
-    bool SearchHiddenNakedSubsetInner(const std::list<ValueMapEntry>& values, std::list<ValueMapEntry>::iterator it, const std::list<ValueMapEntry>::iterator endIt, const std::set<unsigned short>& excludeValues, std::list<unsigned short>& candidates, CellSet& outNakedSubset, const size_t subsetFinalSize, bool& impossible);
+    void SearchHiddenSubsets(const std::set<unsigned short>& valuesToSearch);
+    bool SearchHiddenSubsetInner(const std::list<ValueMapEntry>& values, std::list<ValueMapEntry>::iterator it, const std::list<ValueMapEntry>::iterator endIt, const std::set<unsigned short>& excludeValues, std::list<unsigned short>& candidates, CellSet& outNakedSubset, const size_t subsetFinalSize, bool& impossible);
 };
 
 typedef std::list<Region*>::iterator RegListIt;
@@ -112,6 +115,8 @@ public:
 
     void NextStep() override;
     void Reset() override;
+
+private:
     void UpdateRegions();
     void NotifyFailure();
 

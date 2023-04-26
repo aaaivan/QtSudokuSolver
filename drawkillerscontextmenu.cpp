@@ -1,4 +1,4 @@
-#include "drawkillerscontrols.h"
+#include "drawkillerscontextmenu.h"
 #include "sudokucellwidget.h"
 #include "killercagewidget.h"
 #include "gridgraphicaloverlay.h"
@@ -14,7 +14,7 @@
 #include <QSpinBox>
 #include <QStackedLayout>
 
-DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
+DrawKillersContextMenu::DrawKillersContextMenu(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       ContextMenuWindow(mainWindowContent),
       mGrid(mainWindowContent->GridGet()),
@@ -101,19 +101,19 @@ DrawKillersControls::DrawKillersControls(MainWindowContent* mainWindowContent, c
     }
 }
 
-void DrawKillersControls::hideEvent(QHideEvent *event)
+void DrawKillersContextMenu::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
     mGrid->GraphicalOverlayGet()->ClearActiveComponent();
 }
 
-void DrawKillersControls::showEvent(QShowEvent *event)
+void DrawKillersContextMenu::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     SwitchView(MenuView::MainView);
 }
 
-void DrawKillersControls::UpdateCageTotalLimits(KillerCageWidget *activeCage)
+void DrawKillersContextMenu::UpdateCageTotalLimits(KillerCageWidget *activeCage)
 {
     if(activeCage)
     {
@@ -129,7 +129,7 @@ void DrawKillersControls::UpdateCageTotalLimits(KillerCageWidget *activeCage)
     }
 }
 
-void DrawKillersControls::SwitchView(MenuView newView)
+void DrawKillersContextMenu::SwitchView(MenuView newView)
 {
     if(newView != mCurrentView)
     {
@@ -138,7 +138,7 @@ void DrawKillersControls::SwitchView(MenuView newView)
     }
 }
 
-void DrawKillersControls::CellClickedInMainView(SudokuCellWidget *cell)
+void DrawKillersContextMenu::CellClickedInMainView(SudokuCellWidget *cell)
 {
     bool handled = false;
     for (const auto& clue : cell->VariantCluesGet()) {
@@ -159,7 +159,7 @@ void DrawKillersControls::CellClickedInMainView(SudokuCellWidget *cell)
     }
 }
 
-void DrawKillersControls::CellClickedInEditView(SudokuCellWidget *cell)
+void DrawKillersContextMenu::CellClickedInEditView(SudokuCellWidget *cell)
 {
     KillerCageWidget* activeCage = dynamic_cast<KillerCageWidget*>(mGrid->GraphicalOverlayGet()->ActiveComponentGet());
     if(activeCage)
@@ -187,24 +187,24 @@ void DrawKillersControls::CellClickedInEditView(SudokuCellWidget *cell)
     }
 }
 
-void DrawKillersControls::CreateNewCageFromCell(SudokuCellWidget *cell)
+void DrawKillersContextMenu::CreateNewCageFromCell(SudokuCellWidget *cell)
 {
     KillerCageWidget* killerCageWidget = new KillerCageWidget(mGrid->SizeGet(), mGrid->CellLengthGet(), cell,
                                                               1, mGrid, this, mGrid->GraphicalOverlayGet());
     mGrid->GraphicalOverlayGet()->AddOverlayComponent(killerCageWidget, true);
 }
 
-void DrawKillersControls::CellGainedFocus(SudokuCellWidget *cell)
+void DrawKillersContextMenu::CellGainedFocus(SudokuCellWidget *cell)
 {
     Q_UNUSED(cell)
 }
 
-void DrawKillersControls::CellLostFocus(SudokuCellWidget *cell)
+void DrawKillersContextMenu::CellLostFocus(SudokuCellWidget *cell)
 {
     Q_UNUSED(cell)
 }
 
-void DrawKillersControls::CellClicked(SudokuCellWidget *cell)
+void DrawKillersContextMenu::CellClicked(SudokuCellWidget *cell)
 {
     switch (mCurrentView)
     {
@@ -219,13 +219,13 @@ void DrawKillersControls::CellClicked(SudokuCellWidget *cell)
     }
 }
 
-void DrawKillersControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
+void DrawKillersContextMenu::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
 {
     Q_UNUSED(cell)
     Q_UNUSED(event)
 }
 
-void DrawKillersControls::ClueDidGetActive(QWidget *clue)
+void DrawKillersContextMenu::ClueDidGetActive(QWidget *clue)
 {
     SwitchView(MenuView::EditKiller);
     KillerCageWidget* cage = dynamic_cast<KillerCageWidget*>(clue);
@@ -239,7 +239,7 @@ void DrawKillersControls::ClueDidGetActive(QWidget *clue)
     }
 }
 
-void DrawKillersControls::ClueDidGetInactive(QWidget *clue, bool willBeDeleted)
+void DrawKillersContextMenu::ClueDidGetInactive(QWidget *clue, bool willBeDeleted)
 {
     mCageTotal->setRange(0, 0);
     SwitchView(MenuView::MainView);
@@ -291,7 +291,7 @@ void DrawKillersControls::ClueDidGetInactive(QWidget *clue, bool willBeDeleted)
     }
 }
 
-void DrawKillersControls::DeleteAllKillersBtn_Clicked()
+void DrawKillersContextMenu::DeleteAllKillersBtn_Clicked()
 {
     auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "Delete All Killer Cages", "All the killer cages in the grid will be deleted.\nContinue?",
                                                         QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Ok, QMessageBox::StandardButton::Cancel));
@@ -318,13 +318,13 @@ void DrawKillersControls::DeleteAllKillersBtn_Clicked()
     }
 }
 
-void DrawKillersControls::EditingDoneBtn_Clicked()
+void DrawKillersContextMenu::EditingDoneBtn_Clicked()
 {
     mGrid->GraphicalOverlayGet()->ClearActiveComponent();
     SwitchView(MenuView::MainView);
 }
 
-void DrawKillersControls::DeleteActiveKillerBtn_Clicked()
+void DrawKillersContextMenu::DeleteActiveKillerBtn_Clicked()
 {
     auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "Delete Killer Cage", "The selected killer cage will be deleted.\nContinue?",
                                                         QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Ok, QMessageBox::StandardButton::Cancel));
@@ -336,7 +336,7 @@ void DrawKillersControls::DeleteActiveKillerBtn_Clicked()
     }
 }
 
-void DrawKillersControls::CageTotal_ValueChanged(int value)
+void DrawKillersContextMenu::CageTotal_ValueChanged(int value)
 {
     KillerCageWidget* cage = dynamic_cast<KillerCageWidget*>(mGrid->GraphicalOverlayGet()->ActiveComponentGet());
     if(cage && mMainWindowContent->ActiveContextMenuGet() == this)

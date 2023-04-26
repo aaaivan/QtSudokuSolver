@@ -6,7 +6,7 @@ enum class TechniqueType
 {
     LockedCandidates,
     NakedSubset,
-    HiddenNakedSubset,
+    HiddenSubset,
     Fish,
     InniesOuties,
     Bifurcation,
@@ -20,7 +20,7 @@ enum class ProgressType : int
     SingleOptionLeftInCell,
     SingleCellInRegionForOption,
     NakedSubetFound,
-    HiddenNakedSubsetFound,
+    HiddenSubsetFound,
     OptionRemoved,
     LockedCandidatesFound,
     AlmostLockedCandidatesFound,

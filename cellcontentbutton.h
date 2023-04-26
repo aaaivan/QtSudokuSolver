@@ -12,7 +12,6 @@ public:
     explicit CellContentButton(unsigned short numOptions, SudokuCellWidget *parent);
 
 private:
-    unsigned short mNumOptions;
     SudokuCellWidget* mCell;
 
     void mouseReleaseEvent(QMouseEvent *event) override;

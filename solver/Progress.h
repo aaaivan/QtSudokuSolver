@@ -93,20 +93,20 @@ public:
     void PrintMessage() const override;
 };
 
-class Progress_HiddenNakedSubset : public Progress
+class Progress_HiddenSubset : public Progress
 {
     CellSet mCells;
     Region* mRegion;
     std::set<unsigned short> mValues;
 public:
-    Progress_HiddenNakedSubset(CellSet&& cells, Region* region, std::list<unsigned short>&& values) :
-        Progress(ProgressType::HiddenNakedSubsetFound),
+    Progress_HiddenSubset(CellSet&& cells, Region* region, std::list<unsigned short>&& values) :
+        Progress(ProgressType::HiddenSubsetFound),
         mCells(cells),
         mRegion(region),
         mValues(values.begin(), values.end())
     {}
-    Progress_HiddenNakedSubset(CellSet& cells, std::set<unsigned short>& values) :
-        Progress(ProgressType::HiddenNakedSubsetFound),
+    Progress_HiddenSubset(CellSet& cells, std::set<unsigned short>& values) :
+        Progress(ProgressType::HiddenSubsetFound),
         mCells(cells),
         mValues(values)
     {}

@@ -1,4 +1,4 @@
-#include "drawregionscontrols.h"
+#include "drawregionscontextmenu.h"
 #include "sudokucellwidget.h"
 #include "sudokugridwidget.h"
 #include "mainwindowcontent.h"
@@ -14,7 +14,7 @@
 
 constexpr char kCounterLabelText[] = "Cells in region %1: <b>%2</b>";
 
-DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
+DrawRegionsContextMenu::DrawRegionsContextMenu(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid, QWidget *parent)
     : QWidget{parent},
       ContextMenuWindow(mainWindowContent),
       mGrid(mainWindowContent->GridGet()),
@@ -102,7 +102,7 @@ DrawRegionsControls::DrawRegionsControls(MainWindowContent* mainWindowContent, c
     }
 }
 
-void DrawRegionsControls::hideEvent(QHideEvent *event)
+void DrawRegionsContextMenu::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
     for(const auto& vect : mGrid->CellsGet())
@@ -121,7 +121,7 @@ void DrawRegionsControls::hideEvent(QHideEvent *event)
     mGrid->SolverGet()->SubmitChangesToSolver();
 }
 
-void DrawRegionsControls::showEvent(QShowEvent *event)
+void DrawRegionsContextMenu::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     for(const auto& vect : mGrid->CellsGet())
@@ -141,7 +141,7 @@ void DrawRegionsControls::showEvent(QShowEvent *event)
     }
 }
 
-void DrawRegionsControls::SetRegionIdOfCell(SudokuCellWidget *cell, unsigned short newId)
+void DrawRegionsContextMenu::SetRegionIdOfCell(SudokuCellWidget *cell, unsigned short newId)
 {
     const unsigned short oldId = cell->RegionIdGet();
     const unsigned short newIndex = newId - 1;
@@ -175,7 +175,7 @@ void DrawRegionsControls::SetRegionIdOfCell(SudokuCellWidget *cell, unsigned sho
     }
 }
 
-void DrawRegionsControls::RegionSelect_CurrentIndexChanged(int index)
+void DrawRegionsContextMenu::RegionSelect_CurrentIndexChanged(int index)
 {
     if(mMainWindowContent->ActiveContextMenuGet() != this)
     {
@@ -191,7 +191,7 @@ void DrawRegionsControls::RegionSelect_CurrentIndexChanged(int index)
     }
 }
 
-void DrawRegionsControls::ClearRegionsBtn_Clicked()
+void DrawRegionsContextMenu::ClearRegionsBtn_Clicked()
 {
     auto btn = static_cast<QMessageBox::StandardButton>(QMessageBox::warning(this, "Clear Regions", "All the regions in the grid will be cleared.\nContinue?",
                                                         QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Ok, QMessageBox::StandardButton::Cancel));
@@ -209,17 +209,17 @@ void DrawRegionsControls::ClearRegionsBtn_Clicked()
     }
 }
 
-void DrawRegionsControls::CellGainedFocus(SudokuCellWidget *cell)
+void DrawRegionsContextMenu::CellGainedFocus(SudokuCellWidget *cell)
 {
     Q_UNUSED(cell)
 }
 
-void DrawRegionsControls::CellLostFocus(SudokuCellWidget *cell)
+void DrawRegionsContextMenu::CellLostFocus(SudokuCellWidget *cell)
 {
     Q_UNUSED(cell)
 }
 
-void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
+void DrawRegionsContextMenu::CellClicked(SudokuCellWidget *cell)
 {
     unsigned short newId = SelectedRegionIdGet();
     const unsigned short oldId = cell->RegionIdGet();
@@ -230,7 +230,7 @@ void DrawRegionsControls::CellClicked(SudokuCellWidget *cell)
     SetRegionIdOfCell(cell, newId);
 }
 
-void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
+void DrawRegionsContextMenu::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event)
 {
     bool ok;
     int num = event->text().toInt(&ok);
@@ -252,12 +252,12 @@ void DrawRegionsControls::KeyboardInput(SudokuCellWidget *cell, QKeyEvent *event
     }
 }
 
-unsigned short DrawRegionsControls::SelectedRegionIdGet() const
+unsigned short DrawRegionsContextMenu::SelectedRegionIdGet() const
 {
     return mRegionSelect->currentData().toInt();
 }
 
-void DrawRegionsControls::UpdateCellCounters(unsigned short regionId)
+void DrawRegionsContextMenu::UpdateCellCounters(unsigned short regionId)
 {
     unsigned short index = regionId - 1;
     if(index < mGrid->SizeGet())

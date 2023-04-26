@@ -121,7 +121,7 @@ void NakedSubsetTechnique::SearchNakedSubsets(const CellSet& cellsToSearch)
 }
 
 
-bool HiddenNakedSubsetTechnique::SearchHiddenNakedSubsetInner(const std::list<ValueMapEntry>& values, std::list<ValueMapEntry>::iterator it, const std::list<ValueMapEntry>::iterator endIt, const std::set<unsigned short>& excludeValues, std::list<unsigned short>& candidates, CellSet& outNakedSubset, const size_t subsetFinalSize, bool& impossible)
+bool HiddenSubsetTechnique::SearchHiddenSubsetInner(const std::list<ValueMapEntry>& values, std::list<ValueMapEntry>::iterator it, const std::list<ValueMapEntry>::iterator endIt, const std::set<unsigned short>& excludeValues, std::list<unsigned short>& candidates, CellSet& outNakedSubset, const size_t subsetFinalSize, bool& impossible)
 {
     if (impossible)
     {
@@ -157,7 +157,7 @@ bool HiddenNakedSubsetTechnique::SearchHiddenNakedSubsetInner(const std::list<Va
                 // add the current cell to the naked subset
                 candidates.push_back(it->first);
 
-                if (SearchHiddenNakedSubsetInner(values, ++it, endIt, excludeValues, candidates, newSubset, subsetFinalSize, impossible))
+                if (SearchHiddenSubsetInner(values, ++it, endIt, excludeValues, candidates, newSubset, subsetFinalSize, impossible))
                 {
                     outNakedSubset = newSubset;
                     return true;
@@ -171,7 +171,7 @@ bool HiddenNakedSubsetTechnique::SearchHiddenNakedSubsetInner(const std::list<Va
     }
 }
 
-void HiddenNakedSubsetTechnique::SearchHiddenNakedSubsets(const std::set<unsigned short>& valuesToSearch)
+void HiddenSubsetTechnique::SearchHiddenSubsets(const std::set<unsigned short>& valuesToSearch)
 {
     static constexpr size_t s_minSubsetSize = 1;
     const std::set<unsigned short>& confirmedValues = mCurrentRegion->ConfirmedValuesGet();
@@ -192,7 +192,7 @@ void HiddenNakedSubsetTechnique::SearchHiddenNakedSubsets(const std::set<unsigne
         }
         else
         {
-            mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::HiddenNakedSubset, mCurrentRegion, nullptr, v);
+            mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::HiddenSubset, mCurrentRegion, nullptr, v);
         }
     }
 
@@ -234,9 +234,9 @@ void HiddenNakedSubsetTechnique::SearchHiddenNakedSubsets(const std::set<unsigne
             candidateValues.push_back(v);
             excludeValues.insert(v);
 
-            if (SearchHiddenNakedSubsetInner(valueToCellMap, valueToCellMap.begin(), endIt, excludeValues, candidateValues, nakedSubset, subsetSize, impossible))
+            if (SearchHiddenSubsetInner(valueToCellMap, valueToCellMap.begin(), endIt, excludeValues, candidateValues, nakedSubset, subsetSize, impossible))
             {
-                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_HiddenNakedSubset>(std::move(nakedSubset), mCurrentRegion, std::move(candidateValues)));
+                mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_HiddenSubset>(std::move(nakedSubset), mCurrentRegion, std::move(candidateValues)));
                 return;
             }
             else if (impossible)
@@ -248,6 +248,6 @@ void HiddenNakedSubsetTechnique::SearchHiddenNakedSubsets(const std::set<unsigne
     }
     for (const unsigned short& v : valuesToSearch)
     {
-        mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::HiddenNakedSubset, mCurrentRegion, nullptr, v);
+        mGrid->ProgressManagerGet()->RegisterFailure(TechniqueType::HiddenSubset, mCurrentRegion, nullptr, v);
     }
 }

@@ -6,7 +6,6 @@
 
 CellContentButton::CellContentButton(unsigned short numOptions, SudokuCellWidget *parent)
     : QLabel{parent},
-      mNumOptions(numOptions),
       mCell(parent)
 {
     this->setFocusPolicy(Qt::FocusPolicy::ClickFocus);

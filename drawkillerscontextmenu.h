@@ -1,5 +1,5 @@
-#ifndef DRAWKILLERSCONTROLS_H
-#define DRAWKILLERSCONTROLS_H
+#ifndef DRAWKILLERSCONTEXTMENU_H
+#define DRAWKILLERSCONTEXTMENU_H
 
 #include "contextmenuwindow.h"
 #include "puzzledata.h"
@@ -12,11 +12,11 @@ class KillerCageWidget;
 class QSpinBox;
 class QStackedLayout;
 
-class DrawKillersControls : public QWidget, public ContextMenuWindow
+class DrawKillersContextMenu : public QWidget, public ContextMenuWindow
 {
     Q_OBJECT
 public:
-    explicit DrawKillersControls(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
+    explicit DrawKillersContextMenu(MainWindowContent* mainWindowContent, const PuzzleData* loadedGrid = nullptr, QWidget *parent = nullptr);
 
 private slots:
     void DeleteAllKillersBtn_Clicked();
@@ -56,4 +56,4 @@ public:
     void ClueDidGetInactive(QWidget* clue, bool willBeDeleted) override;
 };
 
-#endif // DRAWKILLERSCONTROLS_H
+#endif // DRAWKILLERSCONTEXTMENU_H

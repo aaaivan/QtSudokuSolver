@@ -140,7 +140,7 @@ void RegionUpdatesManager::OnNakedSetFound(const CellSet& nakedSubset, const std
         {
             for (const auto& v : values)
             {
-                mHotValues.at(TechniqueType::HiddenNakedSubset).erase(v);
+                mHotValues.at(TechniqueType::HiddenSubset).erase(v);
             }
         }
         else

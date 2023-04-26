@@ -10,12 +10,12 @@ CONFIG += c++17
 
 SOURCES += \
     IO/SaveLoadManager.cpp \
-    adddigitscontrols.cpp \
+    adddigitscontextmenu.cpp \
     bruteforcesolverthread.cpp \
     cellcontentbutton.cpp \
     contextmenuwindow.cpp \
-    drawkillerscontrols.cpp \
-    drawregionscontrols.cpp \
+    drawkillerscontextmenu.cpp \
+    drawregionscontextmenu.cpp \
     editgridcontrols.cpp \
     gridgraphicaloverlay.cpp \
     killercagewidget.cpp \
@@ -55,12 +55,12 @@ SOURCES += \
 
 HEADERS += \
     IO/SaveLoadManager.h \
-    adddigitscontrols.h \
+    adddigitscontextmenu.h \
     bruteforcesolverthread.h \
     cellcontentbutton.h \
     contextmenuwindow.h \
-    drawkillerscontrols.h \
-    drawregionscontrols.h \
+    drawkillerscontextmenu.h \
+    drawregionscontextmenu.h \
     editgridcontrols.h \
     gridgraphicaloverlay.h \
     killercagewidget.h \

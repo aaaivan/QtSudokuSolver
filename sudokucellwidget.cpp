@@ -2,7 +2,7 @@
 #include "cellcontentbutton.h"
 #include "variantcluewidget.h"
 #include "sudokugridwidget.h"
-#include "drawregionscontrols.h"
+#include "drawregionscontextmenu.h"
 #include "mainwindowcontent.h"
 #include "sudokusolverthread.h"
 #include <QLabel>
@@ -292,7 +292,7 @@ void SudokuCellWidget::UpdateRegionId(unsigned short newId)
             }
             edge = edge << 1;
         }
-        DrawRegionsControls* context = static_cast<DrawRegionsControls*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions_Context));
+        DrawRegionsContextMenu* context = static_cast<DrawRegionsContextMenu*>(mMainWindowContent->ContextMenuGet(MainWindowContent::DrawRegions_Context));
         if(context)
         {
             mHighlighted = mRegionId == context->SelectedRegionIdGet();

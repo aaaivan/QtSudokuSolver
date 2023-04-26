@@ -1,6 +1,6 @@
 #include "killercagewidget.h"
 #include "sudokucellwidget.h"
-#include "drawkillerscontrols.h"
+#include "drawkillerscontextmenu.h"
 #include "gridgraphicaloverlay.h"
 #include "sudokugridwidget.h"
 #include "sudokusolverthread.h"
@@ -13,7 +13,7 @@ constexpr float kHighlightOpacity = 0.2f;
 constexpr int kLineWidth = 2;
 
 KillerCageWidget::KillerCageWidget(unsigned short maxCageSize, int cellLength, SudokuCellWidget* firstCell, unsigned int total,
-                                   SudokuGridWidget* grid, DrawKillersControls* killerContextMenu, QWidget *parent)
+                                   SudokuGridWidget* grid, DrawKillersContextMenu* killerContextMenu, QWidget *parent)
     : QLabel{parent},
       VariantClueWidget(cellLength, grid, killerContextMenu),
       mPadding(cellLength/10.0),

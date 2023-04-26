@@ -20,8 +20,8 @@ GridProgressManager::GridProgressManager(SudokuGrid* sudoku) :
     mTechniques[static_cast<size_t>(TechniqueType::NakedSubset)] =
         std::make_unique<NakedSubsetTechnique>(mSudokuGrid, SolvingTechnique::ObserveCells);
 
-    mTechniques[static_cast<size_t>(TechniqueType::HiddenNakedSubset)] =
-        std::make_unique<HiddenNakedSubsetTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
+    mTechniques[static_cast<size_t>(TechniqueType::HiddenSubset)] =
+        std::make_unique<HiddenSubsetTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);
 
     mTechniques[static_cast<size_t>(TechniqueType::Fish)] =
         std::make_unique<FishTechnique>(mSudokuGrid, SolvingTechnique::ObserveValues);

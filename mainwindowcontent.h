@@ -4,8 +4,8 @@
 #include <QWidget>
 
 class SudokuGridWidget;
-class DrawRegionsControls;
-class DrawKillersControls;
+class DrawRegionsContextMenu;
+class DrawKillersContextMenu;
 class ContextMenuWindow;
 class MainWindow;
 class QStackedLayout;

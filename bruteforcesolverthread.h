@@ -26,7 +26,7 @@ protected:
 
 private:
     std::unique_ptr<BruteForceSolver> mBruteForceSolver;
-    SudokuGrid* mGrid;
+    const SudokuGrid* mGrid;
 
     size_t mMaxSolutionsCount;
     bool mUseHints;

@@ -140,7 +140,7 @@ void BruteForceSolver::FillIncidenceMatrix(bool** M, const size_t rows)
                 continue;
             }
             const Possibility p = PossibilityFromRowIndex(r);
-            SudokuCell* cell = mGrid->CellGet(p.first);
+            const SudokuCell* cell = mGrid->CellGet(p.first);
             unsigned short value = p.second;
             if(cell->IsGiven())
             {

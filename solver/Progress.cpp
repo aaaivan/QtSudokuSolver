@@ -109,7 +109,7 @@ void Progress_NakedSubset::PrintMessage() const
     }
 }
 
-void Progress_HiddenNakedSubset::ProcessProgress()
+void Progress_HiddenSubset::ProcessProgress()
 {
     auto cIt = mCells.begin();
     SudokuGrid* grid = (*cIt)->GridGet();
@@ -118,7 +118,7 @@ void Progress_HiddenNakedSubset::ProcessProgress()
     PrintMessage();
 }
 
-void Progress_HiddenNakedSubset::PrintMessage() const
+void Progress_HiddenSubset::PrintMessage() const
 {
     auto cIt = mCells.begin();
     SudokuGrid* grid = (*cIt)->GridGet();
