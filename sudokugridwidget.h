@@ -7,7 +7,7 @@
 
 class SudokuCellWidget;
 class PuzzleData;
-class GridGraphicalOverlay;
+class VariantCluesLayer;
 class SudokuSolverThread;
 class MainWindowContent;
 class SudokuSolverThread;
@@ -29,7 +29,7 @@ private:
     QVector<QVector<SudokuCellWidget*>> mCells;
 
     MainWindowContent* mMainWindowContent;
-    GridGraphicalOverlay* mGraphicalOverlay;
+    VariantCluesLayer* mVariantCluesLayer;
     std::unique_ptr<SudokuSolverThread> mSolver;
 
     void paintEvent(QPaintEvent* event) override;
@@ -45,7 +45,7 @@ public:
     const QVector<QVector<SudokuCellWidget*>>& CellsGet() const;
     SudokuCellWidget* CellGet(CellCoord id) const;
     SudokuSolverThread* SolverGet() const;
-    GridGraphicalOverlay* GraphicalOverlayGet() const;
+    VariantCluesLayer* VariantCluesLayerGet() const;
 
     // public non-const functions
     void SwitchView(size_t view);

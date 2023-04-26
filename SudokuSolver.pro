@@ -17,7 +17,6 @@ SOURCES += \
     drawkillerscontextmenu.cpp \
     drawregionscontextmenu.cpp \
     editgridcontrols.cpp \
-    gridgraphicaloverlay.cpp \
     killercagewidget.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -51,6 +50,7 @@ SOURCES += \
     sudokusolverthread.cpp \
     thirdparty/dancing_links.cpp \
     thirdparty/linked_matrix.cpp \
+    variantclueslayer.cpp \
     variantcluewidget.cpp
 
 HEADERS += \
@@ -62,7 +62,6 @@ HEADERS += \
     drawkillerscontextmenu.h \
     drawregionscontextmenu.h \
     editgridcontrols.h \
-    gridgraphicaloverlay.h \
     killercagewidget.h \
     mainwindow.h \
     mainwindowcontent.h \
@@ -92,6 +91,7 @@ HEADERS += \
     sudokusolverthread.h \
     thirdparty/dancing_links.h \
     thirdparty/linked_matrix.h \
+    variantclueslayer.h \
     variantcluewidget.h
 
 FORMS += \

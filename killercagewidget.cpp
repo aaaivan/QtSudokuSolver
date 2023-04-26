@@ -1,7 +1,7 @@
 #include "killercagewidget.h"
 #include "sudokucellwidget.h"
 #include "drawkillerscontextmenu.h"
-#include "gridgraphicaloverlay.h"
+#include "variantclueslayer.h"
 #include "sudokugridwidget.h"
 #include "sudokusolverthread.h"
 #include <QPicture>
@@ -367,7 +367,7 @@ void KillerCageWidget::RemoveCell(SudokuCellWidget *cell)
         }
         else
         {
-            mGrid->GraphicalOverlayGet()->RemoveOverlayComponent(this);
+            mGrid->VariantCluesLayerGet()->RemoveOverlayComponent(this);
         }
 
     }

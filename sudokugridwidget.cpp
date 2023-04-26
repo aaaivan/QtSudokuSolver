@@ -1,6 +1,6 @@
 #include "sudokugridwidget.h"
 #include "sudokucellwidget.h"
-#include "gridgraphicaloverlay.h"
+#include "variantclueslayer.h"
 #include "mainwindowcontent.h"
 #include <QStackedLayout>
 #include <QPainter>
@@ -11,7 +11,7 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
       mSize(size),
       mCells(),
       mMainWindowContent(mainWindowContent),
-      mGraphicalOverlay(new GridGraphicalOverlay(this, mCellLength)),
+      mVariantCluesLayer(new VariantCluesLayer(this, mCellLength)),
       mSolver(std::make_unique<SudokuSolverThread>(size, this))
 {
     // build stacked layout
@@ -19,8 +19,8 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
     this->setLayout(stackedLayout);
     stackedLayout->setStackingMode(QStackedLayout::StackingMode::StackAll);
     QWidget* grid = new QWidget();
-    stackedLayout->addWidget(mGraphicalOverlay);
     stackedLayout->addWidget(grid);
+    stackedLayout->addWidget(mVariantCluesLayer);
 
     // build grid
     QGridLayout* gridLayout = new QGridLayout();
@@ -67,8 +67,8 @@ SudokuGridWidget::SudokuGridWidget(unsigned short size, MainWindowContent* mainW
 
 SudokuGridWidget::~SudokuGridWidget()
 {
-    delete mGraphicalOverlay;
-    mGraphicalOverlay = nullptr;
+    delete mVariantCluesLayer;
+    mVariantCluesLayer = nullptr;
 }
 
 void SudokuGridWidget::paintEvent(QPaintEvent *event)
@@ -129,9 +129,9 @@ SudokuSolverThread *SudokuGridWidget::SolverGet() const
     return mSolver.get();
 }
 
-GridGraphicalOverlay *SudokuGridWidget::GraphicalOverlayGet() const
+VariantCluesLayer *SudokuGridWidget::VariantCluesLayerGet() const
 {
-    return mGraphicalOverlay;
+    return mVariantCluesLayer;
 }
 
 void SudokuGridWidget::SwitchView(size_t view)

@@ -1,9 +1,9 @@
-#include "gridgraphicaloverlay.h"
+#include "variantclueslayer.h"
 #include "variantcluewidget.h"
 #include "sudokugridwidget.h"
 #include "contextmenuwindow.h"
 
-GridGraphicalOverlay::GridGraphicalOverlay(SudokuGridWidget* grid, int cellLength, QWidget *parent)
+VariantCluesLayer::VariantCluesLayer(SudokuGridWidget* grid, int cellLength, QWidget *parent)
     : QFrame{parent},
       mGrid(grid),
       mCellLength(cellLength),
@@ -15,17 +15,17 @@ GridGraphicalOverlay::GridGraphicalOverlay(SudokuGridWidget* grid, int cellLengt
     this->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Fixed,QSizePolicy::Policy::Fixed));
 }
 
-QSet<QWidget *> GridGraphicalOverlay::OverlayComponentsGet() const
+QSet<QWidget *> VariantCluesLayer::OverlayComponentsGet() const
 {
     return mOverlayComponents;
 }
 
-QWidget *GridGraphicalOverlay::ActiveComponentGet() const
+QWidget *VariantCluesLayer::ActiveComponentGet() const
 {
     return mActiveComponent;
 }
 
-bool GridGraphicalOverlay::AddOverlayComponent(QWidget *component, bool setSelected)
+bool VariantCluesLayer::AddOverlayComponent(QWidget *component, bool setSelected)
 {
     if(component && !mOverlayComponents.contains(component))
     {
@@ -46,7 +46,7 @@ bool GridGraphicalOverlay::AddOverlayComponent(QWidget *component, bool setSelec
     return false;
 }
 
-bool GridGraphicalOverlay::RemoveOverlayComponent(QWidget *component)
+bool VariantCluesLayer::RemoveOverlayComponent(QWidget *component)
 {
     if(component && mOverlayComponents.remove(component))
     {
@@ -64,7 +64,7 @@ bool GridGraphicalOverlay::RemoveOverlayComponent(QWidget *component)
     return false;
 }
 
-bool GridGraphicalOverlay::ActiveComponentSet(QWidget *component)
+bool VariantCluesLayer::ActiveComponentSet(QWidget *component)
 {
     if(mOverlayComponents.contains(component) && mActiveComponent != component)
     {
@@ -87,12 +87,12 @@ bool GridGraphicalOverlay::ActiveComponentSet(QWidget *component)
     return false;
 }
 
-void GridGraphicalOverlay::ClearActiveComponent()
+void VariantCluesLayer::ClearActiveComponent()
 {
     ClearActiveComponent(false);
 }
 
-void GridGraphicalOverlay::ClearActiveComponent(bool willBeDeleted)
+void VariantCluesLayer::ClearActiveComponent(bool willBeDeleted)
 {
     QWidget* prevActive = mActiveComponent;
     mActiveComponent = nullptr;

@@ -1,15 +1,15 @@
-#ifndef GRIDGRAPHICALOVERLAY_H
-#define GRIDGRAPHICALOVERLAY_H
+#ifndef VARIANTCLUESLAYER_H
+#define VARIANTCLUESLAYER_H
 
 #include <QFrame>
 
 class SudokuGridWidget;
 
-class GridGraphicalOverlay : public QFrame
+class VariantCluesLayer : public QFrame
 {
     Q_OBJECT
 public:
-    explicit GridGraphicalOverlay(SudokuGridWidget* grid, int cellLength, QWidget *parent = nullptr);
+    explicit VariantCluesLayer(SudokuGridWidget* grid, int cellLength, QWidget *parent = nullptr);
 
 private :
     SudokuGridWidget* mGrid;
@@ -28,4 +28,4 @@ public:
     void ClearActiveComponent();
 };
 
-#endif // GRIDGRAPHICALOVERLAY_H
+#endif // VARIANTCLUESLAYER_H
