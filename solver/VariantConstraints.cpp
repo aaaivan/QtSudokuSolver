@@ -33,27 +33,19 @@ KillerConstraint::KillerConstraint(unsigned int sum) :
     mConfirmedValues(),
     mCellToOrder(),
     mOrderToCell(),
-    mIncidenceMatrix(nullptr),
-    mRowsCount(0),
-    mColsCount(0),
-    mMainRowsCount(0),
+    mDLXSolutions(),
     mSnapshot(nullptr)
 {
-}
-
-KillerConstraint::~KillerConstraint()
-{
-    for (size_t i = 0; i < mRowsCount; ++i)
-    {
-        delete[] mIncidenceMatrix[i];
-    }
-    delete[] mIncidenceMatrix;
 }
 
 void KillerConstraint::Initialise(Region* region)
 {
     VariantConstraint::Initialise(region);
     mSnapshot.reset();
+
+    mCellToOrder.clear();
+    mOrderToCell.clear();
+    mDLXSolutions.clear();
 
     unsigned short x = 0;
     for (const auto& c : region->CellsGet())
@@ -66,22 +58,43 @@ void KillerConstraint::Initialise(Region* region)
     FindCombinations(std::list<unsigned short>(mRegion->AllowedValuesGet().begin(),
                      mRegion->AllowedValuesGet().end()));
 
+
+    size_t gridSize = region->GridGet()->SizeGet();
+    size_t mColsCount = region->SizeGet() + gridSize;
+    size_t mMainRowsCount = region->SizeGet() * gridSize;
+    size_t mRowsCount = mMainRowsCount + mCombinations.size();
+    bool** mIncidenceMatrix = new bool*[mRowsCount];
+    for (size_t i = 0; i < mRowsCount; ++i)
+    {
+        mIncidenceMatrix[i] = new bool[mColsCount];
+    }
+    FillIncidenceMatrix(mIncidenceMatrix, mMainRowsCount, mRowsCount, mColsCount);
+
+    linked_matrix_GJK::LMatrix DLXMatrix(mIncidenceMatrix, mRowsCount, mColsCount);
+    std::list<std::vector<size_t>> solutions;
+    dancing_links_GJK::Exact_Cover_Solver(DLXMatrix, solutions);
+
     for (size_t i = 0; i < mRowsCount; ++i)
     {
         delete[] mIncidenceMatrix[i];
     }
     delete[] mIncidenceMatrix;
 
-    size_t gridSize = region->GridGet()->SizeGet();
-    mColsCount = region->SizeGet() + gridSize;
-    mMainRowsCount = region->SizeGet() * gridSize;
-    mRowsCount = mMainRowsCount + mCombinations.size();
-    mIncidenceMatrix = new bool*[mRowsCount];
-    for (size_t i = 0; i < mRowsCount; ++i)
+    size_t size = mRegion->SizeGet();
+    for(const auto& sol : solutions)
     {
-        mIncidenceMatrix[i] = new bool[mColsCount];
+        mDLXSolutions.push_back(std::vector<unsigned short>(size));
+        for (const auto& r : sol)
+        {
+            if(r >= mMainRowsCount)
+            {
+                continue;
+            }
+            auto p = PossibilityFromRow(r);
+            unsigned short index = mCellToOrder[p.first];
+            mDLXSolutions.back()[index] = p.second;
+        }
     }
-    FillIncidenceMatrix();
 
     UpdateAllowedAndConfirmedValues();
 }
@@ -106,8 +119,22 @@ void KillerConstraint::OnConfimedValueAdded(unsigned short value)
 
 void KillerConstraint::OnOptionRemovedFromCell(unsigned short value, SudokuCell* cell)
 {
-    size_t row = RowFromPossibility(cell->IdGet(), value);
-    if(ClearIncidenceMatrixRow(row))
+    unsigned short index = mCellToOrder[cell->IdGet()];
+    auto it = mDLXSolutions.begin();
+    bool removed = false;
+    while (it != mDLXSolutions.end())
+    {
+        if(it->at(index) == value)
+        {
+            it = mDLXSolutions.erase(it);
+            removed = true;
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    if(removed)
     {
         UpdateAllowedAndConfirmedValues();
     }
@@ -124,14 +151,10 @@ void KillerConstraint::OnRegionPartitioned(Region* leftNode, Region* rightNode)
     }
 
     int leftTotal = 0;
-    if (leftNode)
+    if(leftNode)
     {
-        for (const auto& v : leftNode->ConfirmedValuesGet())
-        {
-            leftTotal += v;
-        }
+        leftTotal = leftNode->SumGet();
     }
-
     std::unique_ptr<VariantConstraint> kc = std::make_unique<KillerConstraint>(mCageSum - leftTotal);
     rightNode->AddVariantConstraint(std::move(kc));
 }
@@ -143,16 +166,14 @@ VariantConstraint *KillerConstraint::DeepCopy() const
 
 void KillerConstraint::TakeSnaphot()
 {
-    mSnapshot = std::make_unique<Snapshot>(mIncidenceMatrix, mRowsCount, mColsCount, mConfirmedValues);
+    mSnapshot = std::make_unique<Snapshot>(mDLXSolutions, mConfirmedValues);
 }
 
 void KillerConstraint::RestoreSnaphot()
 {
     if(mSnapshot)
     {
-        bool** temp = mIncidenceMatrix;
-        mIncidenceMatrix = mSnapshot->mIncidenceMatrix;
-        mSnapshot->mIncidenceMatrix = temp;
+        mDLXSolutions = std::move(mSnapshot->mDLXSolutions);
         mConfirmedValues = std::move(mSnapshot->mConfirmedValues);
         mSnapshot.reset();
     }
@@ -213,15 +234,18 @@ void KillerConstraint::FindCombinationsInner(std::list<unsigned short>::const_it
 void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
 {
     bool removed = false;
-    size_t i = 0;
-    for(const auto& combination: mCombinations)
+    auto it = mDLXSolutions.begin();
+    while (it != mDLXSolutions.end())
     {
-        if (combination.count(value) > 0)
+        if(std::find(it->begin(), it->end(), value) != it->end())
         {
-            size_t row = mMainRowsCount + i;
-            removed |= ClearIncidenceMatrixRow(row);
+            it = mDLXSolutions.erase(it);
+            removed = true;
         }
-        ++i;
+        else
+        {
+            ++it;
+        }
     }
 
     if (removed)
@@ -233,15 +257,18 @@ void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
 void KillerConstraint::RemoveCombinationsWithoutValue(unsigned short value)
 {
     bool removed = false;
-    size_t i = 0;
-    for(const auto& combination: mCombinations)
+    auto it = mDLXSolutions.begin();
+    while (it != mDLXSolutions.end())
     {
-        if (combination.count(value) == 0)
+        if(std::find(it->begin(), it->end(), value) == it->end())
         {
-            size_t row = mMainRowsCount + i;
-            removed |= ClearIncidenceMatrixRow(row);
+            it = mDLXSolutions.erase(it);
+            removed = true;
         }
-        ++i;
+        else
+        {
+            ++it;
+        }
     }
 
     if (removed)
@@ -260,24 +287,17 @@ void KillerConstraint::AddConfirmedValue(unsigned value)
 
 void KillerConstraint::UpdateAllowedAndConfirmedValues()
 {
-    auto DLXMatrix = std::make_unique<linked_matrix_GJK::LMatrix>(mIncidenceMatrix, mRowsCount, mColsCount);
-
-    std::list<std::vector<size_t>> solutions;
-    dancing_links_GJK::Exact_Cover_Solver(*DLXMatrix, solutions);
-
     SudokuGrid* grid = mRegion->GridGet();
     std::vector<std::set<unsigned short>> optionsInCell(mCellToOrder.size(), std::set<unsigned short>());
     std::vector<size_t> valuesCount(grid->SizeGet(), 0);
 
-    for (const auto& s : solutions)
+    for (const auto& s : mDLXSolutions)
     {
-        for (const auto& r : s)
+        for (size_t i = 0; i < s.size(); ++i)
         {
-            if(r >= mMainRowsCount) continue;
-
-            std::pair<CellId, unsigned short> p = PossibilityFromRow(r);
-            optionsInCell.at(mCellToOrder[p.first]).insert(p.second);
-            valuesCount[p.second - 1] += 1;
+            unsigned short candidate = s.at(i);
+            optionsInCell.at(i).insert(candidate);
+            valuesCount[candidate - 1]++;
         }
     }
 
@@ -289,8 +309,7 @@ void KillerConstraint::UpdateAllowedAndConfirmedValues()
             std::set<unsigned short> optionsToRemove;
             for (const auto& v : cell->OptionsGet())
             {
-                if(optionsInCell.at(i).count(v) == 0 &&
-                   ClearIncidenceMatrixRow(RowFromPossibility(cell->IdGet(), v)))
+                if(optionsInCell.at(i).count(v) == 0)
                 {
                     optionsToRemove.insert(v);
                 }
@@ -304,7 +323,7 @@ void KillerConstraint::UpdateAllowedAndConfirmedValues()
 
     for (size_t i = 0; i < valuesCount.size(); ++i)
     {
-        if(valuesCount.at(i) == solutions.size())
+        if(valuesCount.at(i) == mDLXSolutions.size())
         {
             AddConfirmedValue(i + 1);
         }
@@ -322,7 +341,6 @@ size_t KillerConstraint::RowFromPossibility(CellId cell, unsigned short value) c
 std::pair<CellId, unsigned short> KillerConstraint::PossibilityFromRow(size_t row) const
 {
     size_t size = mRegion->GridGet()->SizeGet();
-    assert(row < mMainRowsCount);
 
     size_t pos = static_cast<CellId>(row/size);
     CellId id = mOrderToCell.at(pos);
@@ -331,7 +349,7 @@ std::pair<CellId, unsigned short> KillerConstraint::PossibilityFromRow(size_t ro
     return {id, value};
 }
 
-void KillerConstraint::FillIncidenceMatrix()
+void KillerConstraint::FillIncidenceMatrix(bool** mIncidenceMatrix, size_t mMainRowsCount, size_t mRowsCount, size_t column)
 {
     unsigned short size = mRegion->GridGet()->SizeGet();
     size_t c = 0;
@@ -391,13 +409,13 @@ void KillerConstraint::FillIncidenceMatrix()
             if(!c->HasGuess(i))
             {
                 size_t r = RowFromPossibility(c->IdGet(), i);
-                ClearIncidenceMatrixRow(r);
+                ClearIncidenceMatrixRow(r, mIncidenceMatrix, column);
             }
         }
     }
 }
 
-bool KillerConstraint::ClearIncidenceMatrixRow(size_t row)
+bool KillerConstraint::ClearIncidenceMatrixRow(size_t row, bool** mIncidenceMatrix, size_t mColsCount)
 {
     bool result = false;
     for(size_t col = 0; col < mColsCount; ++col)

@@ -65,44 +65,22 @@ private:
 
     std::map<CellId, unsigned short> mCellToOrder;
     std::map<unsigned short, CellId> mOrderToCell;
-    bool** mIncidenceMatrix;
-    size_t mRowsCount;
-    size_t mColsCount;
-    size_t mMainRowsCount;
+    std::list<std::vector<unsigned short>> mDLXSolutions;
+
+//    bool** mIncidenceMatrix;
+//    size_t mRowsCount;
+//    size_t mColsCount;
+//    size_t mMainRowsCount;
 
     struct Snapshot
     {
-        bool** mIncidenceMatrix;
-        size_t mRowsCount;
-        size_t mColsCount;
+        std::list<std::vector<unsigned short>> mDLXSolutions;
         std::set<unsigned short> mConfirmedValues;
 
-        Snapshot(bool** incidenceMatrix, size_t rows, size_t cols, std::set<unsigned short> confirmedValues):
-            mRowsCount(rows),
-            mColsCount(cols),
+        Snapshot(std::list<std::vector<unsigned short>> DLXSolutions, std::set<unsigned short> confirmedValues):
+            mDLXSolutions(DLXSolutions),
             mConfirmedValues(confirmedValues)
-        {
-            mIncidenceMatrix = new bool*[mRowsCount];
-            for (size_t i = 0; i < mRowsCount; ++i)
-            {
-                mIncidenceMatrix[i] = new bool[mColsCount];
-            }
-            for (size_t r = 0; r < mRowsCount; ++r)
-            {
-                for (size_t c = 0; c < mColsCount; ++c)
-                {
-                    mIncidenceMatrix[r][c] = incidenceMatrix[r][c];
-                }
-            }
-        }
-        ~Snapshot()
-        {
-            for (size_t i = 0; i < mRowsCount; ++i)
-            {
-                delete[] mIncidenceMatrix[i];
-            }
-            delete[] mIncidenceMatrix;
-        }
+        {}
     };
     std::unique_ptr<Snapshot> mSnapshot;
 
@@ -110,7 +88,6 @@ public:
 // Special member function
 
     KillerConstraint(unsigned int sum);
-    ~KillerConstraint();
 
 // Public getters
 
@@ -156,8 +133,8 @@ private:
 
     size_t RowFromPossibility(CellId cell, unsigned short value) const;
     std::pair<CellId, unsigned short> PossibilityFromRow(size_t row) const;
-    void FillIncidenceMatrix();
-    bool ClearIncidenceMatrixRow(size_t row);
+    void FillIncidenceMatrix(bool** M, size_t mainRows, size_t rows, size_t column);
+    bool ClearIncidenceMatrixRow(size_t row, bool** M, size_t column);
 };
 
 #endif // !VARIANT_CONSTRAINTS_H
