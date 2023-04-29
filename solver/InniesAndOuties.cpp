@@ -143,6 +143,21 @@ void InniesAndOuties::SearchOutiesInner(KillerCage_t &unionCage)
 
         return;
     }
+    else
+    {
+        for (const auto& r : regions)
+        {
+            if(r->SizeGet() == cells.size())
+            {
+                if(r->SumGet() != (unsigned int)ghostCageTotal)
+                {
+                    mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashingGhostCages>(std::move(cells), ghostCageTotal, r->SumGet(), mGrid));
+                }
+                return;
+            }
+        }
+    }
+
     regions.clear();
     mGrid->GhostRegionsManagerGet()->RegionsWithCellsGet(regions, cells);
     for (const auto& r : regions)
