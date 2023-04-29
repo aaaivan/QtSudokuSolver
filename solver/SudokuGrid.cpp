@@ -172,6 +172,10 @@ void SudokuGrid::SetCellEliminationHints(unsigned short row, unsigned short col,
     {
         mGrid.at(row).at(col)->RemoveOptionHint(v);
     }
+    if(hints.size() > 0)
+    {
+        mProgressManager->Reset();
+    }
 }
 
 void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& cells,
