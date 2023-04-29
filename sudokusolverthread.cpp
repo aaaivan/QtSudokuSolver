@@ -51,7 +51,6 @@ void SudokuSolverThread::run()
     {
         // collect input
         mInputMutex.lock();
-        const unsigned short gridSize = mPuzzleData.mSize;
         const PuzzleData puzzleData = mPuzzleData;
         std::set<CellCoord> newGivens;
         std::set<CellCoord> newHints;
@@ -102,6 +101,8 @@ void SudokuSolverThread::run()
                 mGrid->ResetContents();
                 emit SolverHasBeenReset();
             }
+
+            const unsigned short gridSize = mPuzzleData.mSize;
 
             // define givens
             for (const auto& given : puzzleData.mGivens)

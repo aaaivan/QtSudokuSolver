@@ -107,12 +107,6 @@ void RandomGuessTreeRoot::NodeHasFinished(unsigned short nodeIndex)
     {
         mChildNodes[mNextNode]->Init();
     }
-
-
-//    if(mEliminatedValues.size() == 0)
-//    {
-//        mNextNode == mChildNodes.size();
-//    }
 }
 
 RandomGuessTreeNode::RandomGuessTreeNode(SudokuGrid* bifurcGrid, CellId pivot, unsigned short pivotValue, RandomGuessTreeRoot* parent, unsigned short index, BifurcationTechnique* technique):

@@ -89,6 +89,7 @@ void StartMenu::NewPuzzleBtn_clicked()
 
 void StartMenu::LoadPuzzleBtn_clicked()
 {
+    // open file with extension .sudoku
     QString fileName = QFileDialog::getOpenFileName(this,"Open file", "", "*.sudoku");
     if(!fileName.isEmpty())
     {
