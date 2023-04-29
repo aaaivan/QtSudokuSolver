@@ -92,6 +92,7 @@ void InniesAndOuties::SearchOuties()
 
 void InniesAndOuties::SearchOutiesInner(KillerCage_t &unionCage)
 {
+    // subtract current region
     const CellSet& regionCells = (*mCurrentRegion)->CellsGet();
     for (const auto& c : regionCells)
     {
@@ -100,6 +101,21 @@ void InniesAndOuties::SearchOutiesInner(KillerCage_t &unionCage)
             return;
         }
     }
+
+    // subtract other contained closed regions
+    const RegionsManager* regionsMan =  mGrid->RegionsManagerGet();
+    for (const auto& r : regionsMan->RegionsGet())
+    {
+        if(r->SumGet() > 0 && r->IsContainedInCells(unionCage.second))
+        {
+            for (const auto& c : r->CellsGet())
+            {
+                unionCage.second.erase(c);
+            }
+            unionCage.first -= r->SumGet();
+        }
+    }
+
     CellSet cells = unionCage.second;
     int ghostCageTotal = static_cast<int>(unionCage.first) - static_cast<int>(mCurrentRegionTotal);
     if(ghostCageTotal < 0 || (ghostCageTotal == 0 && cells.size() > 0))
@@ -113,7 +129,7 @@ void InniesAndOuties::SearchOutiesInner(KillerCage_t &unionCage)
     }
 
     RegionSet regions;
-    mGrid->RegionsManagerGet()->RegionsWithCellsGet(regions, cells);
+    regionsMan->RegionsWithCellsGet(regions, cells);
     if(regions.size() == 0)
     {
         int gridSize = mGrid->SizeGet();
@@ -142,20 +158,6 @@ void InniesAndOuties::SearchOutiesInner(KillerCage_t &unionCage)
         }
 
         return;
-    }
-    else
-    {
-        for (const auto& r : regions)
-        {
-            if(r->SizeGet() == cells.size())
-            {
-                if(r->SumGet() != (unsigned int)ghostCageTotal)
-                {
-                    mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Impossible_ClashingGhostCages>(std::move(cells), ghostCageTotal, r->SumGet(), mGrid));
-                }
-                return;
-            }
-        }
     }
 
     regions.clear();
