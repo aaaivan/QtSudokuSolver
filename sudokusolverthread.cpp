@@ -102,7 +102,7 @@ void SudokuSolverThread::run()
                 emit SolverHasBeenReset();
             }
 
-            const unsigned short gridSize = mPuzzleData.mSize;
+            const unsigned short gridSize = puzzleData.mSize;
 
             // define givens
             for (const auto& given : puzzleData.mGivens)

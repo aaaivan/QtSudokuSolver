@@ -50,16 +50,19 @@ void LockedCandidatesTechnique::NextStep()
 
     const RegionSet& regions = mProcessingGhostRegions ? mGrid->GhostRegionsManagerGet()->RegionsGet()
                                                        : mGrid->RegionsManagerGet()->RegionsGet();
-    RegionSet::iterator it;
+    RegionSet::iterator it = regions.end();
 
-    if (!mCurrentRegion)
+    if (regions.size() > 0)
     {
-        it = regions.begin();
-        mCurrentRegion = *it;
-    }
-    else
-    {
-        it = regions.find(mCurrentRegion);
+        if (!mCurrentRegion)
+        {
+            it = regions.begin();
+            mCurrentRegion = *it;
+        }
+        else
+        {
+            it = regions.find(mCurrentRegion);
+        }
     }
 
     if(it != regions.end())
@@ -239,7 +242,6 @@ void FishTechnique::NextStep()
     {
         mCurrentSize = mMinSize;
         GetPossibeDefiningRegions();
-        mCurrentSet = mDefiningSets.end();
     }
 
     if(mCurrentSet == mDefiningSets.end())

@@ -4,8 +4,8 @@
 #include "SudokuGrid.h"
 #include "RegionsManager.h"
 #include "GridProgressManager.h"
-#include "solver/GhostCagesManager.h"
-#include "solver/SudokuCell.h"
+#include "GhostCagesManager.h"
+#include "SudokuCell.h"
 
 void InniesAndOuties::SearchInnies()
 {
@@ -61,7 +61,7 @@ void InniesAndOuties::SearchInniesInner(KillerCage_t& unionCage)
         }
     }
 
-    KillerCage_t k = std::pair(ghostCageTotal, std::move(cells));
+    KillerCage_t k = KillerCage_t(ghostCageTotal, std::move(cells));
     if(mOutieCages.count(k) == 0)
     {
         mInnieCages.insert(std::move(k));
@@ -174,7 +174,7 @@ void InniesAndOuties::SearchOutiesInner(KillerCage_t &unionCage)
         }
     }
 
-    KillerCage_t k = std::pair(ghostCageTotal, std::move(cells));
+    KillerCage_t k = KillerCage_t(ghostCageTotal, std::move(cells));
     if(mInnieCages.count(k) == 0)
     {
         mOutieCages.insert(std::move(k));

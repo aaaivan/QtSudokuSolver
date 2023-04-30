@@ -105,11 +105,6 @@ public:
         mRegion(region),
         mValues(values.begin(), values.end())
     {}
-    Progress_HiddenSubset(CellSet& cells, std::set<unsigned short>& values) :
-        Progress(ProgressType::HiddenSubsetFound),
-        mCells(cells),
-        mValues(values)
-    {}
     void ProcessProgress() override;
     void PrintMessage() const override;
 };
@@ -185,7 +180,7 @@ class Progress_CannibalFish : public Progress_Fish
     CellSet mCannibalCells;
 public:
     Progress_CannibalFish(const RegionList& definingRegions, const CellList& definingCells, RegionList&& secondaryRegions, CellSet&& cannibalCells, unsigned short value) :
-        Progress_Fish(definingRegions, std::move(definingCells), std::move(secondaryRegions), value),
+        Progress_Fish(definingRegions, definingCells, std::move(secondaryRegions), value),
         mCannibalCells(cannibalCells)
     {
         mType = ProgressType::CannibalFishFound;

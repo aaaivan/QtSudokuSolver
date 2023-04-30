@@ -314,6 +314,7 @@ void FishTechnique::GetPossibeDefiningRegions()
     }
     mDefiningSets.clear();
     mDefiningSets = std::move(newDefiningSets);
+    mCurrentSet = mDefiningSets.end();
 }
 
 void FishTechnique::SearchFish()
