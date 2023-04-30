@@ -36,6 +36,7 @@ class LockedCandidatesTechnique : public SolvingTechnique
 {
     Region* mCurrentRegion;
     bool mProcessingGhostRegions;
+    bool mSearchFinned;
 
 public:
     LockedCandidatesTechnique(SudokuGrid* grid, ObservedComponent observedComponent);

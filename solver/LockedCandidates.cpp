@@ -18,7 +18,10 @@ void LockedCandidatesTechnique::SearchLockedCandidates(unsigned short value)
     RegionSet lockedRegions; // regions that contain all cells with v in region
     mGrid->RegionsManagerGet()->RegionsWithCellsGet(lockedRegions, mCurrentRegion->CellsWithValueGet(value));
     CellSet almostLockedCells; // cells that can see all cells with v in region
-    mGrid->RegionsManagerGet()->FindConnectedCellsWithValue(mCurrentRegion->CellsWithValueGet(value), almostLockedCells, value);
+    if (mSearchFinned)
+    {
+        mGrid->RegionsManagerGet()->FindConnectedCellsWithValue(mCurrentRegion->CellsWithValueGet(value), almostLockedCells, value);
+    }
 
     for (auto it = lockedRegions.begin(), end = lockedRegions.end(); it != end;)
     {
@@ -29,9 +32,12 @@ void LockedCandidatesTechnique::SearchLockedCandidates(unsigned short value)
         }
         else
         {
-            for (const auto& c : (*it)->CellsWithValueGet(value))
+            if (mSearchFinned)
             {
-                almostLockedCells.erase(c);
+                for (const auto& c : (*it)->CellsWithValueGet(value))
+                {
+                    almostLockedCells.erase(c);
+                }
             }
             ++it;
         }

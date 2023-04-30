@@ -37,7 +37,8 @@ SolvingTechnique::ObservedComponent SolvingTechnique::ObservedComponentGet() con
 LockedCandidatesTechnique::LockedCandidatesTechnique(SudokuGrid* regionsManager, ObservedComponent observedComponent):
     SolvingTechnique(regionsManager, TechniqueType::LockedCandidates, observedComponent),
     mCurrentRegion(nullptr),
-    mProcessingGhostRegions(false)
+    mProcessingGhostRegions(false),
+    mSearchFinned(mGrid->ParentNodeGet() == nullptr)
 {
 }
 
