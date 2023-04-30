@@ -4,9 +4,11 @@
 // Include
 #include "Types.h"
 #include "Region.h"
+#include "SudokuCell.h"
 
 // Typedefs
 typedef std::vector<RegionSet> CellToRegionMap;
+typedef std::vector<CellSet> CellToCellsMap;
 typedef std::vector<std::list<RegionSPtr>> RegionsList;
 
 /// <summary>
@@ -19,15 +21,18 @@ class RegionsManager
     RegionsList mStartingRegions;		// list of all regions defined by the setter (typically row, columns and cages)
     RegionSet mLeafRegions;				// list of all leaf regions (see Region class)
     CellToRegionMap mCellToRegionsMap;	// maps each cell in the grid to the regions that cell is in
+    CellToCellsMap mCellToConnectedCellsMap;	// maps each cell in the grid to the cells that can see it
     SudokuGrid* mParentGrid;			// pointer to the grid the cell belongs to
 
     struct Snapshot
     {
         RegionSet mLeafRegions;
         CellToRegionMap mCellToRegionsMap;
-        Snapshot(const RegionSet& leaves, const CellToRegionMap& map):
+        CellToCellsMap mCellToConnectedCellsMap;
+        Snapshot(const RegionSet& leaves, const CellToRegionMap& map, const CellToCellsMap& cellsMap):
             mLeafRegions(leaves),
-            mCellToRegionsMap(map)
+            mCellToRegionsMap(map),
+            mCellToConnectedCellsMap(cellsMap)
         {}
     };
     std::unique_ptr<Snapshot> mSnapshot;
@@ -104,85 +109,89 @@ private:
     /// made up by theremaining cells.
     /// </summary>
     void PartitionRegionWithCells(const RegionSPtr& regionSPtr, Region* region);
+
+    /// <summary>
+    /// Update the set of cells that can see cell c
+    /// </summary>
+    void UpdateConnectedCells(SudokuCell* c);
 };
 
 template<class T>
 void RegionsManager::FindConnectedCells(const T& definingCells, CellSet& outConnectedCells) const
 {
-    // iterate over the cells in definingCells
-    for (auto it = definingCells.begin(), end = definingCells.end(); it != end; ++it)
-    {
-        RegionSet connectedRegion = RegionsWithCellGet(*it); // regions that conatain the cell (*it)
-        CellSet connectedCellsInner; // cells that see the cell (*it)
-        for (Region* const& r : connectedRegion)
-        {
-            connectedCellsInner.insert(r->CellsGet().begin(), r->CellsGet().end());
-        }
+    auto it = definingCells.begin();
+    const auto end = definingCells.end();
 
-        if (it == definingCells.begin()) // first iteration: nothig to intersect with
+    if (it != end)
+    {
+        const auto& cells = mCellToConnectedCellsMap[(*it)->IdGet()];
+        outConnectedCells.insert(cells.begin(), cells.end());
+        ++it;
+    }
+
+    while (it != end)
+    {
+        const auto& cells = mCellToConnectedCellsMap[(*it)->IdGet()];
+
+        auto inIt = outConnectedCells.begin();
+        while (inIt != outConnectedCells.end())
         {
-            outConnectedCells = connectedCellsInner;
-        }
-        else // following iterations: find the intersetion between outConnectedCells and connectedCellsInner
-        {
-            // remove from outConnectedCells any cell that is not in connectedCellsInner
-            for (auto _it = outConnectedCells.begin(), _end = outConnectedCells.end(); _it != _end;)
+            if (cells.count(*inIt) == 0)
             {
-                if (connectedCellsInner.count(*_it) == 0)
-                {
-                    _it = outConnectedCells.erase(_it);
-                }
-                else
-                {
-                    ++_it;
-                }
+                inIt = outConnectedCells.erase(inIt);
+            }
+            else
+            {
+                ++inIt;
             }
         }
-    }
-    // remove from outConnectedCells any cell that is in definingCells
-    for (SudokuCell* const& c : definingCells)
-    {
-        outConnectedCells.erase(c);
+        ++it;
     }
 }
 
 template<class T>
 void RegionsManager::FindConnectedCellsWithValue(const T& definingCells, CellSet& outConnectedCells, unsigned short value) const
 {
-    // iterate over the cells in definingCells
-    for (auto it = definingCells.begin(), end = definingCells.end(); it != end; ++it)
-    {
-        RegionSet connectedRegion = RegionsWithCellGet(*it); // regions that conatain the cell (*it)
-        CellSet connectedCellsInner; // cells that see the cell (*it)
-        for (Region* const& r : connectedRegion)
-        {
-            connectedCellsInner.insert(r->CellsWithValueGet(value).begin(), r->CellsWithValueGet(value).end());
-        }
+    auto it = definingCells.begin();
+    const auto end = definingCells.end();
 
-        if (it == definingCells.begin()) // first iteration: nothig to intersect with
+    if (it != end)
+    {
+        const auto& cells = mCellToConnectedCellsMap[(*it)->IdGet()];
+        outConnectedCells.insert(cells.begin(), cells.end());
+        ++it;
+
+        auto inIt = outConnectedCells.begin();
+        while (inIt != outConnectedCells.end())
         {
-            outConnectedCells = connectedCellsInner;
-        }
-        else // following iterations: find the intersetion between outConnectedCells and connectedCellsInner
-        {
-            // remove from outConnectedCells any cell that is not in connectedCellsInner
-            for (auto _it = outConnectedCells.begin(), _end = outConnectedCells.end(); _it != _end;)
+            if ((*inIt)->HasGuess(value))
             {
-                if (connectedCellsInner.count(*_it) == 0)
-                {
-                    _it = outConnectedCells.erase(_it);
-                }
-                else
-                {
-                    ++_it;
-                }
+                ++inIt;
+            }
+            else
+            {
+                inIt = outConnectedCells.erase(inIt);
             }
         }
     }
-    // remove from outConnectedCells any cell that is in definingCells
-    for (SudokuCell* const& c : definingCells)
+
+    while (it != end)
     {
-        outConnectedCells.erase(c);
+        const auto& cells = mCellToConnectedCellsMap[(*it)->IdGet()];
+
+        auto inIt = outConnectedCells.begin();
+        while (inIt != outConnectedCells.end())
+        {
+            if (cells.count(*inIt) == 0)
+            {
+                inIt = outConnectedCells.erase(inIt);
+            }
+            else
+            {
+                ++inIt;
+            }
+        }
+        ++it;
     }
 }
 #endif // REGIONS_MANAGER_H

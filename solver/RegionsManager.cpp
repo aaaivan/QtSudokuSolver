@@ -11,6 +11,7 @@ RegionsManager::RegionsManager(SudokuGrid* parentGrid):
     mStartingRegions(),
     mLeafRegions(),
     mCellToRegionsMap(),
+    mCellToConnectedCellsMap(),
     mParentGrid(parentGrid),
     mSnapshot(nullptr)
 {
@@ -21,6 +22,7 @@ RegionsManager::RegionsManager(SudokuGrid* parentGrid):
 
     unsigned short gridSize = parentGrid->SizeGet();
     mCellToRegionsMap = CellToRegionMap(gridSize * gridSize);
+    mCellToConnectedCellsMap = CellToCellsMap(gridSize * gridSize);
 }
 
 RegionsManager::~RegionsManager()
@@ -153,6 +155,7 @@ void RegionsManager::PartitionRegionWithCells(const RegionSPtr& regionSPtr, Regi
             {
                 regionsWithCell.insert(regionSPtr.get());
             }
+            UpdateConnectedCells(c);
         }
 
         if (newRegion)
@@ -196,10 +199,24 @@ void RegionsManager::PartitionRegionWithCells(const RegionSPtr& regionSPtr, Regi
                 {
                     RegionSet& regionsWithCell = mCellToRegionsMap.at(c->IdGet());
                     regionsWithCell.erase(r);
+                    UpdateConnectedCells(c);
                 }
             }
         }
     }
+}
+
+void RegionsManager::UpdateConnectedCells(SudokuCell* c)
+{
+    const auto& regions = RegionsWithCellGet(c);
+    auto& connectedCellsSet = mCellToConnectedCellsMap[c->IdGet()];
+    connectedCellsSet.clear();
+
+    for (const auto& r : regions)
+    {
+        connectedCellsSet.insert(r->CellsGet().begin(), r->CellsGet().end());
+    }
+    connectedCellsSet.erase(c);
 }
 
 void RegionsManager::RegisterRegion(RegionSPtr regionSPtr, RegionType regionType)
@@ -220,6 +237,7 @@ void RegionsManager::RegisterRegion(RegionSPtr regionSPtr, RegionType regionType
     for (const auto& cell : region->CellsGet())
     {
         mCellToRegionsMap.at(cell->IdGet()).insert(region);
+        UpdateConnectedCells(cell);
     }
 
     // if the new region contains an existing closed region,
@@ -277,6 +295,7 @@ void RegionsManager::RegisterRegion(RegionSPtr regionSPtr, RegionType regionType
             {
                 RegionSet& regionsWithCell = mCellToRegionsMap.at(c->IdGet());
                 regionsWithCell.erase(region);
+                UpdateConnectedCells(c);
             }
         }
     }
@@ -287,6 +306,10 @@ void RegionsManager::Reset()
     mLeafRegions.clear();
     mSnapshot.reset();
     for (auto& c : mCellToRegionsMap)
+    {
+        c.clear();
+    }
+    for (auto& c : mCellToConnectedCellsMap)
     {
         c.clear();
     }
@@ -314,6 +337,10 @@ void RegionsManager::Clear()
     {
         c.clear();
     }
+    for (auto& c : mCellToConnectedCellsMap)
+    {
+        c.clear();
+    }
     for (size_t i = 0; i < static_cast<size_t>(RegionType::MAX_TYPES); i++)
     {
         mStartingRegions.at(i).clear();
@@ -326,7 +353,7 @@ void RegionsManager::TakeSnapshot()
     {
         r->TakeSnapshot();
     }
-    mSnapshot = std::make_unique<Snapshot>(mLeafRegions, mCellToRegionsMap);
+    mSnapshot = std::make_unique<Snapshot>(mLeafRegions, mCellToRegionsMap, mCellToConnectedCellsMap);
 }
 
 void RegionsManager::RestoreSnapshot()
@@ -335,6 +362,7 @@ void RegionsManager::RestoreSnapshot()
     {
         mLeafRegions = std::move(mSnapshot->mLeafRegions);
         mCellToRegionsMap = std::move(mSnapshot->mCellToRegionsMap);
+        mCellToConnectedCellsMap = std::move(mSnapshot->mCellToConnectedCellsMap);
         mSnapshot.reset();
         for (const auto& r : mLeafRegions)
         {
