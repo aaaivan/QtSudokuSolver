@@ -49,6 +49,6 @@ void LockedCandidatesTechnique::SearchLockedCandidates(unsigned short value)
     }
     if (almostLockedCells.size() > 0)
     {
-        mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_AlmostLockedCandidates>(mCurrentRegion, std::move(almostLockedCells), value));
+        mGrid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_FinnedLockedCandidates>(mCurrentRegion, std::move(almostLockedCells), value));
     }
 }

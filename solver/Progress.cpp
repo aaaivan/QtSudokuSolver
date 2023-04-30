@@ -188,7 +188,7 @@ void Progress_LockedCandidates::PrintMessage() const
     }
 }
 
-void Progress_AlmostLockedCandidates::ProcessProgress()
+void Progress_FinnedLockedCandidates::ProcessProgress()
 {
     for (SudokuCell* const & c : mCells)
     {
@@ -198,7 +198,7 @@ void Progress_AlmostLockedCandidates::ProcessProgress()
     PrintMessage();
 }
 
-void Progress_AlmostLockedCandidates::PrintMessage() const
+void Progress_FinnedLockedCandidates::PrintMessage() const
 {
     SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
     if(st)

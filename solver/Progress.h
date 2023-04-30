@@ -140,14 +140,14 @@ public:
     void PrintMessage() const override;
 };
 
-class Progress_AlmostLockedCandidates : public Progress
+class Progress_FinnedLockedCandidates : public Progress
 {
     Region* mRegion;
     CellSet mCells;
     unsigned short mValue;
 public:
-    Progress_AlmostLockedCandidates(Region* region, CellSet&& cells, unsigned short value) :
-        Progress(ProgressType::AlmostLockedCandidatesFound),
+    Progress_FinnedLockedCandidates(Region* region, CellSet&& cells, unsigned short value) :
+        Progress(ProgressType::FinnedLockedCandidatesFound),
         mRegion(region),
         mCells(cells),
         mValue(value)

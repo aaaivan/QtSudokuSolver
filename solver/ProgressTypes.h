@@ -23,7 +23,7 @@ enum class ProgressType : int
     HiddenSubsetFound,
     OptionRemoved,
     LockedCandidatesFound,
-    AlmostLockedCandidatesFound,
+    FinnedLockedCandidatesFound,
     FishFound,
     CannibalFishFound,
     FinnedFishFound,
