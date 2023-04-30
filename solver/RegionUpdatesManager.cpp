@@ -397,6 +397,11 @@ void RegionUpdatesManager::OnRegionPartitioned()
 
 void RegionUpdatesManager::OnConfirmedValueAdded(unsigned short value)
 {
+    if(mRegion->IsHouse())
+    {
+        return;
+    }
+
     auto it = mHotValues.begin();
     while (it != mHotValues.end())
     {

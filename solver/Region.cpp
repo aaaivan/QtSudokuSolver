@@ -271,6 +271,11 @@ bool Region::IsClosed() const
     return mCells.size() == mConfirmedValues.size() && mCells.size() == mAllowedValues.size();
 }
 
+bool Region::IsHouse() const
+{
+    return mCells.size() == mParentGrid->SizeGet();
+}
+
 unsigned int Region::SumGet() const
 {
     if(const auto& constr = GetConstraintByType(RegionType::KillerCage); constr != nullptr)
