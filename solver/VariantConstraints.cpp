@@ -34,6 +34,7 @@ KillerConstraint::KillerConstraint(unsigned int sum) :
     mCellToOrder(),
     mOrderToCell(),
     mDLXSolutions(),
+    mValidSolution(),
     mSnapshot(nullptr)
 {
 }
@@ -46,12 +47,14 @@ void KillerConstraint::Initialise(Region* region)
     mCellToOrder.clear();
     mOrderToCell.clear();
     mDLXSolutions.clear();
+    mValidSolution.clear();
 
     unsigned short x = 0;
     for (const auto& c : region->CellsGet())
     {
         mCellToOrder[c->IdGet()] = x;
         mOrderToCell[x] = c->IdGet();
+        mAllowedValues.push_back(c->OptionsGet());
         ++x;
     }
 
@@ -81,9 +84,12 @@ void KillerConstraint::Initialise(Region* region)
     delete[] mIncidenceMatrix;
 
     size_t size = mRegion->SizeGet();
+    mDLXSolutions.reserve(solutions.size());
+    mValidSolution.reserve(solutions.size());
     for(const auto& sol : solutions)
     {
         mDLXSolutions.push_back(std::vector<unsigned short>(size));
+        mValidSolution.push_back(true);
         for (const auto& r : sol)
         {
             if(r >= mMainRowsCount)
@@ -120,20 +126,17 @@ void KillerConstraint::OnConfimedValueAdded(unsigned short value)
 void KillerConstraint::OnOptionRemovedFromCell(unsigned short value, SudokuCell* cell)
 {
     unsigned short index = mCellToOrder[cell->IdGet()];
-    auto it = mDLXSolutions.begin();
     bool removed = false;
-    while (it != mDLXSolutions.end())
+    for (size_t i = 0; i < mDLXSolutions.size(); ++i)
     {
-        if(it->at(index) == value)
+        if(mValidSolution.at(i) && mDLXSolutions.at(i).at(index) == value)
         {
-            it = mDLXSolutions.erase(it);
+            mValidSolution.at(i) = false;
             removed = true;
         }
-        else
-        {
-            ++it;
-        }
     }
+    mAllowedValues.at(index).erase(value);
+
     if(removed)
     {
         UpdateAllowedAndConfirmedValues();
@@ -166,15 +169,16 @@ VariantConstraint *KillerConstraint::DeepCopy() const
 
 void KillerConstraint::TakeSnaphot()
 {
-    mSnapshot = std::make_unique<Snapshot>(mDLXSolutions, mConfirmedValues);
+    mSnapshot = std::make_unique<Snapshot>(mValidSolution, mConfirmedValues, mAllowedValues);
 }
 
 void KillerConstraint::RestoreSnaphot()
 {
     if(mSnapshot)
     {
-        mDLXSolutions = std::move(mSnapshot->mDLXSolutions);
+        mValidSolution = std::move(mSnapshot->mValidSolution);
         mConfirmedValues = std::move(mSnapshot->mConfirmedValues);
+        mAllowedValues = std::move(mSnapshot->mAllowedValues);
         mSnapshot.reset();
     }
 }
@@ -231,43 +235,16 @@ void KillerConstraint::FindCombinationsInner(std::list<unsigned short>::const_it
 
 }
 
-void KillerConstraint::RemoveCombinationsWithValue(unsigned short value)
-{
-    bool removed = false;
-    auto it = mDLXSolutions.begin();
-    while (it != mDLXSolutions.end())
-    {
-        if(std::find(it->begin(), it->end(), value) != it->end())
-        {
-            it = mDLXSolutions.erase(it);
-            removed = true;
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-    if (removed)
-    {
-        UpdateAllowedAndConfirmedValues();
-    }
-}
-
 void KillerConstraint::RemoveCombinationsWithoutValue(unsigned short value)
 {
     bool removed = false;
-    auto it = mDLXSolutions.begin();
-    while (it != mDLXSolutions.end())
+    for (size_t i = 0; i < mDLXSolutions.size(); ++i)
     {
-        if(std::find(it->begin(), it->end(), value) == it->end())
+        if(mValidSolution.at(i) &&
+           std::find(mDLXSolutions.at(i).begin(), mDLXSolutions.at(i).end(), value) == mDLXSolutions.at(i).end())
         {
-            it = mDLXSolutions.erase(it);
+            mValidSolution.at(i) = false;
             removed = true;
-        }
-        else
-        {
-            ++it;
         }
     }
 
@@ -288,45 +265,67 @@ void KillerConstraint::AddConfirmedValue(unsigned value)
 void KillerConstraint::UpdateAllowedAndConfirmedValues()
 {
     SudokuGrid* grid = mRegion->GridGet();
-    std::vector<std::set<unsigned short>> optionsInCell(mCellToOrder.size(), std::set<unsigned short>());
-    std::vector<size_t> valuesCount(grid->SizeGet(), 0);
+    std::vector<std::set<unsigned short>> optionsForbiddenInCell = mAllowedValues;
+    std::set<unsigned short> newConfirmed;
 
-    for (const auto& s : mDLXSolutions)
+    for (unsigned short i = 1; i <= grid->SizeGet(); ++i)
     {
-        for (size_t i = 0; i < s.size(); ++i)
+        if(mConfirmedValues.count(i) == 0)
         {
-            unsigned short candidate = s.at(i);
-            optionsInCell.at(i).insert(candidate);
-            valuesCount[candidate - 1]++;
+            newConfirmed.insert(i);
         }
     }
 
-    for (size_t i = 0; i < optionsInCell.size(); ++i)
+    for (size_t s = 0; s < mDLXSolutions.size(); ++s)
     {
-        SudokuCell* cell = grid->CellGet(mOrderToCell[i]);
-        if(optionsInCell.at(i).size() < cell->OptionsGet().size())
+        if(!mValidSolution.at(s)) continue;
+
+        bool canEliminate = false;
+        const auto& solution = mDLXSolutions.at(s);
+        for (size_t i = 0; i < optionsForbiddenInCell.size(); ++i)
         {
-            std::set<unsigned short> optionsToRemove;
-            for (const auto& v : cell->OptionsGet())
+            if(!optionsForbiddenInCell.at(i).empty())
             {
-                if(optionsInCell.at(i).count(v) == 0)
-                {
-                    optionsToRemove.insert(v);
-                }
+                canEliminate = true;
+                optionsForbiddenInCell.at(i).erase(solution.at(i));
             }
-            if(optionsToRemove.size() > 0)
+        }
+
+        auto cIt = newConfirmed.begin();
+        while ( cIt!=newConfirmed.end() )
+        {
+            if(std::find(solution.begin(), solution.end(), *cIt) == solution.end())
             {
-                grid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_ValueNotInKiller>(cell, mRegion, std::move(optionsToRemove)));
+                cIt = newConfirmed.erase(cIt);
             }
+            else
+            {
+                ++cIt;
+            }
+        }
+
+        if(newConfirmed.empty() && !canEliminate)
+        {
+            break;
         }
     }
 
-    for (size_t i = 0; i < valuesCount.size(); ++i)
+    for (size_t i = 0; i < optionsForbiddenInCell.size(); ++i)
     {
-        if(valuesCount.at(i) == mDLXSolutions.size())
+        if(!optionsForbiddenInCell.at(i).empty())
         {
-            AddConfirmedValue(i + 1);
+            SudokuCell* cell = grid->CellGet(mOrderToCell[i]);
+            for (const auto v : optionsForbiddenInCell.at(i))
+            {
+                mAllowedValues.at(i).erase(v);
+            }
+            grid->ProgressManagerGet()->RegisterProgress(std::make_shared<Progress_ValueNotInKiller>(cell, mRegion, std::move(optionsForbiddenInCell.at(i))));
         }
+    }
+
+    for (const auto& v : newConfirmed)
+    {
+        AddConfirmedValue(v);
     }
 }
 

@@ -62,24 +62,25 @@ private:
     unsigned int mCageSum;								// sum of the digits in the cage
     std::list<std::set<unsigned short>> mCombinations;	// sets of numbers whose sum equals mCageSum and whose size euqals the size of the region
     std::set<unsigned short> mConfirmedValues;
+    std::vector<std::set<unsigned short>> mAllowedValues;
 
     std::map<CellId, unsigned short> mCellToOrder;
     std::map<unsigned short, CellId> mOrderToCell;
-    std::list<std::vector<unsigned short>> mDLXSolutions;
-
-//    bool** mIncidenceMatrix;
-//    size_t mRowsCount;
-//    size_t mColsCount;
-//    size_t mMainRowsCount;
+    std::vector<std::vector<unsigned short>> mDLXSolutions;
+    std::vector<bool> mValidSolution;
 
     struct Snapshot
     {
-        std::list<std::vector<unsigned short>> mDLXSolutions;
+        std::vector<bool> mValidSolution;
         std::set<unsigned short> mConfirmedValues;
+        std::vector<std::set<unsigned short>> mAllowedValues;
 
-        Snapshot(std::list<std::vector<unsigned short>> DLXSolutions, std::set<unsigned short> confirmedValues):
-            mDLXSolutions(DLXSolutions),
-            mConfirmedValues(confirmedValues)
+        Snapshot(std::vector<bool> validSolution,
+                 std::set<unsigned short> confirmedValues,
+                 std::vector<std::set<unsigned short>> allowedValues):
+            mValidSolution(validSolution),
+            mConfirmedValues(confirmedValues),
+            mAllowedValues(allowedValues)
         {}
     };
     std::unique_ptr<Snapshot> mSnapshot;
@@ -114,10 +115,6 @@ private:
     /// </summary>
     void FindCombinations(std::list<unsigned short> allowedValues);
     void FindCombinationsInner(std::list<unsigned short>::const_iterator it, const std::list<unsigned short> &allowedValues, unsigned int runningTotal, std::list<unsigned short>& combination);
-    /// <summary>
-    /// Remove all combinations where one of the digits is value
-    /// </summary>
-    void RemoveCombinationsWithValue(unsigned short value);
     /// <summary>
     /// Remove all combinations where none of the digits is value
     /// </summary>
