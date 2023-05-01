@@ -25,7 +25,6 @@ SOURCES += \
     savepuzzlethread.cpp \
     solver/BruteForceSolver.cpp \
     solver/FishTechniques.cpp \
-    solver/FishTechniquesV2.cpp \
     solver/GhostCagesManager.cpp \
     solver/GridProgressManager.cpp \
     solver/InniesAndOuties.cpp \

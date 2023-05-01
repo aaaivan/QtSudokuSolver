@@ -384,6 +384,7 @@ void BifurcationTechnique::NextStep()
             return;
         }
         mCurrentIndex = 0;
+        mBifurcationGrid = std::make_unique<SudokuGrid>(mGrid);
         CreateRootNode();
     }
 
@@ -410,6 +411,7 @@ void BifurcationTechnique::NextStep()
         {
             ++mTargetDepth;
             mCurrentIndex = 0;
+            mBifurcationGrid = std::make_unique<SudokuGrid>(mGrid);
             CreateRootNode();
         }
     }
@@ -454,8 +456,6 @@ void BifurcationTechnique::Init()
     {
         return a->OptionsGet().size() < b->OptionsGet().size();
     });
-
-    mBifurcationGrid = std::make_unique<SudokuGrid>(mGrid);
 }
 
 void BifurcationTechnique::CreateRootNode()
