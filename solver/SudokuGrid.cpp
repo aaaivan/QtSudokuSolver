@@ -3,8 +3,9 @@
 #include "RegionsManager.h"
 #include "GridProgressManager.h"
 #include "SudokuCell.h"
-#include "../sudokusolverthread.h"
 #include "GhostCagesManager.h"
+#include "RegionUpdatesManager.h"
+#include "../sudokusolverthread.h"
 #include <cassert>
 
 SudokuGrid::SudokuGrid(unsigned short size, SudokuSolverThread* solverThread) :
@@ -60,7 +61,7 @@ SudokuGrid::SudokuGrid(const SudokuGrid *grid) :
         {
             constraints.emplace_back(c->DeepCopy());
         }
-        DefineRegion(r->CellCoordsGet(), RegionType::Generic_region, constraints);
+        DefineRegion(r->CellCoordsGet(), RegionType::Generic_region, constraints, "", true);
     }
 }
 
@@ -179,18 +180,18 @@ void SudokuGrid::SetCellEliminationHints(unsigned short row, unsigned short col,
 }
 
 void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2>>& cells,
-                              RegionType regionType, VariantConstraint* constraint, std::string name)
+                              RegionType regionType, VariantConstraint* constraint, std::string name, bool wipeUpdateManager)
 {
     std::vector<VariantConstraint*> constraints;
     if(constraint)
     {
         constraints.emplace_back(constraint);
     }
-    DefineRegion(cells, regionType, constraints, name);
+    DefineRegion(cells, regionType, constraints, name, wipeUpdateManager);
 }
 
 void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > &cells,
-                              RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name)
+                              RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name, bool wipeUpdateManager)
 {
     assert(cells.size() <= mSize && "Index out of bound for a Given Cell");
 
@@ -210,6 +211,10 @@ void SudokuGrid::DefineRegion(const std::vector<std::array<unsigned short, 2> > 
         regionSPtr->AddVariantConstraint(std::unique_ptr<VariantConstraint>(constraint));
     }
     regionSPtr->RegionNameSet(name);
+    if(wipeUpdateManager)
+    {
+        regionSPtr->UpdateManagerGet()->Reset();
+    }
     mRegionsManager->RegisterRegion(regionSPtr, regionType);
 }
 

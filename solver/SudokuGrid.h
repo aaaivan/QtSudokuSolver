@@ -70,9 +70,9 @@ public:
     /// The region type (row, column, box etc.) is also specified as a parameter.
     /// </summary>
     void DefineRegion(const std::vector<std::array<unsigned short, 2> /* row, col */>& cells,
-                      RegionType regionType, VariantConstraint* constraint = nullptr, std::string name="");
+                      RegionType regionType, VariantConstraint* constraint = nullptr, std::string name="", bool wipeUpdateManager = false);
     void DefineRegion(const std::vector<std::array<unsigned short, 2> /* row, col */>& cells,
-                      RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name="");
+                      RegionType regionType, std::vector<VariantConstraint*> &constraints, std::string name="", bool wipeUpdateManager = false);
 
     /// <summary>
     /// Clear the content of the grid (does not delete the regions)
