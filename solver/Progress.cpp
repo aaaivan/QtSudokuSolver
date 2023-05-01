@@ -415,6 +415,16 @@ void Progress_RegionBecameClosed::ProcessProgress()
     PrintMessage();
 }
 
+void Progress_RegionBecameClosed::PrintMessage() const
+{
+    SudokuSolverThread* st = mRegion->GridGet()->SolverThreadGet();
+    if(st && !mRegion->IsHouse() && mRegion->IsStartingRegion())
+    {
+        std::string message = "->" + mRegion->RegionNameGet() + " forms a naked set.";
+        st->NotifyLogicalDeduction(message);
+    }
+}
+
 void Progress_ValueNotInKiller::ProcessProgress()
 {
     mCell->RemoveMultipleOptions(mValues);

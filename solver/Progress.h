@@ -233,6 +233,7 @@ public:
         mRegion(region)
     {}
     void ProcessProgress() override;
+    void PrintMessage() const override;
 };
 
 class Progress_ValueNotInKiller : public Progress
