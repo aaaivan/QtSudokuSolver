@@ -31,6 +31,7 @@ KillerConstraint::KillerConstraint(unsigned int sum) :
     mCageSum(sum),
     mCombinations(),
     mConfirmedValues(),
+    mAllowedValues(),
     mCellToOrder(),
     mOrderToCell(),
     mDLXSolutions(),
@@ -44,6 +45,9 @@ void KillerConstraint::Initialise(Region* region)
     VariantConstraint::Initialise(region);
     mSnapshot.reset();
 
+    mCombinations.clear();
+    mConfirmedValues.clear();
+    mAllowedValues.clear();
     mCellToOrder.clear();
     mOrderToCell.clear();
     mDLXSolutions.clear();
