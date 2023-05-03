@@ -134,6 +134,11 @@ bool FishTechnique::SearchSecondaryFishRegionInner(CellList::const_iterator& cel
                 currentSet.pop_back();
             }
 
+            if(!mSearchFins)
+            {
+                return false;
+            }
+
             // we could not find a fish containing the cell pointed at by mapIt->first
             // keep going to find out whether it can be a fin
             fins.push_back(*cellIt);

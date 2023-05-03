@@ -220,7 +220,8 @@ FishTechnique::FishTechnique(SudokuGrid* regionsManager, ObservedComponent obser
     mMinSize(2),
     mCurrentSize(mMinSize),
     mDefiningSets(),
-    mCurrentSet()
+    mCurrentSet(),
+    mSearchFins(false)
 {
     mFinished = (mGrid->ParentNodeGet() != nullptr);
 }
@@ -268,12 +269,24 @@ void FishTechnique::NextStep()
         }
         else
         {
-            NotifyFailure();
+            if(mSearchFins)
+            {
+                NotifyFailure();
+            }
             mCurrentSize = 0;
             ++mCurrentValue;
             if(mCurrentValue <= mGrid->SizeGet())
             {
                 UpdateRegions();
+            }
+            else if(mSearchFins == false)
+            {
+                mSearchFins = true;
+                mCurrentValue = 0;
+                mCurrentSize = 0;
+                mRegionsToSearchCount = 0;
+                mAvailableRegions.clear();
+                mDefiningSets.clear();
             }
             else
             {
@@ -295,6 +308,7 @@ void FishTechnique::Reset()
     mRegionsToSearchCount = 0;
     mAvailableRegions.clear();
     mDefiningSets.clear();
+    mSearchFins = false;
 }
 
 void FishTechnique::UpdateRegions()

@@ -103,6 +103,7 @@ class FishTechnique : public SolvingTechnique
     size_t mRegionsToSearchCount;
     const unsigned short mMinSize;
     unsigned short mCurrentSize;
+    bool mSearchFins;
 
     std::list<DefininfSet> mDefiningSets;
     std::list<DefininfSet>::iterator mCurrentSet;
