@@ -67,25 +67,25 @@ void KillerConstraint::Initialise(Region* region)
 
 
     size_t gridSize = region->GridGet()->SizeGet();
-    size_t mColsCount = region->SizeGet() + gridSize;
-    size_t mMainRowsCount = region->SizeGet() * gridSize;
-    size_t mRowsCount = mMainRowsCount + mCombinations.size();
-    bool** mIncidenceMatrix = new bool*[mRowsCount];
-    for (size_t i = 0; i < mRowsCount; ++i)
+    size_t colsCount = region->SizeGet() + gridSize;
+    size_t mainRowsCount = region->SizeGet() * gridSize;
+    size_t rowsCount = mainRowsCount + mCombinations.size();
+    bool** incidenceMatrix = new bool*[rowsCount];
+    for (size_t i = 0; i < rowsCount; ++i)
     {
-        mIncidenceMatrix[i] = new bool[mColsCount];
+        incidenceMatrix[i] = new bool[colsCount];
     }
-    FillIncidenceMatrix(mIncidenceMatrix, mMainRowsCount, mRowsCount, mColsCount);
+    FillIncidenceMatrix(incidenceMatrix, mainRowsCount, rowsCount, colsCount);
 
-    linked_matrix_GJK::LMatrix DLXMatrix(mIncidenceMatrix, mRowsCount, mColsCount);
+    linked_matrix_GJK::LMatrix DLXMatrix(incidenceMatrix, rowsCount, colsCount);
     std::list<std::vector<size_t>> solutions;
     dancing_links_GJK::Exact_Cover_Solver(DLXMatrix, solutions);
 
-    for (size_t i = 0; i < mRowsCount; ++i)
+    for (size_t i = 0; i < rowsCount; ++i)
     {
-        delete[] mIncidenceMatrix[i];
+        delete[] incidenceMatrix[i];
     }
-    delete[] mIncidenceMatrix;
+    delete[] incidenceMatrix;
 
     size_t size = mRegion->SizeGet();
     mDLXSolutions.reserve(solutions.size());
@@ -96,7 +96,7 @@ void KillerConstraint::Initialise(Region* region)
         mValidSolution.push_back(true);
         for (const auto& r : sol)
         {
-            if(r >= mMainRowsCount)
+            if(r >= mainRowsCount)
             {
                 continue;
             }
