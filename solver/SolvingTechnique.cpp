@@ -219,9 +219,9 @@ FishTechnique::FishTechnique(SudokuGrid* regionsManager, ObservedComponent obser
     mRegionsToSearchCount(0),
     mMinSize(2),
     mCurrentSize(mMinSize),
+    mSearchFins(false),
     mDefiningSets(),
-    mCurrentSet(),
-    mSearchFins(false)
+    mCurrentSet()
 {
     mFinished = (mGrid->ParentNodeGet() != nullptr);
 }
